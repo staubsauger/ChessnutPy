@@ -57,7 +57,6 @@ class ChessnutAir:
     async def handler(self, char, data):
         rdata = data[2:34]
         if rdata != self.old_data:
-            self.old_data = rdata
             for i in range(32):
                 if rdata[i] != self.old_data[i]:
                     clow = rdata[i] & 0xf
@@ -72,6 +71,7 @@ class ChessnutAir:
                             self.piece_up(i*2+1, self.old_data[i] >> 4)
                         else:
                             self.piece_down(i*2+1, rdata[i] >> 4)
+            self.old_data = rdata
 
 
     async def run(self, debug=False):
