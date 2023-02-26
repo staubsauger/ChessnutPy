@@ -7,7 +7,6 @@ from virtualeboard import Eboard
 import chess
 
 
-old_data = None
 CLIENT = None
 eboard = Eboard()
 
@@ -67,17 +66,16 @@ class PlayerState:
         self.p1 = False
         self.p2 = False
         self.p2_new_fen = None
+        self.old_data = None
 
     async def p1_handler(self, char, data):
-        global old_data
-        if data[2:34] != old_data:
+        if data[2:34] != self.old_data:
             print_board(data[2:34])
             self.p1 = True
 
     async def p2_handler(self, char, data):
-        global old_data
         rdata = data[2:34]
-        if rdata != old_data:
+        if rdata != self.old_data:
             cur_fen = get_fen(rdata)
             print(f"compare fens!\n{cur_fen}\n{self.p2_new_fen}")
             if cur_fen == self.p2_new_fen:
@@ -100,7 +98,7 @@ async def run(device, debug=False):
         # Add game loop
         game_over = False
         state = PlayerState()
-        cur_fen = chess.Board().fen().split()[0]
+        cur_fen = chess.Board().fen()
 
         while not game_over:
             state.p1 = False
@@ -113,7 +111,7 @@ async def run(device, debug=False):
             state.p2 = False
             await client.start_notify(READDATA, state.p2_handler)  # start another notification handler
             move = generate_move()
-            state.p2_new_fen = fen_add(cur_fen, move)
+            state.p2_new_fen = fen_add(cur_fen, move).split()[0]
             await display_move(move)
             while not state.p2:
                 await asyncio.sleep(1.0)
