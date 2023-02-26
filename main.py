@@ -49,8 +49,8 @@ on E8.
     print("    a b c d e f g h\n\n")
 
 
-async def leds(bytearray):
-    await CLIENT.write_gatt_char(WRITECHARACTERISTICS, bytearray)
+async def leds(byte_array):
+    await CLIENT.write_gatt_char(WRITECHARACTERISTICS, byte_array)
 
 
 async def display_move(move):
@@ -61,7 +61,8 @@ async def display_move(move):
 def generate_move():
     return "e2e4"
 
-class player_state:
+
+class PlayerState:
     def __init__(self):
         self.p1 = False
         self.p2 = False
