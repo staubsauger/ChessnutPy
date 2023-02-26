@@ -41,12 +41,13 @@ on E8.
     print("    a b c d e f g h\n\n")
 
 
-async def leds(bytearr):
-    await CLIENT.write_gatt_char(WRITECHARACTERISTICS, bytearr)
+async def leds(bytearray):
+    await CLIENT.write_gatt_char(WRITECHARACTERISTICS, bytearray)
 
 
 async def display_move(move):
-    pass
+    """Display the correct LEDs for a given move as a string."""
+    await leds(eboard.onleds)
 
 
 def generate_move():
@@ -57,16 +58,21 @@ class player_state:
         self.p1 = False
         self.p2 = False
 
-    async def handler(self, char, data):
+    async def p1_handler(self, char, data):
+        global old_data
+        if data[2:34] != old_data:
+            print_board(data[2:34])
+            self.p1 = True
+
+    async def p2_handler(self, char, data):
         global old_data
         if data[2:34] != old_data:
             print_board(data[2:34])
             eboard.boardstatus = data
-            # bytearray(b'\x01$X#1\x85DDDD\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00wwww\xa6\xc9\x9bj\xc9\xe2G\x00')
             print(eboard.boardstatus)
             await leds(eboard.onleds)
             old_data = data[2:34].copy()
-            self.p1 = True
+            self.p2 = True
 
 
 async def run(device, debug=False):
@@ -81,7 +87,6 @@ async def run(device, debug=False):
         if data[2:34] != old_data:
             print_board(data[2:34])
             eboard.boardstatus = data
-            # bytearray(b'\x01$X#1\x85DDDD\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00wwww\xa6\xc9\x9bj\xc9\xe2G\x00')
             print(eboard.boardstatus)
             await leds(eboard.onleds)
             old_data = data[2:34].copy()
@@ -100,13 +105,15 @@ async def run(device, debug=False):
         state = player_state()
 
         while not game_over:
-            await client.start_notify(READDATA, state.handler)  # start the notification handler
+            state.p1 = False
+            await client.start_notify(READDATA, state.p1_handler)  # start the notification handler
             print("Player1 Move!")
             while not state.p1:
                 await asyncio.sleep(1.0)  # wait 1 second
             print("done!")
             await client.stop_notify(READDATA)  # stop the notification handler
-            await client.start_notify(READDATA, lambda char, data:  notification_handler(player_state, char, data))  # start another notification handler
+            state.p2 = False
+            await client.start_notify(READDATA, state.p2_handler)  # start another notification handler
             move = generate_move()
             await display_move(move)
             while not player_state["player2"]:
