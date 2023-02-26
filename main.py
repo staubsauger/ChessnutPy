@@ -4,10 +4,17 @@ import asyncio
 from bleak import BleakClient
 from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATION, READDATA, convertDict, MASKLOW
 from virtualeboard import Eboard
+import chess
+
 
 old_data = None
 CLIENT = None
 eboard = Eboard()
+
+def fen_add(fen, move):
+    board = chess.Board(fen)
+    board.push_san(move)
+    return board.fen()
 
 
 def print_board(data):
