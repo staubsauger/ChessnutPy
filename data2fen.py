@@ -39,7 +39,7 @@ def convert_to_fen(in_data):
                 count = 0
         temp_str = temp_str + "/"
     temp_str = temp_str[:-1]
-    print("FEN from Board", temp_str)
+    #print("FEN from Board", temp_str)
     return temp_str
 
 def get_fen(data):

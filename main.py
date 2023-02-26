@@ -116,6 +116,7 @@ async def run(device, debug=False):
             await display_move(move)
             while not state.p2:
                 await asyncio.sleep(1.0)
+            print("correct move done")
             # TODO: check if game over
         await client.stop_notify(READDATA)  # stop the notification handler
 
