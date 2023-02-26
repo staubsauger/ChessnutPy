@@ -57,6 +57,7 @@ class player_state:
     def __init__(self):
         self.p1 = False
         self.p2 = False
+        self.p2_move = ""
 
     async def p1_handler(self, char, data):
         global old_data
@@ -102,7 +103,7 @@ async def run(device, debug=False):
 
         # Add game loop
         game_over = False
-        state = player_state()
+        state = PlayerState()
 
         while not game_over:
             state.p1 = False
@@ -115,8 +116,9 @@ async def run(device, debug=False):
             state.p2 = False
             await client.start_notify(READDATA, state.p2_handler)  # start another notification handler
             move = generate_move()
+            state.p2_move = move
             await display_move(move)
-            while not player_state["player2"]:
+            while not state.p2:
                 await asyncio.sleep(1.0)
             # TODO: check if game over
         await client.stop_notify(READDATA)  # stop the notification handler
