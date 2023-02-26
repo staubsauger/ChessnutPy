@@ -43,4 +43,4 @@ def convert_to_fen(in_data):
     return temp_str
 
 def get_fen(data):
-    convert_to_fen(get_pieces(data))
+    return convert_to_fen(get_pieces(data))
