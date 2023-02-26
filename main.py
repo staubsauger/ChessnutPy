@@ -83,14 +83,15 @@ async def run(device, debug=False):
         game_over = False
         player_state = {"player1": False, "player2": False}
 
+        test = lambda char, data: (await notification_handler(player_state, char, data)).__anext__()
         while not game_over:
-            await client.start_notify(READDATA, lambda char, data: notification_handler(player_state, char, data))  # start the notification handler
+            await client.start_notify(READDATA, test)  # start the notification handler
             print("Player1 Move!")
             while not player_state["player1"]:
                 await asyncio.sleep(1.0)  # wait 1 second
             print("done!")
             await client.stop_notify(READDATA)  # stop the notification handler
-            await client.start_notify(READDATA, lambda char, data: notification_handler(player_state, char, data))  # start another notification handler
+            await client.start_notify(READDATA, lambda char, data:  notification_handler(player_state, char, data))  # start another notification handler
             move = generate_move()
             await display_move(move)
             while not player_state["player2"]:
