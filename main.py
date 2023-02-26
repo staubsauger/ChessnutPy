@@ -64,6 +64,7 @@ def generate_move():
 class PlayerState:
     def __init__(self):
         self.p1 = False
+        self.p1_legal_fens = []
         self.p2 = False
         self.p2_new_fen = None
         self.old_data = None
@@ -108,6 +109,7 @@ async def run(device, debug=False):
             print("Player1 Move!")
             while not state.p1:
                 await asyncio.sleep(1.0)  # wait 1 second
+            cur_fen = get_fen(state.old_data)
             print("done!")
             await client.stop_notify(READDATA)  # stop the notification handler
             state.p2 = False
@@ -127,3 +129,20 @@ device = ChessnutAirDevice()
 asyncio.run(device.discover())
 # connect to device
 asyncio.run(run(device))
+
+from ChessnutAir import ChessnutAir
+
+class Test (ChessnutAir):
+    async def piece_down(self, location, id):
+        print(f"piece: {id} at {location} down")
+
+    async def piece_up(self, location, id):
+        print(f"piece: {id} at {location} up")
+
+async def testf():
+    t = Test()
+    await t.discover()
+    await t.run()
+
+asyncio.run(testf())
+
