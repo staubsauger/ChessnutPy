@@ -79,6 +79,7 @@ class PlayerState:
         rdata = data[2:34]
         if rdata != old_data:
             cur_fen = get_fen(rdata)
+            print(f"compare fens!\n{cur_fen}\n{self.p2_new_fen}")
             if cur_fen == self.p2_new_fen:
                 self.p2 = True
 
