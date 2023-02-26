@@ -70,12 +70,14 @@ class PlayerState:
 
     async def p1_handler(self, char, data):
         if data[2:34] != self.old_data:
+            self.old_data = data[2:34]
             print_board(data[2:34])
             self.p1 = True
 
     async def p2_handler(self, char, data):
         rdata = data[2:34]
         if rdata != self.old_data:
+            self.old_data = rdata
             cur_fen = get_fen(rdata)
             print(f"compare fens!\n{cur_fen}\n{self.p2_new_fen}")
             if cur_fen == self.p2_new_fen:
@@ -117,7 +119,7 @@ async def run(device, debug=False):
                 await asyncio.sleep(1.0)
             print("correct move done")
             # TODO: check if game over
-        await client.stop_notify(READDATA)  # stop the notification handler
+            await client.stop_notify(READDATA)  # stop the notification handler
 
 
 device = ChessnutAirDevice()
