@@ -1,4 +1,5 @@
 from devices import ChessnutAirDevice
+from data2fen import get_fen
 import asyncio
 from bleak import BleakClient
 from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATION, READDATA, convertDict, MASKLOW
@@ -57,7 +58,7 @@ class player_state:
     def __init__(self):
         self.p1 = False
         self.p2 = False
-        self.p2_move = ""
+        self.p2_new_fen = None
 
     async def p1_handler(self, char, data):
         global old_data
@@ -67,31 +68,17 @@ class player_state:
 
     async def p2_handler(self, char, data):
         global old_data
-        if data[2:34] != old_data:
-            print_board(data[2:34])
-            eboard.boardstatus = data
-            print(eboard.boardstatus)
-            await leds(eboard.onleds)
-            old_data = data[2:34].copy()
-            self.p2 = True
+        rdata = data[2:34]
+        if rdata != old_data:
+            cur_fen = get_fen(rdata)
+            if cur_fen == self.p2_new_fen:
+                self.p2 = True
 
 
 async def run(device, debug=False):
     """ Connect to the device and run the notification handler.
     then read the data from the device. after 100 seconds stop the notification handler."""
     print("device.adress: ", device.device.address)
-
-    async def notification_handler(state, characteristic, data):
-        """Handle the notification from the device and print the board."""
-        # print("data: ", ''.join('{:02x}'.format(x) for x in data))
-        global old_data
-        if data[2:34] != old_data:
-            print_board(data[2:34])
-            eboard.boardstatus = data
-            print(eboard.boardstatus)
-            await leds(eboard.onleds)
-            old_data = data[2:34].copy()
-            state["player1"] = True
 
     global CLIENT
     async with BleakClient(device.device) as client:
@@ -104,6 +91,7 @@ async def run(device, debug=False):
         # Add game loop
         game_over = False
         state = PlayerState()
+        cur_fen = chess.Board().fen()
 
         while not game_over:
             state.p1 = False
@@ -116,7 +104,7 @@ async def run(device, debug=False):
             state.p2 = False
             await client.start_notify(READDATA, state.p2_handler)  # start another notification handler
             move = generate_move()
-            state.p2_move = move
+            state.p2_new_fen = fen_add(cur_fen, move)
             await display_move(move)
             while not state.p2:
                 await asyncio.sleep(1.0)
