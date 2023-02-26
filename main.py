@@ -58,7 +58,7 @@ async def run(device, debug=False):
     then read the data from the device. after 100 seconds stop the notification handler."""
     print("device.adress: ", device.device.address)
 
-    async def notification_handler(state, data):
+    async def notification_handler(state, characteristic, data):
         """Handle the notification from the device and print the board."""
         # print("data: ", ''.join('{:02x}'.format(x) for x in data))
         global old_data
@@ -84,13 +84,13 @@ async def run(device, debug=False):
         player_state = {"player1": False, "player2": False}
 
         while not game_over:
-            await client.start_notify(READDATA, lambda data: notification_handler(player_state, data))  # start the notification handler
+            await client.start_notify(READDATA, lambda char, data: notification_handler(player_state, char, data))  # start the notification handler
             print("Player1 Move!")
             while not player_state["player1"]:
                 await asyncio.sleep(1.0)  # wait 1 second
             print("done!")
             await client.stop_notify(READDATA)  # stop the notification handler
-            await client.start_notify(READDATA, lambda data: notification_handler(player_state, data))  # start another notification handler
+            await client.start_notify(READDATA, lambda char, data: notification_handler(player_state, char, data))  # start another notification handler
             move = generate_move()
             await display_move(move)
             while not player_state["player2"]:
