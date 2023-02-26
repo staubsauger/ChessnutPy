@@ -100,7 +100,7 @@ async def run(device, debug=False):
         # Add game loop
         game_over = False
         state = PlayerState()
-        cur_fen = chess.Board().fen()
+        cur_fen = chess.Board().fen().split()[0]
 
         while not game_over:
             state.p1 = False
