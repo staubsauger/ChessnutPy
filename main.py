@@ -4,8 +4,8 @@ from bleak import BleakClient
 from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATION, READDATA, convertDict, MASKLOW
 from virtualeboard import Eboard
 
-oldData = None
-CLIENT  = None
+old_data = None
+CLIENT = None
 eboard = Eboard()
 
 def printBoard(data):
@@ -44,19 +44,25 @@ async def leds(bytearr):
 
     await CLIENT.write_gatt_char(WRITECHARACTERISTICS, bytearr)
 
+async def display_move(move):
+    pass
 
-async def run(connect, debug=False):
+
+def generate_move():
+    return "e2e4"
+
+
+async def run(device, debug=False):
     """ Connect to the device and run the notification handler.
     then read the data from the device. after 100 seconds stop the notification handler."""
     print("device.adress: ", connect.device.address)
     
     async def notification_handler(characteristic, data):
         """Handle the notification from the device and print the board."""
-        global oldData
         # print("data: ", ''.join('{:02x}'.format(x) for x in data))
-        
-        if data[2:34] != oldData:
-            printBoard(data[2:34])
+        global old_data
+        if data[2:34] != old_data:
+            print_board(data[2:34])
             eboard.boardstatus = data
             # bytearray(b'\x01$X#1\x85DDDD\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00wwww\xa6\xc9\x9bj\xc9\xe2G\x00')
             print(eboard.boardstatus)

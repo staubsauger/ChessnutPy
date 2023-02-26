@@ -19,7 +19,7 @@ class ChessnutAirDevice:
     """
     def __init__(self, timeout=10.0):
         self.deviceNameList = DEVICELIST # valid device name list
-        self.device = self.advertisement_data = None
+        self.device = self.advertisement_data = self.connection = None
 
     def filter_by_name(
         self,
