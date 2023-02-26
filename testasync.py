@@ -30,3 +30,5 @@ async def foo2(text):
     await asyncio.sleep(9)
     print("muahahha")
 asyncio.run(main())
+
+print("test")
