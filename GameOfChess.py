@@ -9,7 +9,7 @@ class GameOfChess():
         
     def getcpumove(self):
         cpumove = self.engine.play(self.board, self.limit)
-        return cpumove.move
+        return cpumove#.move
     
     def makemove(self, move):
         self.board.push_san(move)
@@ -17,9 +17,9 @@ class GameOfChess():
     def quitchess(self):
         self.engine.quit()
 
-print(chess.Board().fen())
-c = GameOfChess(chess.Board().fen())
-c.makemove("e2e4")
-print(c.board)
-print(c.getcpumove())
-c.quitchess()
+# print(chess.Board().fen())
+# c = GameOfChess(chess.Board().fen())
+# c.makemove("e2e4")
+# print(c.board)
+# print(c.getcpumove())
+# c.quitchess()

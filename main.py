@@ -3,22 +3,24 @@ from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATIO
 from ChessnutAir import ChessnutAir
 from GameOfChess import GameOfChess
 
-class Test(ChessnutAir):
+class Board(ChessnutAir):
     async def piece_down(self, location, id):
         print(f"piece: {convertDict[id]} at {location} down")
-        await self.connection.write_gatt_char(WRITECHARACTERISTICS,
-                                              [0x0A, 0x08, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00])
+        # print(self.returnboardstate())
+        self.turnLedOnOn("a4")
+        # print("OnLeds", self.onledsarr)
 
     async def piece_up(self, location, id):
-        print(f"piece: {id} at {location} up")
-        await self.connection.write_gatt_char(WRITECHARACTERISTICS,
-                                              [0x0A, 0x08, 0x08, 0x00, 0x00, 0x00, 0x08, 0x08, 0x00, 0x00])
+        print(f"piece: {convertDict[id]} at {location} up")
+        
+    async def showmoveonboard(self, bytearr):
+        await self.connection.write_gatt_char(WRITECHARACTERISTICS, bytearr)
 
-async def testf():
-    t = Test()
-    c = GameOfChess()
-    await t.discover()
-    await t.run()
+async def go():
+    b = Board()
+    # c = GameOfChess(b.boardstate)
+    await b.discover()
+    await b.run()    
 
-asyncio.run(testf())
+asyncio.run(go())
 

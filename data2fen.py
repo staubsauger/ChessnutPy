@@ -14,7 +14,10 @@ def get_pieces(data):
     for i in range(0,8):
         temp_arr2.append(temp_arr[0:8])
         for i in range(0,8):
-            temp_arr.pop(0)
+            try: 
+                temp_arr.pop(0)
+            except IndexError:
+                print("empty")
     
     return temp_arr2
 
@@ -39,7 +42,7 @@ def convert_to_fen(in_data):
                 count = 0
         temp_str = temp_str + "/"
     temp_str = temp_str[:-1]
-    #print("FEN from Board", temp_str)
+    # print("FEN from Board", temp_str)
     return temp_str
 
 def get_fen(data):
