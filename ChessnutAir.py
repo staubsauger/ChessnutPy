@@ -22,7 +22,7 @@ class ChessnutAir:
         self.deviceNameList = DEVICELIST # valid device name list
         self.device = self.advertisement_data = self.connection = None
         self.running = False
-        self.old_data = []
+        self.old_data = [0]*32
 
     def filter_by_name(
         self,
