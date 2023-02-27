@@ -10,15 +10,9 @@ class Test(ChessnutAir):
                                               [0x0A, 0x08, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00])
 
     async def piece_up(self, location, id):
-<<<<<<< HEAD
         print(f"piece: {id} at {location} up")
         await self.connection.write_gatt_char(WRITECHARACTERISTICS,
                                               [0x0A, 0x08, 0x08, 0x00, 0x00, 0x00, 0x08, 0x08, 0x00, 0x00])
-=======
-        print(f"piece: {convertDict[id]} at {location} up")
-        await self.connection.write_gatt_char(WRITECHARACTERISTICS,
-                                              [0x0A, 0x08, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00])
->>>>>>> ccbf894 (early in the morning!)
 
 async def testf():
     t = Test()
