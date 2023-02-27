@@ -134,10 +134,10 @@ from ChessnutAir import ChessnutAir
 
 
 class Test (ChessnutAir):
-    def piece_down(self, location, id):
+    async def piece_down(self, location, id):
         print(f"piece: {id} at {location} down")
 
-    def piece_up(self, location, id):
+    async def piece_up(self, location, id):
         print(f"piece: {id} at {location} up")
 
 async def testf():

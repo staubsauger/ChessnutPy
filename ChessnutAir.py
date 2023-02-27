@@ -48,10 +48,10 @@ class ChessnutAir:
             return
         print("done scanning")
 
-    def piece_up(self, location, id):
+    async def piece_up(self, location, id):
         raise NotImplementedError
 
-    def piece_down(self, location, id): # location -> pos: x = location%8, y = location//8
+    async def piece_down(self, location, id): # location -> pos: x = location%8, y = location//8
         raise NotImplementedError
 
     async def handler(self, char, data):
@@ -63,14 +63,14 @@ class ChessnutAir:
                     olow = self.old_data[i] & 0xf
                     if clow != olow:
                         if clow == 0:
-                            self.piece_up(i*2, olow)
+                            await self.piece_up(i*2, olow)
                         else:
-                            self.piece_down(i*2, clow)
+                            await self.piece_down(i*2, clow)
                     else:
                         if rdata[i] >> 4 == 0:
-                            self.piece_up(i*2+1, self.old_data[i] >> 4)
+                            await self.piece_up(i*2+1, self.old_data[i] >> 4)
                         else:
-                            self.piece_down(i*2+1, rdata[i] >> 4)
+                            await self.piece_down(i*2+1, rdata[i] >> 4)
             self.old_data = rdata
 
 
