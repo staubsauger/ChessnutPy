@@ -136,6 +136,8 @@ from ChessnutAir import ChessnutAir
 class Test (ChessnutAir):
     async def piece_down(self, location, id):
         print(f"piece: {id} at {location} down")
+        await self.connection.write_gatt_char(WRITECHARACTERISTICS,
+                                              [0x0A, 0x08, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x08, 0x00])
 
     async def piece_up(self, location, id):
         print(f"piece: {id} at {location} up")
