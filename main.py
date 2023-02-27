@@ -124,19 +124,20 @@ async def run(device, debug=False):
             await client.stop_notify(READDATA)  # stop the notification handler
 
 
-device = ChessnutAirDevice()
+#device = ChessnutAirDevice()
 # get device
-asyncio.run(device.discover())
+#asyncio.run(device.discover())
 # connect to device
-asyncio.run(run(device))
+#asyncio.run(run(device))
 
 from ChessnutAir import ChessnutAir
 
+
 class Test (ChessnutAir):
-    async def piece_down(self, location, id):
+    def piece_down(self, location, id):
         print(f"piece: {id} at {location} down")
 
-    async def piece_up(self, location, id):
+    def piece_up(self, location, id):
         print(f"piece: {id} at {location} up")
 
 async def testf():
