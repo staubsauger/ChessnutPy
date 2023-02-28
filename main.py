@@ -51,6 +51,12 @@ class Game(ChessnutAir):
         await self.change_leds(self.to_light)
         self.move_end = None
         self.move_start = (pos, p_str)
+        for move in self.board.legal_moves:
+            m_str = f"{move}"
+            from_square = m_str[:2]
+            if from_square == pos:
+                self.to_blink.append(m_str[2:])
+
 
     async def game_loop(self):
         await asyncio.sleep(1)
