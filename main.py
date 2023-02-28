@@ -60,12 +60,12 @@ class Game(ChessnutAir):
                     self.waiting_for_move = False
                     if self.player_turn:
                         move = self.move_start+self.move_end
-                        if any(self.board.legal_moves, lambda x: x == move):
+                        if move in self.board.generate_legal_moves:
                             self.board.push_san(move)
                             print(self.board)
                         else:
                             self.to_blink.extend((self.move_start, self.move_end))
-                        self.player_turn
+                        self.player_turn = False
 
             self.tick = not self.tick
             if self.tick:
