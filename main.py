@@ -102,6 +102,7 @@ class Game(ChessnutAir):
                     move = f"{list(self.board.legal_moves)[0]}"
                     self.target_move = move
                     self.to_light = [move[:2], move[2:]]
+                    await self.change_leds(self.to_light)
                     self.player_turn = True
 
 
