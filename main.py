@@ -26,7 +26,8 @@ class Board(ChessnutAir):
         # g6 = 17 = 1 2 ->
         pos = loc_to_pos(location)
         print(f"piece: {convertDict[piece_id]} at {pos} down")
-        self.to_light.remove(pos)
+        if pos in self.to_light:
+            self.to_light.remove(pos)
         print(self.boardstate_as_fen())
 
     async def piece_up(self, location, id):
