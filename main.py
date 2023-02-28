@@ -21,6 +21,7 @@ class Board(ChessnutAir):
 
     async def piece_down(self, location, id):
         print(f"piece: {convertDict[id]} at {location} down")
+        print(self.boardstate_as_fen())
 
     async def piece_up(self, location, id):
         print(f"piece: {convertDict[id]} at {location} up")

@@ -23,9 +23,7 @@ def pieces_from_data(data):
 
 def convert_to_fen(data):
     """"
-    todo: make clean(R) [a b c,
-                         1 2 3,
-                         d e f]
+    convert data to fen
     """
     result = ""
     empty_count = 0
