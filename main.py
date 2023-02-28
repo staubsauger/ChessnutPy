@@ -99,7 +99,7 @@ class Game(ChessnutAir):
 
             elif not self.player_turn:
                     # generate move
-                    move = self.board.legal_moves[len(self.board.legal_moves)-1]
+                    move = self.board.legal_moves[self.board.legal_moves.count()-1]
                     self.target_move = move
                     self.to_light = [move[:2], move[2:]]
                     self.player_turn = True
