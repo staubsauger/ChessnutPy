@@ -53,10 +53,10 @@ class ChessnutAir:
             return
         print("done scanning")
 
-    async def piece_up(self, location, id):
+    async def piece_up(self, location, piece_id):
         raise NotImplementedError
 
-    async def piece_down(self, location, id):  # location -> pos: x = location%8, y = location//8
+    async def piece_down(self, location, piece_id):  # location -> pos: x = location%8, y = location//8
         raise NotImplementedError
 
     async def game_loop(self):
@@ -105,4 +105,3 @@ class ChessnutAir:
             await client.start_notify(READDATA, self.handler)  # start another notification handler
             await self.game_loop()  # call user game loop
             await client.stop_notify(READDATA)  # stop the notification handler
-

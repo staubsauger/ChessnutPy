@@ -30,8 +30,10 @@ class Board(ChessnutAir):
             self.to_light.remove(pos)
         print(self.boardstate_as_fen())
 
-    async def piece_up(self, location, id):
-        print(f"piece: {convertDict[id]} at {location} up")
+    async def piece_up(self, location, piece_id):
+        pos = loc_to_pos(location)
+        print(f"piece: {convertDict[piece_id]} at {pos} up")
+        self.to_light.append(pos)
 
     async def game_loop(self):
         self.running = True
@@ -51,4 +53,3 @@ async def go():
     await b.run()    
 
 asyncio.run(go())
-

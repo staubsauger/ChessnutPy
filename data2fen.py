@@ -17,8 +17,8 @@ def pieces_from_data(data):
     for i in range(len(data)):
         x = i % 4
         y = i // 4
-        new_x = 3-x
-        new_i = (y*4)+new_x
+        new_x = 3 - x
+        new_i = (y * 4) + new_x
         double_field = data[new_i]
         rfield = double_field & 0xf
         lfield = double_field >> 4
@@ -50,6 +50,7 @@ def convert_to_fen(data):
             empty_count = 0
         result += piece_str
     return result
+
 
 def get_fen(data):
     return convert_to_fen(data)
