@@ -15,10 +15,7 @@ def pieces_from_data(data):
      -data is saved
     """
     for i in range(len(data)):
-        x = i % 4
-        y = i // 4
-        new_x = 3-x
-        new_i = (y*4)+new_x
+        new_i = 31-i
         double_field = data[new_i]
         rfield = double_field & 0xf
         lfield = double_field >> 4
