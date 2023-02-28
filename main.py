@@ -70,6 +70,8 @@ class Game(ChessnutAir):
                 if self.target_move is not None:
                     if move == self.target_move:
                         self.target_move = None
+                        self.move_start = None
+                        self.move_end = None
                         self.to_blink = []
                         print("move reset")
                     continue
@@ -81,9 +83,13 @@ class Game(ChessnutAir):
                     else:
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
-                        print(f"illegal move1 {move}\n{self.board}")
+                        print(f"illegal move {move}\n{self.board}")
                 else:
                     pass
+                self.move_start = None
+                self.move_end = None
+
+
 async def go():
     b = Game()
     # c = GameOfChess(b.boardstate)
