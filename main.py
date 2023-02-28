@@ -6,7 +6,7 @@ from GameOfChess import GameOfChess
 
 class Board(ChessnutAir):
     def __init__(self):
-        ChessnutAir.__init__()
+        ChessnutAir.__init__(self)
         self.running = False
         self.boardstate = ""
         self.tick = False
