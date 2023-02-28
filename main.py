@@ -106,7 +106,7 @@ class Game(ChessnutAir):
             elif not self.player_turn:
                     # generate move
                     print("generating Move!")
-                    move = f"{list(self.board.legal_moves)[0]}"
+                    move = f"{list(self.board.legal_moves)[random(self.board.legal_moves.count())]}"
                     self.target_move = move
                     self.board.push_san(move)
                     self.to_light = [move[:2], move[2:]]
