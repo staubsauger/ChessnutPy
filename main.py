@@ -40,7 +40,10 @@ class Game(ChessnutAir):
         if self.move_start != None:
             self.to_light.remove(self.move_start[0])
             await self.change_leds(self.to_light)
-        self.move_end = (pos, p_str)
+        if self.move_start[0] != pos:
+            self.move_end = (pos, p_str)
+        else:
+            self.to_blink=[]
         print(self.boardstate_as_fen())
 
     async def piece_up(self, location, piece_id):
