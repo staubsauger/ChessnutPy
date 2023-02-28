@@ -66,6 +66,10 @@ class Game(ChessnutAir):
         self.running = True
         while self.running:
             self.tick = not self.tick
+            if self.board.is_checkmate():
+                print("checkmate!")
+                self.running = False
+                continue
             if self.to_blink:
                 if self.tick:
                     await self.change_leds(self.to_blink + self.to_light)
