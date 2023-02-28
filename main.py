@@ -39,6 +39,7 @@ class Game(ChessnutAir):
         print(f"piece: {p_str} at {pos} down")
         if self.move_start != None:
             self.to_light.remove(self.move_start[0])
+            self.change_leds(self.to_light)
         self.move_end = (pos, p_str)
         print(self.boardstate_as_fen())
 
@@ -47,6 +48,7 @@ class Game(ChessnutAir):
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} up")
         self.to_light.append(pos)
+        self.change_leds(self.to_light)
         self.move_end = None
         self.move_start = (pos, p_str)
 
@@ -55,10 +57,11 @@ class Game(ChessnutAir):
         self.running = True
         while self.running:
             self.tick = not self.tick
-            if self.tick:
-                await self.change_leds(self.to_blink + self.to_light)
-            else:
-                await self.change_leds(self.to_light)
+            if self.to_blink:
+                if self.tick:
+                    await self.change_leds(self.to_blink + self.to_light)
+                else:
+                    await self.change_leds(self.to_light)
             await asyncio.sleep(0.5)
 
             if self.move_start is not None and self.move_end is not None\
@@ -67,12 +70,13 @@ class Game(ChessnutAir):
                 if self.target_move is not None:
                     if move == self.target_move:
                         self.target_move = None
+                        self.to_blink = []
                     continue
                 if self.player_turn:
                     if self.board.is_legal(chess.Move.from_uci(move)):
                         self.board.push_san(move)
                         print(self.board)
-                        self.player_turn = False
+                        # self.player_turn = False
                     else:
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
