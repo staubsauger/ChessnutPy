@@ -4,6 +4,7 @@ from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATIO
 from ChessnutAir import ChessnutAir, loc_to_pos
 from GameOfChess import GameOfChess
 import chess
+import random
 
 
 class Game(ChessnutAir):
