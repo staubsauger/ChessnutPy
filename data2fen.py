@@ -1,49 +1,52 @@
 from constants import convertDict, MASKLOW
 
-def get_pieces(data):
-    temp_arr = []
-    temp_arr2 = []
 
-    for i in range(0,8):
-        row = reversed(data[i*4:i*4+4])
-        for b in row:
-            left = convertDict[b >> 4]
-            right = convertDict[b & MASKLOW]     
-            temp_arr.append(left)
-            temp_arr.append(right)
-    for i in range(0,8):
-        temp_arr2.append(temp_arr[0:8])
-        for i in range(0,8):
-            try: 
-                temp_arr.pop(0)
-            except IndexError:
-                print("empty")
-    
-    return temp_arr2
+# piece_pos_x = location % 8  # -> rest von location//8 (13 % 8 = 5 <=> 13= 8*1+5)
+# piece_pos_y = location // 8  # -> floor(location/8) (13 // 8 = 1)
+# location = piece_pos_y*8+piece_pos_x
+# print(piece_str)
+# location += 1
 
-def convert_to_fen(in_data):
-    temp_str = ""
-    for row in in_data:
-        count = 0
-        counter = 0
-        for field in row:
-            if field == " ":
-                counter += 1
-            elif field != " " and counter != 0:
-                temp_str = temp_str + str(counter)
-                counter = 0
-                temp_str = temp_str + field
-            elif field != " " and counter == 0:
-                temp_str = temp_str + field
-            count += 1
-            if count == 8:
-                if counter !=0:
-                    temp_str = temp_str + str(counter)
-                count = 0
-        temp_str = temp_str + "/"
-    temp_str = temp_str[:-1]
-    # print("FEN from Board", temp_str)
-    return temp_str
+def pieces_from_data(data):
+    """"
+    data:  [0x14,0x00,0xa5] (size = 32), 0x1C -> Kq
+    makes an interator (generator) like and works like an array of [" ", " ", "q", " ", ... ]
+    to do this:
+     -data is saved
+    """
+    for double_field in data:
+        lfield = double_field & 0xf
+        rfield = double_field >> 4
+        yield lfield
+        yield rfield
+
+
+def convert_to_fen(data):
+    """"
+    todo: make clean(R) [a b c,
+                         1 2 3,
+                         d e f]
+    """
+    result = ""
+    empty_count = 0
+    x_pos = 0
+    for piece in pieces_from_data(data):
+        if x_pos == 8:
+            x_pos = 0
+            if empty_count > 0:
+                result += str(empty_count)
+                empty_count = 0
+            result += "/"
+        x_pos += 1
+        piece_str = convertDict[piece]
+        if piece_str == " ":
+            empty_count += 1
+            continue
+        if empty_count > 0:
+            result += str(empty_count)
+            empty_count = 0
+        result += piece_str
+    return result
 
 def get_fen(data):
-    return convert_to_fen(get_pieces(data))
+    return convert_to_fen(data)

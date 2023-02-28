@@ -39,7 +39,7 @@ class ChessnutAir:
             return True
         return False
 
-    async def discover(self, timeout=10.0):
+    async def discover(self):
         """Scan for chessnut Air devices"""
         print("scanning, please wait...")
         await BleakScanner.find_device_by_filter(
@@ -48,11 +48,6 @@ class ChessnutAir:
             print("No chessnut Air devices found")
             return
         print("done scanning")
-
-    def boardstate_fen(self):
-        fen = data2fen.get_fen(self.boardstate)
-        # print(fen)
-        return fen
 
     async def piece_up(self, location, id):
         raise NotImplementedError
