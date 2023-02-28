@@ -14,7 +14,8 @@ def pieces_from_data(data):
     to do this:
      -data is saved
     """
-    for double_field in data:
+    for i in range(len(data)):
+        double_field = data[(i // 8) * 8 + (8 - i % 8)]
         lfield = double_field & 0xf
         rfield = double_field >> 4
         yield lfield
