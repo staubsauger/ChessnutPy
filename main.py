@@ -54,6 +54,13 @@ class Game(ChessnutAir):
 
         self.running = True
         while self.running:
+            self.tick = not self.tick
+            if self.tick:
+                await self.change_leds(self.to_blink + self.to_light)
+            else:
+                await self.change_leds(self.to_light)
+            await asyncio.sleep(0.5)
+
             if self.move_start is not None and self.move_end is not None\
                     and self.move_start != self.move_end:
                 move = self.move_start[0] + self.move_end[0]
@@ -71,15 +78,6 @@ class Game(ChessnutAir):
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                 else:
                     pass
-
-
-            self.tick = not self.tick
-            if self.tick:
-                await self.change_leds(self.to_blink + self.to_light)
-            else:
-                await self.change_leds(self.to_light)
-            await asyncio.sleep(0.5)
-
 async def go():
     b = Game()
     # c = GameOfChess(b.boardstate)
