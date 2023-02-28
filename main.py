@@ -16,8 +16,13 @@ class Game(ChessnutAir):
         self.tick = False
         self.to_blink = ["a3", "b4", "c7", "h3"]
         self.to_light = ["a5"]
-        self.cur_fen = ""
+        self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1")
         self.target_fen = ""
+        self.waiting_for_move = True
+        if turn == player_color:
+            self.player_turn = True
+        else:
+            self.player_turn = False
 
     def boardstate_as_fen(self):
         self.cur_fen = convert_to_fen(self.boardstate)
@@ -45,14 +50,31 @@ class Game(ChessnutAir):
         self.move_start = (pos, p_str)
 
     async def game_loop(self):
+
         self.running = True
         while self.running:
+
+            if self.waiting_for_move:
+                if self.move_start is not None and self.move_end is not None\
+                        and self.move_start != self.move_end:
+                    self.waiting_for_move = False
+                    if self.player_turn:
+                        move = self.move_start+self.move_end
+                        if move in self.board.legal_moves:
+                            self.board.push_san(move)
+                            print(self.board)
+                        else:
+                            self.to_blink.extend((self.move_start, self.move_end))
+
             self.tick = not self.tick
             if self.tick:
                 await self.change_leds(self.to_blink + self.to_light)
             else:
                 await self.change_leds(self.to_light)
             await asyncio.sleep(0.5)
+
+
+
 
 
 
