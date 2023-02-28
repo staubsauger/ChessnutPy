@@ -96,6 +96,7 @@ class Game(ChessnutAir):
                         print(f"illegal move {move}\n{self.board}")
                 self.move_start = None
                 self.move_end = None
+
             elif not self.player_turn:
                     # generate move
                     move = self.board.legal_moves[len(self.board.legal_moves)-1]
