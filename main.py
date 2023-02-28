@@ -87,6 +87,7 @@ class Game(ChessnutAir):
                     if self.board.is_legal(chess.Move.from_uci(move)):
                         self.board.push_san(move)
                         print(self.board)
+                        self.to_blink = []
                         # self.player_turn = False
                     else:
                         self.target_move = self.move_end[0]+self.move_start[0]
