@@ -1,12 +1,5 @@
 from constants import convertDict, MASKLOW
 
-
-# piece_pos_x = location % 8  # -> rest von location//8 (13 % 8 = 5 <=> 13= 8*1+5)
-# piece_pos_y = location // 8  # -> floor(location/8) (13 // 8 = 1)
-# location = piece_pos_y*8+piece_pos_x
-# print(piece_str)
-# location += 1
-
 def pieces_from_data(data):
     """"
     data:  [0x14,0x00,0xa5] (size = 32), 0x1C -> Kq
