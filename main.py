@@ -10,12 +10,13 @@ class Game(ChessnutAir):
     def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
                  player_color="w"):
         ChessnutAir.__init__(self)
+        self.target_move = None
         self.move_end = None
         self.move_start = None
         self.running = False
         self.tick = False
-        self.to_blink = ["a3", "b4", "c7", "h3"]
-        self.to_light = ["a5"]
+        self.to_blink = []
+        self.to_light = []
         self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1")
         self.target_fen = ""
         self.waiting_for_move = True
@@ -53,19 +54,24 @@ class Game(ChessnutAir):
 
         self.running = True
         while self.running:
-
-            if self.waiting_for_move:
-                if self.move_start is not None and self.move_end is not None\
-                        and self.move_start != self.move_end:
-                    self.waiting_for_move = False
-                    if self.player_turn:
-                        move = self.move_start[0]+self.move_end[0]
-                        if self.board.is_legal(chess.Move.from_uci(move)):
-                            self.board.push_san(move)
-                            print(self.board)
-                        else:
-                            self.to_blink.extend((self.move_start[0], self.move_end[0]))
+            if self.move_start is not None and self.move_end is not None\
+                    and self.move_start != self.move_end:
+                move = self.move_start[0] + self.move_end[0]
+                if self.target_move is not None:
+                    if move == self.target_move:
+                        self.target_move = None
+                    continue
+                if self.player_turn:
+                    if self.board.is_legal(chess.Move.from_uci(move)):
+                        self.board.push_san(move)
+                        print(self.board)
                         self.player_turn = False
+                    else:
+                        self.target_move = self.move_end[0]+self.move_start[0]
+                        self.to_blink.extend((self.move_start[0], self.move_end[0]))
+                else:
+                    pass
+
 
             self.tick = not self.tick
             if self.tick:
