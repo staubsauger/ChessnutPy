@@ -54,7 +54,8 @@ class Game(ChessnutAir):
         self.to_light.append(pos)
         await self.change_leds(self.to_light)
         self.move_end = None
-        self.move_start = (pos, p_str)
+        if self.move_start is None:
+            self.move_start = (pos, p_str)
         for move in self.board.legal_moves:
             m_str = f"{move}"
             from_square = m_str[:2]
@@ -97,6 +98,7 @@ class Game(ChessnutAir):
                         self.to_blink = []
                         self.player_turn = False
                     else:
+                        self.move_start = None
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         print(f"illegal move {move}\n{self.board}")
