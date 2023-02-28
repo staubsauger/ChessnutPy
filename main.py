@@ -81,7 +81,7 @@ class Game(ChessnutAir):
                     else:
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
-                        print(f"illegal move1 {move}")
+                        print(f"illegal move1 {move}\n{self.board}")
                 else:
                     pass
 async def go():
