@@ -35,15 +35,14 @@ class ChessnutAir:
         self,
         device: BLEDevice,
         advertisement_data: AdvertisementData,
-    ) -> None:
+    ) -> bool:
         """Callback for each discovered device.
         return True if the device name is in the list of 
         valid device names otherwise it returns False"""
         if any(ext in device.name for ext in self.deviceNameList):
             self.device = device            
             return True
-        else:
-            return False
+        return False
 
     async def discover(self, timeout=10.0):
         """Scan for chessnut Air devices"""
@@ -129,7 +128,7 @@ class ChessnutAir:
 
     async def run(self, debug=False):
         """ Connect to the device and run the notification handler."""
-        print("device.adress: ", self.device.address)
+        print("device.address: ", self.device.address)
 
         async with BleakClient(self.device) as client:
             self.connection = client
