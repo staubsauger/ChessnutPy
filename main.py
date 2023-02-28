@@ -113,7 +113,6 @@ class Game(ChessnutAir):
                     await self.change_leds(self.to_light)
                     self.player_turn = True
 
-
 async def go():
     b = Game()
     # c = GameOfChess(b.boardstate)
