@@ -74,11 +74,6 @@ class Game(ChessnutAir):
                 await self.change_leds(self.to_light)
             await asyncio.sleep(0.5)
 
-
-
-
-
-
 async def go():
     b = Game()
     # c = GameOfChess(b.boardstate)
