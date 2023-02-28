@@ -69,7 +69,7 @@ class ChessnutAir:
         conv_number = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
         arr = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         for pos in list_of_pos:
-            arr[conv_number[pos[1]]] += conv_letter[pos[0]]
+            arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
         await self.connection.write_gatt_char(WRITECHARACTERISTICS, self.led_command + arr)
 
     async def handler(self, char, data):
