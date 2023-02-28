@@ -43,7 +43,7 @@ class Board(ChessnutAir):
                 await self.change_leds(self.to_blink + self.to_light)
             else:
                 await self.change_leds(self.to_light)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)
 
 
 async def go():
