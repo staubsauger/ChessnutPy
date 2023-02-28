@@ -88,15 +88,21 @@ class Game(ChessnutAir):
                         self.board.push_san(move)
                         print(self.board)
                         self.to_blink = []
-                        # self.player_turn = False
+                        self.player_turn = False
                     else:
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         print(f"illegal move {move}\n{self.board}")
-                else:
-                    pass
                 self.move_start = None
                 self.move_end = None
+            elif not self.player_turn:
+                    # generate move
+                    move = self.board.legal_moves[len(self.board.legal_moves)-1]
+                    self.target_move = move
+                    self.to_light = [move[:2], move[2:]]
+                    self.player_turn = True
+
+
 
 
 async def go():
