@@ -64,7 +64,7 @@ class Game(ChessnutAir):
                             self.board.push_san(move)
                             print(self.board)
                         else:
-                            self.to_blink.extend((self.move_start, self.move_end))
+                            self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         self.player_turn = False
 
             self.tick = not self.tick
