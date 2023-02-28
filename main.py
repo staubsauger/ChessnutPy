@@ -60,7 +60,7 @@ class Game(ChessnutAir):
                     self.waiting_for_move = False
                     if self.player_turn:
                         move = self.move_start+self.move_end
-                        if move in self.board.legal_moves:
+                        if self.board.is_legal(move):
                             self.board.push_san(move)
                             print(self.board)
                         else:
