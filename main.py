@@ -11,7 +11,7 @@ class Board(ChessnutAir):
         self.running = False
         self.tick = False
         self.to_blink = ["a3", "b4", "c7", "h3"]
-        self.to_light = []
+        self.to_light = ["a5"]
         self.cur_fen = ""
         self.target_fen = ""
 
@@ -20,8 +20,15 @@ class Board(ChessnutAir):
         return fen
 
     async def piece_down(self, location, id):
-        print(f"piece: {convertDict[id]} at {location} down")
-        print(self.boardstate_as_fen())
+        # location = 0oyx 0x77
+        # a1 = 63 = 7 7 -> 7=a 6=b 5=c 4=d 3=e 2=f 1=g 0=h
+        # e4 = 35 = 3 4 ->
+        # g6 = 17 = 1 2 ->
+        x = "hgfedcba"[location % 8]
+        y = 8-(location//8)
+
+        print(f"piece: {convertDict[id]} at {location} down pos: {x}{y}")
+        print(self.boardstate_as_fen()) # location -> pos: x = location%8, y = location//8
 
     async def piece_up(self, location, id):
         print(f"piece: {convertDict[id]} at {location} up")
