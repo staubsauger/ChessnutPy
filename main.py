@@ -53,7 +53,7 @@ class Game(ChessnutAir):
         self.move_start = (pos, p_str)
 
     async def game_loop(self):
-
+        await asyncio.sleep(1)
         self.running = True
         while self.running:
             self.tick = not self.tick
@@ -71,6 +71,7 @@ class Game(ChessnutAir):
                     if move == self.target_move:
                         self.target_move = None
                         self.to_blink = []
+                        print("move reset")
                     continue
                 if self.player_turn:
                     if self.board.is_legal(chess.Move.from_uci(move)):
