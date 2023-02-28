@@ -39,7 +39,7 @@ class Game(ChessnutAir):
         print(f"piece: {p_str} at {pos} down")
         if self.move_start != None:
             self.to_light.remove(self.move_start[0])
-            self.change_leds(self.to_light)
+            await self.change_leds(self.to_light)
         self.move_end = (pos, p_str)
         print(self.boardstate_as_fen())
 
@@ -48,7 +48,7 @@ class Game(ChessnutAir):
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} up")
         self.to_light.append(pos)
-        self.change_leds(self.to_light)
+        await self.change_leds(self.to_light)
         self.move_end = None
         self.move_start = (pos, p_str)
 
