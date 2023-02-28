@@ -50,7 +50,3 @@ def convert_to_fen(data):
             empty_count = 0
         result += piece_str
     return result
-
-
-def get_fen(data):
-    return convert_to_fen(data)
