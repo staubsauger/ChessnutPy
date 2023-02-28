@@ -1,5 +1,6 @@
 import chess
 import chess.engine
+import asyncio
 
 class GameOfChess():
     def __init__(self, fen) -> None:

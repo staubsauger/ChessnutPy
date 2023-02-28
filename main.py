@@ -3,6 +3,7 @@ from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATIO
 from ChessnutAir import ChessnutAir
 from GameOfChess import GameOfChess
 
+
 class Board(ChessnutAir):
     def __init__(self):
         ChessnutAir.__init__()
@@ -14,7 +15,7 @@ class Board(ChessnutAir):
     async def piece_down(self, location, id):
         print(f"piece: {convertDict[id]} at {location} down")
         # print(self.returnboardstate())
-        self.turnLedOnOn("a4")
+        # self.turnLedOnOn("a4")
         # print("OnLeds", self.onledsarr)
 
     async def piece_up(self, location, id):
