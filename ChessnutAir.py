@@ -15,6 +15,10 @@ import data2fen
 from setledhelpers import turnOffat, turnOnat
 
 
+def loc_to_pos(location):
+    return "hgfedcba"[location % 8]+str(8-(location//8))
+
+
 class ChessnutAir:
     """Class created to discover and connect to chessnut Air devices.
     It discovers the first device with a name that maches the names in DEVICELIST.
