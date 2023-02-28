@@ -8,7 +8,7 @@ class GameOfChess():
         self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
         self.limit = chess.engine.Limit(time=5.0)
         
-    async def getcpumove(self):
+    def getcpumove(self):
         cpumove = self.engine.play(self.board, self.limit)
         return cpumove.move
     
