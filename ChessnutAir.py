@@ -100,7 +100,7 @@ class ChessnutAir:
         async with BleakClient(self.device) as client:
             self.connection = client
             print(f"Connected: {client.is_connected}")
-            # send initialisation string
+            # send initialisation string!
             await client.write_gatt_char(WRITECHARACTERISTICS, INITIALIZASION_CODE)  # send initialisation string
             print("Initialized")
             await client.start_notify(READDATA, self.handler)  # start another notification handler

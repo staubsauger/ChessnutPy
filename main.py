@@ -11,6 +11,9 @@ class Board(ChessnutAir):
         self.boardstate = ""
         self.tick = False
         self.to_blink = ["a3", "b4", "c7", "h3"]
+        self.to_light = []
+        self.cur_fen = ""
+        self.target_fen = ""
 
     async def piece_down(self, location, id):
         print(f"piece: {convertDict[id]} at {location} down")
