@@ -24,7 +24,7 @@ class ChessnutAir:
         self.device = self.advertisement_data = self.connection = None
         self.boardstate = [0]*32
         self.old_data = [0]*32
-        self.led_command = [0x0A, 0x08]
+        self.led_command = bytearray([0x0A, 0x08])
 
     def filter_by_name(
         self,
