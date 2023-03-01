@@ -118,16 +118,18 @@ class Game(ChessnutAir):
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         print(f"illegal move {move}\n{self.board}")
+                        self.ai_turn = True
                 self.move_start = None
                 self.move_end = None
 
-            elif not self.player_turn:
-                    # generate move
-                    print("generating Move!")
-                    move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
-                    self.target_move = move
-                    self.to_light = [move[:2], move[2:]]
-                    await self.change_leds(self.to_light)
+            elif not self.player_turn and self.ai_turn:
+                self.ai_turn = False
+                # generate move
+                print("generating Move!")
+                move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
+                self.target_move = move
+                self.to_light = [move[:2], move[2:]]
+                await self.change_leds(self.to_light)
 
 async def go():
     b = Game()
