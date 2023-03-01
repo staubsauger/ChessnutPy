@@ -81,15 +81,17 @@ class Game(ChessnutAir):
                     await self.change_leds(self.to_light)
             await asyncio.sleep(0.5)
 
-            if self.move_start is not None and self.move_end is not None\
-                    and self.move_start != self.move_end:
-                if isinstance(self.move_start, list):
-                    if any(f"{m}".startswith(self.move_start[0][0]) for m in self.board.legal_moves):
-                        move = self.move_start[0][0]
-                    else:
-                        move = self.move_start[1][0]
+            if isinstance(self.move_start, list):
+                if any(f"{m}".startswith(self.move_start[0][0]) for m in self.board.legal_moves):
+                    move = self.move_start[0][0]
                 else:
-                    move = self.move_start[0]
+                    move = self.move_start[1][0]
+            elif self.move_start is not None:
+                move = self.move_start[0]
+            else:
+                move = None
+            if move is not None and self.move_end is not None\
+                    and self.move_start != self.move_end:
                 move += self.move_end[0]
                 if self.target_move is not None:
                     if move == self.target_move:
