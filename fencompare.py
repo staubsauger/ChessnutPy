@@ -41,30 +41,30 @@ def convert_fen(fen):
     print("Your new fen ", new_fen)
     return new_fen
 
-def compare_chess_fens(fen1, fen2):
+def compare_chess_fens(rows1, rows2):
     """
     takes fen1 and fen2 and returns which pieces are wrong on fen2
     fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
     """
-    fen1 = convert_fen(fen1).split("/")
-    fen2 = convert_fen(fen2).split("/")
-    print(fen1, fen2)
+    rows1 = convert_fen(rows1).split("/")
+    rows2 = convert_fen(rows2).split("/")
+    print(rows1, rows2)
     differences = []
     count = 0 
-    for i in range(len(fen1)): # für also 8
+    for i in range(len(rows1)):  # für also 8
         
-        if fen1[i] != fen2[i]:
-            print("ungleich", fen1[i], fen2[i], maskasnumber[count])
+        if rows1[i] != rows2[i]:
+            print("ungleich", rows1[i], rows2[i], maskasnumber[count])
             count2 = 0
-            for b in range(len(fen2[i])): # also wieder 8 :)
+            for b in range(len(rows2[i])):  # also wieder 8 :)
                 
-                if fen1[i][b] != fen2[i][b]:
-                    print("ungleich", fen1[i][b], fen2[i][b], str(maskasletter[count2])+str(maskasnumber[count]))
-                    print("Piece:", fen2[i][b], "at ", str(maskasletter[count2])+str(maskasnumber[count]))
-                    differences.append([fen2[i][b], str(maskasletter[count2])+str(maskasnumber[count])])
-                count2 +=1
-        count +=1
+                if rows1[i][b] != rows2[i][b]:
+                    print("ungleich", rows1[i][b], rows2[i][b], str(maskasletter[count2]) + str(maskasnumber[count]))
+                    print("Piece:", rows2[i][b], "at ", str(maskasletter[count2]) + str(maskasnumber[count]))
+                    differences.append([rows2[i][b], str(maskasletter[count2]) + str(maskasnumber[count])])
+                count2 += 1
+        count += 1
     return differences
 
 fen1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

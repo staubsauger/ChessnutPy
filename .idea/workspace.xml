@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5105c0b1-73a8-468f-b1a0-26d3303b63e5" name="Changes" comment="we have the technology" />
+    <list default="true" id="5105c0b1-73a8-468f-b1a0-26d3303b63e5" name="Changes" comment="local vars should have usefull names">
+      <change beforePath="$PROJECT_DIR$/fencompare.py" beforeDir="false" afterPath="$PROJECT_DIR$/fencompare.py" afterDir="false" />
+    </list>
     <list id="857d7d08-6123-4539-a88f-b55c19385890" name="Changes by rudi" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,6 +15,9 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent"><![CDATA[{
@@ -31,11 +36,19 @@
       <option name="project" value="LOCAL" />
       <updated>1677698661972</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="local vars should have usefull names">
+      <created>1677698688329</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1677698688329</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="we have the technology" />
-    <option name="LAST_COMMIT_MESSAGE" value="we have the technology" />
+    <MESSAGE value="local vars should have usefull names" />
+    <option name="LAST_COMMIT_MESSAGE" value="local vars should have usefull names" />
   </component>
 </project>
