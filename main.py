@@ -84,7 +84,7 @@ class Game(ChessnutAir):
             if self.move_start is not None and self.move_end is not None\
                     and self.move_start != self.move_end:
                 if isinstance(self.move_start, list):
-                    if any(f"{m}"[:2] == self.move_start[0][0] for m in self.board.legal_moves):
+                    if any(f"{m}".startswith(self.move_start[0][0]) for m in self.board.legal_moves):
                         move = self.move_start[0][0]
                     else:
                         move = self.move_start[1][0]
