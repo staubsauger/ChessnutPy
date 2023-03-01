@@ -96,9 +96,9 @@ class Game(ChessnutAir):
                 move += self.move_end[0]
                 if self.target_move is not None:
                     if move == self.target_move:
-                        if self.ai_turn:
+                        if not self.player_turn:
                             self.board.push_san(move)
-                            self.ai_turn = False
+                            self.player_turn = True
                         self.target_move = None
                         self.move_start = None
                         self.move_end = None
@@ -122,14 +122,12 @@ class Game(ChessnutAir):
                 self.move_end = None
 
             elif not self.player_turn:
-                    self.ai_turn = False
                     # generate move
                     print("generating Move!")
                     move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
                     self.target_move = move
                     self.to_light = [move[:2], move[2:]]
                     await self.change_leds(self.to_light)
-                    self.player_turn = True
 
 async def go():
     b = Game()
