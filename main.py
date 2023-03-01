@@ -113,12 +113,12 @@ class Game(ChessnutAir):
                         print(self.board)
                         self.to_blink = []
                         self.player_turn = False
+                        self.ai_turn = True
                     else:
                         self.move_start = None
                         self.target_move = self.move_end[0]+self.move_start[0]
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         print(f"illegal move {move}\n{self.board}")
-                        self.ai_turn = True
                 self.move_start = None
                 self.move_end = None
 
