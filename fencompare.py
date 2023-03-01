@@ -32,12 +32,12 @@ def convert_fen(fen):
     """
     fen = fen.split()[0]
     new_fen = ""
-    for _ in fen:
-        if _ not in ["k","K","q","Q","b","B","p","P","r","R","n","N", "/", "1"]:
-            for count in range(int(_)):
+    for piece in fen:
+        if piece not in ["k","K","q","Q","b","B","p","P","r","R","n","N", "/", "1"]:
+            for count in range(int(piece)):
                 new_fen = new_fen+"1" 
         else: 
-            new_fen = new_fen+_
+            new_fen = new_fen+piece
     print("Your new fen ", new_fen)
     return new_fen
 
