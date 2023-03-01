@@ -39,7 +39,7 @@ class Game(ChessnutAir):
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} down")
         if self.move_start is not None:
-            self.to_light.remove(self.move_start[0])
+            self.to_light = []
             await self.change_leds(self.to_light)
             if self.move_start[0] != pos:
                 self.move_end = (pos, p_str)
