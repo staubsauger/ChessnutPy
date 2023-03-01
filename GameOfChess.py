@@ -7,7 +7,7 @@ class GameOfChess:
 
     def __init__(self) -> None:
         self.engine = chess.engine.SimpleEngine.popen_uci("stockfish")
-        self.limit = chess.engine.Limit(time=0.1)
+        self.limit = chess.engine.Limit(time=0.1, depth=3)
         
     def getcpumove(self, board):
         cpumove = self.engine.play(board, self.limit)
