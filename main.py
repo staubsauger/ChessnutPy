@@ -108,7 +108,7 @@ class Game(ChessnutAir):
                         self.to_blink = []
                         self.to_light = []
                         await self.change_leds(self.to_light)
-                        print("move reset")
+                        print("target achieved")
                     continue
                 if self.player_turn:
                     if self.board.is_legal(chess.Move.from_uci(move)):  # schmiert ab wegen "d4d4"
