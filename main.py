@@ -56,6 +56,9 @@ class Game(ChessnutAir):
         self.move_end = None
         if self.move_start is None:
             self.move_start = (pos, p_str)
+        else:
+            self.move_start = [(pos, p_str), self.move_start]
+            return
         for move in self.board.legal_moves:
             m_str = f"{move}"
             from_square = m_str[:2]
@@ -80,7 +83,14 @@ class Game(ChessnutAir):
 
             if self.move_start is not None and self.move_end is not None\
                     and self.move_start != self.move_end:
-                move = self.move_start[0] + self.move_end[0]
+                if isinstance(self.move_start, list):
+                    if any(f"{m}"[:2] == self.move_start[0][0] for m in self.board.legal_moves):
+                        move = self.move_start[0][0]
+                    else:
+                        move = self.move_start[1][0]
+                else:
+                    move = self.move_start[0]
+                move += self.move_end[0]
                 if self.target_move is not None:
                     if move == self.target_move:
                         self.target_move = None
