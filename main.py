@@ -110,7 +110,7 @@ class Game(ChessnutAir):
                         print("move reset")
                     continue
                 if self.player_turn:
-                    if self.board.is_legal(chess.Move.from_uci(move)):
+                    if self.board.is_legal(chess.Move.from_uci(move)):  # schmiert ab wegen "d4d4"
                         self.board.push_san(move)
                         print(self.board)
                         self.to_blink = []
