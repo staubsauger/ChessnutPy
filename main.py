@@ -56,7 +56,7 @@ class Game(ChessnutAir):
         self.move_end = None
         if self.move_start is None:
             self.move_start = (pos, p_str)
-        else:
+        elif self.move_start[0] != pos:
             self.move_start = [(pos, p_str), self.move_start]
             return
         for move in self.board.legal_moves:
