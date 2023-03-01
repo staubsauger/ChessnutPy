@@ -130,7 +130,7 @@ class Game(ChessnutAir):
                 move = self.game.getcpumove(self.board)
                 print("generating Move!")
                 #move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
-                self.target_move = move.uci()
+                self.target_move = f"{move}"
                 self.to_light = [move[:2], move[2:]]
                 await self.change_leds(self.to_light)
 
