@@ -26,6 +26,7 @@ class Game(ChessnutAir):
         else:
             self.player_turn = False
         self.ai_turn = not self.player_turn
+        self.game = GameOfChess()
 
     def boardstate_as_fen(self):
         self.cur_fen = convert_to_fen(self.boardstate)
@@ -74,6 +75,7 @@ class Game(ChessnutAir):
             if self.board.is_checkmate():
                 print("checkmate!")
                 self.running = False
+                self.game.quitchess()
                 continue
             if self.to_blink:
                 if self.tick:
@@ -125,6 +127,7 @@ class Game(ChessnutAir):
             elif not self.player_turn and self.ai_turn:
                 self.ai_turn = False
                 # generate move
+                self.game.getcpumove(self.board)
                 print("generating Move!")
                 move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
                 self.target_move = move
@@ -135,6 +138,6 @@ async def go():
     b = Game()
     # c = GameOfChess(b.boardstate)
     await b.discover()
-    await b.run()    
+    await b.run()
 
 asyncio.run(go())
