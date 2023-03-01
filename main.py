@@ -68,7 +68,8 @@ class Game(ChessnutAir):
                 self.to_blink.append(m_str[2:])
 
     async def game_loop(self):
-        await asyncio.sleep(1)
+        await asyncio.sleep(1)  # wait for board to settle
+        # TODO: add check if board if in correct orientation and, if not, give tips to fix it (sortierer)
         self.running = True
         while self.running:
             self.tick = not self.tick
@@ -117,8 +118,8 @@ class Game(ChessnutAir):
                         self.player_turn = False
                         self.ai_turn = True
                     else:
-                        self.move_start = None
                         self.target_move = self.move_end[0]+self.move_start[0]
+                        self.move_start = None
                         self.to_blink.extend((self.move_start[0], self.move_end[0]))
                         print(f"illegal move {move}\n{self.board}")
                 self.move_start = None
