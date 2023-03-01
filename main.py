@@ -6,7 +6,13 @@ from GameOfChess import GameOfChess
 import chess
 import random
 
+"""
+Mindmap:
 
+def playerturn()
+
+
+"""
 class Game(ChessnutAir):
     def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
                  player_color="w"):
@@ -69,6 +75,7 @@ class Game(ChessnutAir):
 
     async def game_loop(self):
         await asyncio.sleep(1)  # wait for board to settle
+        print("Board settled", self.board)
         # TODO: add check if board if in correct orientation and, if not, give tips to fix it (sortierer)
         self.running = True
         while self.running:
@@ -116,6 +123,7 @@ class Game(ChessnutAir):
                     if self.board.is_legal(chess.Move.from_uci(move)):  # schmiert ab wegen "d4d4"
                         self.board.push_san(move)
                         print(self.board)
+                        print("Users last move: ", move)
                         self.to_blink = []
                         self.player_turn = False
                         self.ai_turn = True
@@ -131,7 +139,7 @@ class Game(ChessnutAir):
                 self.ai_turn = False
                 # generate move
                 move = f"{self.game.getcpumove(self.board)}"[:4]
-                print("generating Move!")
+                print("generating Move!", move)
                 # move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
                 self.target_move = move
                 self.to_light = [move[:2], move[2:]]
