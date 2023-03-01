@@ -111,6 +111,8 @@ class Game(ChessnutAir):
                         print("target achieved")
                     continue
                 if self.player_turn:
+                    if move[0] + move[1] != move[2] + move[3]:
+                        print("Targetmove is equal to pieceposition") # warum fixt das das problem?
                     if self.board.is_legal(chess.Move.from_uci(move)):  # schmiert ab wegen "d4d4"
                         self.board.push_san(move)
                         print(self.board)
