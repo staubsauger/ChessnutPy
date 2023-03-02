@@ -42,4 +42,6 @@ def convert_to_fen(data):
             result += str(empty_count)
             empty_count = 0
         result += piece_str
+    if empty_count > 0:
+        result += str(empty_count)
     return result

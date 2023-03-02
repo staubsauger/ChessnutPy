@@ -2,29 +2,6 @@
 a python function which compares two chess fens and returns on which fields a piece is wrong
 """
 
-maskasletter = {
-    0: "a",
-    1: "b",
-    2: "c",
-    3: "d",
-    4: "e",
-    5: "f",
-    6: "g",
-    7: "h"
-}
-
-maskasnumber = {
-    0 : 8,
-    1 : 7,
-    2 : 6,
-    3 : 5,
-    4 : 4,
-    5 : 3,
-    6 : 2,
-    7 : 1,
-}
-
-
 def convert_fen(fen):
     """
     convert "r1bqkbnr/pppppppp/2n5/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2"
@@ -33,41 +10,82 @@ def convert_fen(fen):
     fen = fen.split()[0]
     new_fen = ""
     for piece in fen:
-        if piece not in ["k","K","q","Q","b","B","p","P","r","R","n","N", "/", "1"]:
+        if piece not in ["k", "K", "q", "Q", "b", "B", "p", "P", "r", "R", "n", "N", "/", "1"]:
             for count in range(int(piece)):
                 new_fen = new_fen+"1" 
         else: 
             new_fen = new_fen+piece
-    print("Your new fen ", new_fen)
+    # print("Your new fen ", new_fen)
     return new_fen
 
-def compare_chess_fens(rows1, rows2):
+
+def compare_chess_fens(target_fen, cur_fen):
     """
-    takes fen1 and fen2 and returns which pieces are wrong on fen2
+    takes target_fen and cur_fen and returns which pieces are wrong on fen2
     fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
     """
-    rows1 = convert_fen(rows1).split("/")
-    rows2 = convert_fen(rows2).split("/")
-    print(rows1, rows2)
+    def row_as_num(x):
+        return 8 - x
+
+    col_as_letter = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
+    target_rows = convert_fen(target_fen).split("/")
+    cur_rows = convert_fen(cur_fen).split("/")
+    # print(target_rows, cur_rows)
     differences = []
-    count = 0 
-    for i in range(len(rows1)):  # für also 8
-        
-        if rows1[i] != rows2[i]:
-            print("ungleich", rows1[i], rows2[i], maskasnumber[count])
-            count2 = 0
-            for b in range(len(rows2[i])):  # also wieder 8 :)
-                
-                if rows1[i][b] != rows2[i][b]:
-                    print("ungleich", rows1[i][b], rows2[i][b], str(maskasletter[count2]) + str(maskasnumber[count]))
-                    print("Piece:", rows2[i][b], "at ", str(maskasletter[count2]) + str(maskasnumber[count]))
-                    differences.append([rows2[i][b], str(maskasletter[count2]) + str(maskasnumber[count])])
-                count2 += 1
-        count += 1
+    row = 0
+    for i in range(len(target_rows)):  # für also 8
+        if target_rows[i] != cur_rows[i]:
+            # print("ungleich", target_rows[i], cur_rows[i], row_as_num(row))
+            col = 0
+            for b in range(len(cur_rows[i])):  # also wieder 8 :)
+                if target_rows[i][b] != cur_rows[i][b]:
+                    # print("ungleich", target_rows[i][b], cur_rows[i][b], str(col_as_letter[col]) + str(row_as_num(row)))
+                    # print("Piece:", cur_rows[i][b], "at ", str(col_as_letter[col]) + str(row_as_num(row)))
+                    pos = str(col_as_letter[col]) + str(row_as_num(row))
+                    cur_piece = cur_rows[i][b]
+                    target_piece = target_rows[i][b]
+                    differences.append((cur_piece, pos, target_piece))
+                col += 1
+        row += 1
     return differences
 
-fen1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-fen2 = "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1"
-differences = compare_chess_fens(fen1, fen2)
-print(differences)
+
+def fen_diff_leds(fen_diff):
+    """
+    find all led pairs to fix the board
+    [('P', d4, "1"), ("1", "d2", "P"), ("P", d5, '1')] ->
+    [("d4", "d2"), ("d5")]
+    """
+    fen_diff = fen_diff.copy()
+    leds = []
+
+    def find_pair(fd):
+        for diff in fd:
+            if start[2] == diff[0]:  # did we find a pair?
+                leds.append([start[1], diff[1]])
+                return diff
+    while len(fen_diff) > 0:
+        start = fen_diff.pop(0)
+        if start[2] == '1':
+            new_start = None
+            for d in fen_diff:
+                if d[2] != '1':
+                    fen_diff.append(start)
+                    new_start = d
+                    break
+            if new_start:
+                start = new_start
+                fen_diff.remove(new_start)
+        partner = find_pair(fen_diff)
+        if partner:
+            fen_diff.remove(partner)
+        else:
+            leds.append([start[1]])  # we never found a pair
+    return leds
+
+# fen1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+# fen2 = "rnbqkbnr/ppp2ppp/3p4/4P3/2PP4/8/PP3PPP/RNBQKBNR b KQkq - 0 1"
+# differences = compare_chess_fens(fen1, fen2)
+# print(differences)
+# print(fen_diff_leds(differences))

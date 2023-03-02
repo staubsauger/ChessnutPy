@@ -68,6 +68,8 @@ class ChessnutAir:
         conv_letter = {"a": 128, "b": 64, "c": 32, "d": 16, "e": 8, "f": 4, "g": 2, "h": 1}
         conv_number = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
         arr = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        if list_of_pos is None:
+            return
         for pos in list_of_pos:
             arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
         await self.connection.write_gatt_char(WRITECHARACTERISTICS, self.led_command + arr)

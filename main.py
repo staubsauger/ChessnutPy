@@ -6,6 +6,8 @@ from GameOfChess import GameOfChess
 import chess
 import random
 
+from fencompare import compare_chess_fens, fen_diff_leds
+
 """
 Mindmap:
 
@@ -22,11 +24,13 @@ class Game(ChessnutAir):
         self.move_start = None
         self.running = False
         self.tick = False
+        self.castling = False
         self.to_blink = []
         self.to_light = []
         self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1")
         self.target_fen = ""
         self.waiting_for_move = True
+        self.undo_loop = False
         if turn == player_color:
             self.player_turn = True
         else:
@@ -72,25 +76,68 @@ class Game(ChessnutAir):
             from_square = m_str[:2]
             if from_square == pos:
                 self.to_blink.append(m_str[2:])
+            to_square = m_str[2:]
+            if to_square == pos:
+                self.to_blink.append(m_str[:2])
+        if len(self.board.move_stack) > 0:
+            undo = f"{self.board.peek()}"
+            if undo[2:] == pos:
+                self.to_blink.append(undo[:2])
+
+    async def blink_tick(self):
+        self.tick = not self.tick
+        if self.tick:
+            await self.change_leds(self.to_blink+self.to_light)
+        else:
+            await self.change_leds(self.to_light)
+
+    async def fix_board(self):
+        diff = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+        if diff:
+            print("board incorrect!\nplease fix")
+            while diff:
+                led_pairs = fen_diff_leds(diff)
+                first = led_pairs[0]
+                if len(first) == 1:
+                    self.to_blink = first
+                    self.to_light = []
+                else:
+                    if self.castling and len(led_pairs) > 1 and led_pairs[1][0].startswith("e"):
+                        self.to_light = led_pairs[1]
+                    else:
+                        self.to_light = first
+                    self.to_blink = []
+                await self.blink_tick()
+                await asyncio.sleep(0.2)
+                diff = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+            print("board fixed!")
+            await asyncio.sleep(0.5)
+        else:
+            test = self.boardstate_as_fen()
+            print(f"board correct:\n{chess.Board(test)}")
+        self.castling = False
+        self.move_start = self.move_end = None
+        self.to_light = self.to_blink = []
+        if self.undo_loop and len(self.board.move_stack) > 0:
+            next_undo = f"{self.board.peek()}"
+            self.to_light = [next_undo[:2], next_undo[2:]]
+        await self.change_leds([])
 
     async def game_loop(self):
         await asyncio.sleep(1)  # wait for board to settle
         print("Board settled", self.board)
-        # TODO: add check if board if in correct orientation and, if not, give tips to fix it (sortierer)
+        await self.fix_board()
+
         self.running = True
         while self.running:
-            self.tick = not self.tick
+            await self.blink_tick()
             if self.board.is_checkmate():
                 print("checkmate!")
                 self.running = False
                 self.game.quitchess()
                 continue
-            if self.to_blink:
-                if self.tick:
-                    await self.change_leds(self.to_blink + self.to_light)
-                else:
-                    await self.change_leds(self.to_light)
-            await asyncio.sleep(0.5)
+
+            await asyncio.sleep(0.2)
 
             if isinstance(self.move_start, list):
                 if any(f"{m}".startswith(self.move_start[0][0]) for m in self.board.legal_moves):
@@ -102,53 +149,54 @@ class Game(ChessnutAir):
             else:
                 move = None
             if move is not None and self.move_end is not None\
-                    and self.move_start != self.move_end:
+                    and move != self.move_end[0]:
                 move += self.move_end[0]
-                if self.target_move is not None:
-                    if move == self.target_move:
-                        if not self.player_turn:
-                            self.board.push_san(move)
-                            self.player_turn = True
-                        self.target_move = None
-                        self.move_start = None
-                        self.move_end = None
-                        self.to_blink = []
-                        self.to_light = []
-                        await self.change_leds(self.to_light)
-                        print("target achieved")
-                    continue
                 if self.player_turn:
-                    if move[0] + move[1] != move[2] + move[3]:
-                        print("Targetmove is equal to pieceposition") # warum fixt das das problem?
-                    if self.board.is_legal(chess.Move.from_uci(move)):  # schmiert ab wegen "d4d4"
+                    if self.board.is_legal(chess.Move.from_uci(move)):
                         self.board.push_san(move)
                         print(self.board)
                         print("Users last move: ", move)
                         self.to_blink = []
                         self.player_turn = False
                         self.ai_turn = True
+                        self.undo_loop = False
                     else:
-                        self.target_move = self.move_end[0]+self.move_start[0]
-                        self.move_start = None
-                        self.to_blink.extend((self.move_start[0], self.move_end[0]))
-                        print(f"illegal move {move}\n{self.board}")
+                        if move[2:]+move[:2] == f"{self.board.peek()}":  # check if we want to undo a move
+                            print("undoing moves!")
+                            self.board.pop()
+                            self.board.pop()
+                            self.undo_loop = True
+                        else:
+                            print(f"illegal move {move}\n{self.board}")
+                        await self.fix_board()
                 self.move_start = None
                 self.move_end = None
 
-            elif not self.player_turn and self.ai_turn:
-                self.ai_turn = False
+            elif not self.player_turn:
                 # generate move
-                move = f"{self.game.getcpumove(self.board)}"[:4]
+                rmove = self.game.getcpumove(self.board)
+                move = f"{rmove}"[:4]
                 print("generating Move!", move)
                 # move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
-                self.target_move = move
-                self.to_light = [move[:2], move[2:]]
-                await self.change_leds(self.to_light)
+                castle_rights = self.board.castling_rights
+                if (self.board.is_kingside_castling(rmove) and self.board.turn == chess.WHITE)\
+                        or (self.board.is_queenside_castling(rmove) and self.board.turn == chess.BLACK):
+                    print("ai is castling right")
+                    self.castling = True
+                self.board.push_san(move)
+                await self.fix_board()
+                self.player_turn = True
 
 async def go():
-    b = Game()
+    b = Game() #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')
     # c = GameOfChess(b.boardstate)
-    await b.discover()
-    await b.run()
+    while not b.device:
+        await b.discover()
+    try:
+        await b.run()
+    # except Exception:
+    #   print(b.board.fen())
+    except KeyboardInterrupt:
+        print(b.board.fen())
 
 asyncio.run(go())
