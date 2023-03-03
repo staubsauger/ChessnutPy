@@ -20,6 +20,16 @@ class GameOfChess:
         cpumove = self.engine.play(board, self.limit)
         return cpumove.move
 
+    def get_score(self, board):
+        score = self.engine_suggest.analyse(board, self.limit_sug).get('score')
+        return score.pov(True) # returns score in cp relative to white -> always
+
+    def getmovesuggestion(self, board):
+        move = self.getbookmove(board)
+        if not move:
+            move = self.engine.play(board, self.limit_sug).move
+        return f"{move}"  # ex "e3e4"
+
     def getbookmove(self, board):
         with chess.polyglot.open_reader(self.suggestion_book) as reader:
             try:

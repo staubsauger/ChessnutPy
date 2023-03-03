@@ -63,7 +63,7 @@ def fen_diff_leds(fen_diff):
     def find_pair(fd):
         for diff in fd:
             if start[2] == diff[0]:  # did we find a pair?
-                leds.append([start[1], diff[1]])
+                leds.append([diff[1], start[1]])
                 return diff
     while len(fen_diff) > 0:
         start = fen_diff.pop(0)

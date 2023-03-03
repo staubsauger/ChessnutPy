@@ -4,6 +4,9 @@ for more information."""
 
 import asyncio
 import logging
+
+import chess
+
 from constants import WRITECHARACTERISTICS, INITIALIZASION_CODE, READDATA
 
 
@@ -84,15 +87,16 @@ class ChessnutAir:
         rdata = data[2:34]
         if rdata != self.old_data:
             self.boardstate = rdata
-            for i in range(32):
-                if rdata[i] != self.old_data[i]:
-                    cur_left = rdata[i] & 0xf
-                    old_left = self.old_data[i] & 0xf
-                    await send_message(i*2, old_left, cur_left)
-                    cur_right = rdata[i] >> 4
-                    old_right = self.old_data[i] >> 4
-                    await send_message(i*2+1, old_right, cur_right)
+            od = self.old_data
             self.old_data = rdata
+            for i in range(32):
+                if rdata[i] != od[i]:
+                    cur_left = rdata[i] & 0xf
+                    old_left = od[i] & 0xf
+                    cur_right = rdata[i] >> 4
+                    old_right = od[i] >> 4
+                    await send_message(i*2, old_left, cur_left)
+                    await send_message(i*2+1, old_right, cur_right)
 
     async def run(self, debug=False):
         """ Connect to the device and run the notification handler."""
