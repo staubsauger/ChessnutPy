@@ -4,6 +4,7 @@ from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATIO
 from ChessnutAir import ChessnutAir, loc_to_pos
 from GameOfChess import GameOfChess
 import chess
+from chess.engine import Cp
 import random
 
 from fencompare import compare_chess_fens, fen_diff_leds
@@ -11,7 +12,9 @@ from fencompare import compare_chess_fens, fen_diff_leds
 """
 Mindmap:
 
-def playerturn()
+aufstellung der startposition = neues game
+wenn stellung aufgestellt, dann ist der player turn = der letzte könig der gesetzt wurde
+analysefunktion bzw. schiedsrichterfunktion
 
 
 """
@@ -48,6 +51,7 @@ class Game(ChessnutAir):
         # e4 = 35 = 3 4 ->
         # g6 = 17 = 1 2 ->
         pos = loc_to_pos(location)
+        print("Location", pos)
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} down")
         if self.move_start is not None:
@@ -83,6 +87,7 @@ class Game(ChessnutAir):
             undo = f"{self.board.peek()}"
             if undo[2:] == pos:
                 self.to_blink.append(undo[:2])
+
 
     async def blink_tick(self):
         self.tick = not self.tick
@@ -137,55 +142,7 @@ class Game(ChessnutAir):
                 self.game.quitchess()
                 continue
 
-            await asyncio.sleep(0.2)
-
-            if isinstance(self.move_start, list):
-                if any(f"{m}".startswith(self.move_start[0][0]) for m in self.board.legal_moves):
-                    move = self.move_start[0][0]
-                else:
-                    move = self.move_start[1][0]
-            elif self.move_start is not None:
-                move = self.move_start[0]
-            else:
-                move = None
-            if move is not None and self.move_end is not None\
-                    and move != self.move_end[0]:
-                move += self.move_end[0]
-                if self.player_turn:
-                    if self.board.is_legal(chess.Move.from_uci(move)):
-                        self.board.push_san(move)
-                        print(self.board)
-                        print("Users last move: ", move)
-                        self.to_blink = []
-                        self.player_turn = False
-                        self.ai_turn = True
-                        self.undo_loop = False
-                    else:
-                        if move[2:]+move[:2] == f"{self.board.peek()}":  # check if we want to undo a move
-                            print("undoing moves!")
-                            self.board.pop()
-                            self.board.pop()
-                            self.undo_loop = True
-                        else:
-                            print(f"illegal move {move}\n{self.board}")
-                        await self.fix_board()
-                self.move_start = None
-                self.move_end = None
-
-            elif not self.player_turn:
-                # generate move
-                rmove = self.game.getcpumove(self.board)
-                move = f"{rmove}"[:4]
-                print("generating Move!", move)
-                # move = f"{list(self.board.legal_moves)[random.randint(0, self.board.legal_moves.count()-1)]}"
-                castle_rights = self.board.castling_rights
-                if (self.board.is_kingside_castling(rmove) and self.board.turn == chess.WHITE)\
-                        or (self.board.is_queenside_castling(rmove) and self.board.turn == chess.BLACK):
-                    print("ai is castling right")
-                    self.castling = True
-                self.board.push_san(move)
-                await self.fix_board()
-                self.player_turn = True
+            await asyncio.sleep(0.3)
 
 async def go():
     b = Game() #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')
