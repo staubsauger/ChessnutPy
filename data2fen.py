@@ -3,7 +3,7 @@ from constants import convertDict, MASKLOW
 def pieces_from_data(data):
     """"
     data:  [0x14,0x00,0xa5] (size = 32), 0x1C -> Kq
-    makes an interator (generator) like and works like an array of [" ", " ", "q", " ", ... ]
+    makes an interator (generator) that  works like an array of [" ", " ", "q", " ", ... ]
     to do this:
      -data is saved
     """

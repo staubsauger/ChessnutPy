@@ -18,7 +18,7 @@ MASKLOW = 0b00001111
 
 # Each square has a value specifying the piece:
 convertDict = {0: " ",
-               1: "q", # 0b00000001
+               1: "q",  # 0b00000001
                2: "k",
                3: "b",
                4: "p",

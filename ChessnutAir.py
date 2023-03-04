@@ -77,6 +77,17 @@ class ChessnutAir:
             arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
         await self.connection.write_gatt_char(WRITECHARACTERISTICS, self.led_command + arr)
 
+    async def play_animation(self, list_of_frames, sleep_time=0.5):
+        """
+            changes LED to a frame popped from list_of_frames, waits for sleep_time and repeats until no more frames
+        """
+        list_of_frames = list(reversed(list_of_frames.copy()))
+        while list_of_frames:
+            frame = list_of_frames.pop()
+            await self.change_leds(frame)
+            await asyncio.sleep(sleep_time)
+
+
     async def handler(self, char, data):
         async def send_message(loc, old, new):
             if old != new:
