@@ -18,6 +18,16 @@ aufstellung der startposition = neues game
 wenn stellung aufgestellt, dann ist der player turn = der letzte könig der gesetzt wurde
 analysefunktion bzw. schiedsrichterfunktion
 
+funktionsweise pi:
+-an
+- programm wird gestartet -> sucht nach board
+-> vielleicht shutdown nach 5 min
+- findet board -> ließt startpos aus
+- fragt nach spielerfarbe
+- startet game 
+- wenn matt dann restart gameloop
+- wenn beide könige in der mitte (diagonal oder nebeneinander) restart gameloop, wenn beide weißen damen nebeneinander shutdown 
+
 
 """
 
@@ -26,6 +36,7 @@ class Game(ChessnutAir):
     def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
                  player_color=None, read_board=False, no_help=False, show_valid_moves=True):
         ChessnutAir.__init__(self)
+        self.no_help = no_help
         self.should_read = read_board
         self.target_move = None
         self.move_end = None
@@ -101,10 +112,10 @@ class Game(ChessnutAir):
         elif -50 <= score < 0:
             self.to_blink = ['a5']
             await self.change_leds(self.to_blink)
-        elif score < -50 <= -100:
+        elif -100 <= score < -50:
             self.to_blink = ['a5', 'a6']
             await self.change_leds(self.to_blink)
-        elif score < -100 <= -150:
+        elif -150 <= score < -100:
             self.to_blink = ['a5', 'a6', 'a7']
             await self.change_leds(self.to_blink)
         elif score < -150:
@@ -137,20 +148,11 @@ class Game(ChessnutAir):
     async def piece_down(self, location, piece_id):
         async def king_hover_action():
             if not ms or ms == pos:
-                print("white King hovered")
-                if self.player_color and p_str == 'K':
-                    await player_king_action()
-                elif not self.player_color and p_str == 'k':
-                    await player_king_action()
-                else:
-                    print("LED Score")
-                    await self.led_score()
-
-
-            # elif (not ms or ms == pos) and p_str == 'k':
-            #     print("black King hovered")
-            #     if not self.player_color:
-            #         await player_king_action()
+                if (self.player_color == chess.WHITE and p_str == 'K')\
+                        or (self.player_color == chess.BLACK and p_str == 'k'):
+                    await self.player_king_hover_action()
+                elif p_str == 'K' or p_str == 'k':
+                    await self.cpu_king_hover_action()
 
         pos = loc_to_pos(location)
         p_str = convertDict[piece_id]
@@ -377,6 +379,7 @@ class Game(ChessnutAir):
             await self.blink_tick()
             self.is_check = self.board.is_check()
             if self.board.is_checkmate():
+                await self.play_animation(animations.check_mate_anim)
                 print("checkmate!")
                 self.running = False
                 self.winner = not self.board.turn
@@ -402,7 +405,7 @@ class Game(ChessnutAir):
         self.game.quitchess()
 
 async def go():
-    b = Game(player_color='w')#, read_board=True)  #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')
+    b = Game(show_valid_moves=False) #board_fen="r1b1kb1r/p1pp1ppp/3n4/4p3/2Bn2Pq/5P1P/PP6/RNBQK1NR", player_color=chess.WHITE, turn='w')#, read_board=True)  #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')
     while not b.device:
         await b.discover()
     try:
@@ -413,5 +416,6 @@ async def go():
         quit()
     except KeyboardInterrupt:
         print(b.board.fen())
+        quit()
 
 asyncio.run(go())
