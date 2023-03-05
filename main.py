@@ -218,9 +218,9 @@ class Game(ChessnutAir):
         def filter_fun(i, _):
             x = i % 8
             y = i // 8
-            return (x == 3 or x == 4) and (y == 3 or y == 4)  # -> four field in the center
+            return 3 <= x <= 4 and 3 <= y <= 4  # -> four squares in the center
         relevant_positions = filter(filter_fun, enumerate(pieces_from_data(self.board_state)))  # should always be 4
-        d5, e5, d4, e4 = map(lambda pos: pos[1] == 'k' or pos[1] == 'K', relevant_positions)
+        d5, e5, d4, e4 = map(lambda _, pos: pos == 'k' or pos == 'K', relevant_positions)
         if d5 and e4:  # both on white
             self.winner = chess.WHITE
             return True
