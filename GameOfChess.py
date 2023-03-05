@@ -9,7 +9,8 @@ import asyncio
 
 class GameOfChess:
 
-    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1), suggestion_limit=chess.engine.Limit(time=1.5),
+    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
+                 suggestion_limit=chess.engine.Limit(time=1.5),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin") -> None:
         self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
         self.engine_suggest = chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)

@@ -86,8 +86,7 @@ class ChessnutAir:
             await self.change_leds(frame)
             await asyncio.sleep(sleep_time)
 
-    # noinspection PyUnusedLocal
-    async def handler(self, char, data):
+    async def handler(self, _, data):
         async def send_message(loc, old, new):
             if old != new:
                 if new == 0:

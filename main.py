@@ -115,7 +115,7 @@ class Game(ChessnutAir):
         end = score_in_increments if score_in_increments > 0 else len(leds)
         self.to_blink = leds[start:end]
         await self.change_leds(self.to_blink)
-        await asyncio.sleep(1.4)
+        await asyncio.sleep(1.5)
         await self.blink_tick()
 
     async def player_king_hover_action(self):
@@ -197,32 +197,31 @@ class Game(ChessnutAir):
                 pos = "abcdefgh"[x]+str(y)
                 self.to_blink = [pos]
 
-    async def blink_tick(self):
+    async def blink_tick(self, sleep_time=0):
         self.tick = not self.tick
         self.check_check()
         if self.tick:
             await self.change_leds(self.to_blink+self.to_light)
         else:
             await self.change_leds(self.to_light)
+        if sleep_time > 0:
+            await asyncio.sleep(sleep_time)
 
     async def check_quit(self) -> bool:
         """
-        Special quit checks:
-            e4-K e5-K d4-k d5-k
+        Check if game should end because the kings were placed in ther middle in specific ways
+        if both kings are on black: black wins
+        if both kings are on white: white wins
+        if mixed and vertical: draw
+        if mixed and horizontal: quit completly
         """
-        relevant_poss = []
-
-        for i, piece in enumerate(pieces_from_data(self.board_state)):
-            # i(0) = A1, i(63) = H8
+        def filter_fun(i, _):
             x = i % 8
             y = i // 8
-            if (x == 3 or x == 4) and (y == 3 or y == 4):  # -> four field in the center
-                relevant_poss.append(convertDict[piece])
-            if i > 47:
-                break
-        d5, e5, d4, e4 = map(lambda pos: pos == 'k' or pos == 'K', relevant_poss)
+            return (x == 3 or x == 4) and (y == 3 or y == 4)  # -> four field in the center
+        relevant_positions = filter(filter_fun, enumerate(pieces_from_data(self.board_state)))  # should always be 4
+        d5, e5, d4, e4 = map(lambda pos: pos[1] == 'k' or pos[1] == 'K', relevant_positions)
         if d5 and e4:  # both on white
-            # white wins
             self.winner = chess.WHITE
             return True
         elif d4 and e5:  # both on black
@@ -231,7 +230,7 @@ class Game(ChessnutAir):
         elif (e4 and e5) or (d4 and d5):  # Draw
             return True
         elif (e4 and d4) or (e5 and d5):  # we want to quit completly
-            self.more_games = False
+            self.more_games = False  # maybe quit() here?
             return True
         return False
 
@@ -267,10 +266,8 @@ class Game(ChessnutAir):
                     would_have_done = task.result()
                     await self.suggest_move(would_have_done, blink=True)
                     suggested = True
-                # actually change LEDs to light or blink
-                await self.blink_tick()
-                # loop is done. wait a bit and then recalculate the diffs
-                await asyncio.sleep(0.2)
+                # actually change LEDs to light or blink and sleep a little
+                await self.blink_tick(sleep_time=0.2)
                 diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
             if task and not task.done():
@@ -363,7 +360,6 @@ class Game(ChessnutAir):
         self.running = True
         # all initializing is done to loop can finally begin
         while self.running:
-            await self.blink_tick()
             self.is_check = self.board.is_check()
             if self.board.is_checkmate():
                 await self.play_animation(animations.check_mate_anim)
@@ -381,8 +377,7 @@ class Game(ChessnutAir):
                 self.print_openings()
                 await self.ai_move()
                 self.print_openings()
-
-            await asyncio.sleep(0.3)
+            await self.blink_tick(sleep_time=0.3)
         print(f'winner was {self.winner}!')
         # save PGN here
         self.game.write_to_pgn(self)
@@ -412,8 +407,7 @@ class Game(ChessnutAir):
                 await self.play_animation(animations.pick_anim, sleep_time=0.4)
             self.to_blink = ["e8", "e1"]
         while self.player_color_select:
-            await self.blink_tick()
-            await asyncio.sleep(0.5)
+            await self.blink_tick(sleep_time=0.5)
 
     def print_openings(self):
         cur_var = self.game.ecopgn
