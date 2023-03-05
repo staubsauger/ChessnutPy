@@ -33,7 +33,9 @@ funktionsweise pi:
 
 class Game(ChessnutAir):
     def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
-                 player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True):
+                 player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True,
+                 suggestion_book_dir="/usr/share/scid/books/Elo2400.bin",
+                 engine_dir="/home/rudi/Games/schach/texel-chess/texel/build/texel", engine_suggest_dir="stockfish"):
         ChessnutAir.__init__(self)
         self.no_help = no_help
         self.should_read = read_board
@@ -52,7 +54,7 @@ class Game(ChessnutAir):
         self.waiting_for_move = True
         self.undo_loop = False
         self.player_turn = False
-        self.game = GameOfChess()
+        self.game = GameOfChess(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir)
         self.more_games = True
         self.winner = None
         self.inited = False
@@ -271,7 +273,7 @@ class Game(ChessnutAir):
                 await asyncio.sleep(0.2)
                 diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
-            if not task.done():
+            if task and not task.done():
                 task.cancel()
             await asyncio.sleep(0.2)
         else:
@@ -428,7 +430,11 @@ class Game(ChessnutAir):
 
 
 async def go():
-    b = Game(show_valid_moves=True)
+    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"
+    engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
+    engine_suggest_dir = "stockfish"
+    b = Game(show_valid_moves=True,
+             suggestion_book_dir=suggestion_book_dir, engine_dir=engine_dir, engine_suggest_dir=engine_suggest_dir)
     while not b.device:
         await b.discover()
     try:

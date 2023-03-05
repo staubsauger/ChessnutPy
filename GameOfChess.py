@@ -6,17 +6,14 @@ import time
 # noinspection PyUnresolvedReferences
 import asyncio
 
-suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"
-engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
-engine_suggest_dir = "stockfish"
 
 class GameOfChess:
 
-    def __init__(self, engine_limit=chess.engine.Limit(time=0.1), suggestion_limit=chess.engine.Limit(time=1.5),
-                 suggestion_book="/usr/share/scid/books/Elo2400.bin") -> None:
-        self.engine = chess.engine.SimpleEngine.popen_uci(engine_dir)
-        self.engine_suggest = chess.engine.SimpleEngine.popen_uci(engine_suggest_dir)
-        self.suggestion_book = suggestion_book
+    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1), suggestion_limit=chess.engine.Limit(time=1.5),
+                 suggestion_book_path="/usr/share/scid/books/Elo2400.bin") -> None:
+        self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
+        self.engine_suggest = chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
+        self.suggestion_book = suggestion_book_path
         self.limit = engine_limit
         self.limit_sug = suggestion_limit
         self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
