@@ -96,35 +96,25 @@ class Game(ChessnutAir):
         await asyncio.sleep(1.0)
         await self.blink_tick()
 
-    async def led_score(self):
-        score = int(self.game.get_score(self.board).score())
+    async def led_score(self, score=None):
+        # check if score exists, else await score
+        score = score if score else int((await self.game.get_score(self.board)).score())
         print(score)
-
-        if 50 > score >= 0:
-            self.to_blink = ['a4']
-            await self.change_leds(self.to_blink)
-        elif 50 < score <= 100:
-            self.to_blink = ['a4', 'a3']
-            await self.change_leds(self.to_blink)
-        elif 100 < score <= 150:
-            self.to_blink = ['a4', 'a3', 'a2']
-            await self.change_leds(self.to_blink)
-        elif score > 150:
-            self.to_blink = ['a4', 'a3', 'a2', 'a1']
-            await self.change_leds(self.to_blink)
-        elif -50 <= score < 0:
-            self.to_blink = ['a5']
-            await self.change_leds(self.to_blink)
-        elif -100 <= score < -50:
-            self.to_blink = ['a5', 'a6']
-            await self.change_leds(self.to_blink)
-        elif -150 <= score < -100:
-            self.to_blink = ['a5', 'a6', 'a7']
-            await self.change_leds(self.to_blink)
-        elif score < -150:
-            self.to_blink = ['a5', 'a6', 'a7', 'a8']
-            await self.change_leds(self.to_blink)
-        await asyncio.sleep(1.0)
+        # Max score is divided into increments via half of the led matrix.
+        # I.e. if leds has 8 entries, increments = 200/ 4 = 50
+        leds = ['a4', 'a3', 'a2', 'a1', 'a8', 'a7', 'a6', 'a5']
+        max_score = 200
+        increments = (max_score*2)/len(leds)
+        # return the score relative to the increments that we just created
+        score_in_increments = int(math.ceil(score/increments)) # ceiling to only have 0 leds at scaore = 0
+        score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2) # assert!! -len(leds)/2<score<len(leds)/2
+        #define the LEDs we need to light for this move, and light them!
+        start = 0 if score_in_increments >= 0 else score_in_increments+1
+        end = score_in_increments if score_in_increments > 0 else len(leds)
+        self.to_blink = leds[start:end]
+        await self.change_leds(self.to_blink)
+        await asyncio.sleep(1.4)
+        await self.blink_tick()
 
     async def player_king_hover_action(self):
         if self.player_color_select:
@@ -132,7 +122,7 @@ class Game(ChessnutAir):
             self.player_color = chess.WHITE
             self.player_color_select = False
         else:
-            move = self.game.getmovesuggestion(self.board)
+            move = await self.game.getmovesuggestion(self.board)
             print(f"suggesting move: {move}")
             await self.suggest_move(move)
             self.move_end = None
@@ -298,8 +288,8 @@ class Game(ChessnutAir):
         self.move_end = None
 
     async def ai_move(self):
-        # generate move
-        rmove = self.game.getcpumove(self.board)
+        score_task = asyncio.create_task(self.game.get_score(self.board))
+        rmove = await self.game.getcpumove(self.board)
         move = f"{rmove}"[:4]
         print("generating Move!", move)
         if self.board.is_castling(rmove):
@@ -410,6 +400,20 @@ class Game(ChessnutAir):
         self.setup()
         await self.game_loop()
         self.game.quitchess()
+
+    def print_openings(self):
+        cur_var = self.game.ecopgn
+        for n in self.board.move_stack:
+            if cur_var.has_variation(n):
+                cur_var = cur_var.variation(n)
+            else:
+                cur_var = None
+                break
+        if cur_var:
+            print('\n'.join(reversed(cur_var.comment.split('\n'))))
+        else:
+            print(f'not openers found: {" ".join(map(lambda m: m.uci(), self.board.move_stack))}')
+
 
 async def go():
     b = Game(show_valid_moves=True) #board_fen="r1b1kb1r/p1pp1ppp/3n4/4p3/2Bn2Pq/5P1P/PP6/RNBQK1NR", player_color=chess.WHITE, turn='w')#, read_board=True)  #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')

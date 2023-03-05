@@ -15,19 +15,22 @@ class GameOfChess:
         self.suggestion_book = suggestion_book
         self.limit = engine_limit
         self.limit_sug = suggestion_limit
-        self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 800, 'OwnBook': True})
+        self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
         self.checkmate = False
         self.engines_running = True
+        self.ecopgn = chess.pgn.Game()
+        # self.ecolist[move_str] -> (ecocode, econame)
+        self.init_eco_file()
 
-    def getcpumove(self, board):
+    async def getcpumove(self, board):
         cpumove = self.engine.play(board, self.limit)
         return cpumove.move
 
-    def get_score(self, board):
+    async def get_score(self, board):
         score = self.engine_suggest.analyse(board, self.limit_sug).get('score')
-        return score.pov(True) # returns score in cp relative to white -> always
+        return score.pov(True)  # returns score in cp relative to white -> always
 
-    def getmovesuggestion(self, board):
+    async def getmovesuggestion(self, board):
         move = self.getbookmove(board)
         if not move:
             print("Engine move")
@@ -78,18 +81,40 @@ class GameOfChess:
         print(game, file=open(f"/home/rudi/Desktop/{tstr}.pgn", 'w'), end="\n\n")
         print("PGN written")
 
-# board = chess.Board("rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b")
+    def init_eco_file(self, ):  # -> bester weg um nicht städing die datei neu zu lesen?
+        """
+        read the ecofile -> get:
+        'E94    1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O "King's Indian, Classical Variation"'
+        and return:
+        [["E94", ["d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O"], ["King's Indian, Classical Variation"]], [[...], [...], [...]]]
+
+        """
+        with open("eco", "rt") as eco_file:
+            eco_line = eco_file.readline()
+            while eco_line:
+                split = eco_line.split('"')
+                name = split[1] if len(split) > 1 else ""
+                rest = split[0]
+                split = rest.split(' ')
+                code = split[0]
+                moves = list(filter(lambda m: len(m) > 1 and '.' not in m, split[1:]))
+                b = chess.Board()
+                uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
+                cur_var = self.ecopgn
+                for i, cur_move in enumerate(uci_moves):
+                    id_string = f'({name}, {code})\n'
+                    if cur_var.has_variation(cur_move):
+                        if id_string not in cur_var.variation(cur_move).comment:
+                            if len(uci_moves) == i+1:
+                                cur_var.variation(cur_move).comment = id_string + '\n' +cur_var.variation(cur_move).comment
+                            else:
+                                cur_var.variation(cur_move).comment += id_string
+
+                    else:
+                        cur_var.add_variation(cur_move).comment = id_string
+                    cur_var = cur_var.variation(cur_move)
+                eco_line = eco_file.readline()
+
 # c = GameOfChess()
-# while not c.checkmate:
-#     m = str(c.getcpumove(board))
-#     print(m, type(m)
-#     print(chess.Move.from_uci(m))
-#     board.push_san(m)
-#     print(board.is_checkmate)
-#     if board.is_checkmate():
-#         print("checkmate")
-#         c.quitchess()
-#         c.checkmate = True
-#     else:
-#         print("not checkmate,go on")
-#     print(board)
+# c.init_eco_file()
+# print(c.ecolist)
