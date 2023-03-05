@@ -197,7 +197,7 @@ class Game(ChessnutAir):
                 pos = "abcdefgh"[x]+str(y)
                 self.to_blink = [pos]
 
-    async def blink_tick(self, sleep_time=0):
+    async def blink_tick(self, sleep_time=0.0):
         self.tick = not self.tick
         self.check_check()
         if self.tick:
