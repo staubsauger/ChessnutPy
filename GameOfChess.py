@@ -6,13 +6,16 @@ import time
 # noinspection PyUnresolvedReferences
 import asyncio
 
+suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"
+engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
+engine_suggest_dir = "stockfish"
 
 class GameOfChess:
 
     def __init__(self, engine_limit=chess.engine.Limit(time=0.1), suggestion_limit=chess.engine.Limit(time=1.5),
                  suggestion_book="/usr/share/scid/books/Elo2400.bin") -> None:
-        self.engine = chess.engine.SimpleEngine.popen_uci("/home/rudi/Games/schach/texel-chess/texel/build/texel")
-        self.engine_suggest = chess.engine.SimpleEngine.popen_uci("stockfish")
+        self.engine = chess.engine.SimpleEngine.popen_uci(engine_dir)
+        self.engine_suggest = chess.engine.SimpleEngine.popen_uci(engine_suggest_dir)
         self.suggestion_book = suggestion_book
         self.limit = engine_limit
         self.limit_sug = suggestion_limit
@@ -75,6 +78,9 @@ class GameOfChess:
             else:
                 res = '1/2-1/2'
         game.headers["Result"] = res
+        if len(gameboard.board.move_stack) == 0:
+            print("No PGN Written")
+            return
         move = gameboard.board.move_stack.pop(0)
         node = game.add_main_variation(move)
         for move in gameboard.board.move_stack:
