@@ -28,15 +28,14 @@ funktionsweise pi:
 - fragt nach spielerfarbe
 - startet game 
 - wenn matt dann restart gameloop
-- wenn beide könige in der mitte (diagonal oder nebeneinander) restart gameloop, wenn beide weißen damen nebeneinander shutdown 
-
-
+- wenn beide könige in der mitte (diagonal oder nebeneinander) restart gameloop, 
+    wenn beide weißen damen nebeneinander shutdown
 """
 
 
 class Game(ChessnutAir):
     def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
-                 player_color=None, read_board=False, no_help=False, show_valid_moves=True):
+                 player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True):
         ChessnutAir.__init__(self)
         self.no_help = no_help
         self.should_read = read_board
@@ -62,6 +61,7 @@ class Game(ChessnutAir):
         self.cur_fen = " "
         self.show_valid = show_valid_moves
         self.is_check = False
+        self.play_animations = play_animations
 
     def setup(self):
         self.target_move = None
@@ -87,14 +87,15 @@ class Game(ChessnutAir):
         self.cur_fen = convert_to_fen(self.boardstate)
         return self.cur_fen
 
-    async def suggest_move(self, move):
+    async def suggest_move(self, move, blink=False):
         if self.no_help:
             return
         move = move[:4]
-        self.to_blink = [move[2:], move[:2]]
-        await self.change_leds(self.to_blink)
-        await asyncio.sleep(1.0)
-        await self.blink_tick()
+        leds = [move[2:], move[:2]]
+        if blink:
+            self.to_blink = leds
+        else:
+            self.to_light = leds
 
     async def led_score(self, score=None):
         # check if score exists, else await score
@@ -106,7 +107,7 @@ class Game(ChessnutAir):
         max_score = 200
         increments = (max_score*2)/len(leds)
         # return the score relative to the increments that we just created
-        score_in_increments = int(math.ceil(score/increments)) # ceiling to only have 0 leds at scaore = 0
+        score_in_increments = int(math.ceil(score/increments))  # ceiling to only have 0 leds at scaore = 0
         score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2) # assert!! -len(leds)/2<score<len(leds)/2
         #define the LEDs we need to light for this move, and light them!
         start = 0 if score_in_increments >= 0 else score_in_increments+1
@@ -140,24 +141,22 @@ class Game(ChessnutAir):
 
     async def piece_down(self, location, piece_id):
         async def king_hover_action():
-            if not ms or ms == pos:
-                if (self.player_color == chess.WHITE and p_str == 'K')\
-                        or (self.player_color == chess.BLACK and p_str == 'k'):
-                    await self.player_king_hover_action()
-                elif p_str == 'K' or p_str == 'k':
-                    await self.cpu_king_hover_action()
+            if (self.player_color == chess.WHITE and p_str == 'K')\
+                    or (self.player_color == chess.BLACK and p_str == 'k'):
+                await self.player_king_hover_action()
+            elif p_str == 'K' or p_str == 'k':
+                await self.cpu_king_hover_action()
         pos = loc_to_pos(location)
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} down")
         if self.player_turn and len(self.move_start) > 0:
             self.to_light = []
-            #await self.change_leds(self.to_light)
             ms = await self.find_start_move()
-            if ms != pos:
+            if ms and ms != pos:
                 self.move_end = (pos, p_str)
                 self.to_blink = []
-            await king_hover_action()
-            self.to_blink = []
+            else:
+                await king_hover_action()
 
 
     async def piece_up(self, location, piece_id):
@@ -240,45 +239,50 @@ class Game(ChessnutAir):
         return False
 
     async def fix_board(self, task=None):
-        diff = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
-        self.to_blink = []
-        if diff:
+        diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+        self.to_blink = self.to_light = []  # turn off any lights that might still be on
+        if diffs:
             print("board incorrect!\nplease fix")
             suggested = False
-            while diff:
-                self.to_light = []
+            while diffs:
                 # check if we want to quit/reset the game
                 self.winner = None
                 want_to_quit = await self.check_quit()
                 if self.inited and want_to_quit:
                     self.running = False
                     return
-                led_pairs = fen_diff_leds(diff)
-                first = led_pairs[0]
-                if len(first) == 1:
-                    self.to_blink = first
+                # Calculate LEDs needed to fix all diffs
+                led_pairs = fen_diff_leds(diffs)
+                to_display = led_pairs[0]  # generally only display LEDs to fix 1 diff
+                if len(to_display) == 1:        # if only 1 LED needed
+                    self.to_blink = to_display  # blink LED instead of lighting it
                 else:
                     if self.castling and len(led_pairs) > 1:
-                        led_pair = led_pairs[0]
+                        # if the AI is doing a castling move we want to display the King pair
+                        # if no king move exists display any pair
                         for p in led_pairs:
                             if p[0].startswith("e"):
-                                led_pair = p
+                                to_display = p
                                 break
-                        self.to_light = led_pair
-                    else:
-                        self.to_light = first
+                    self.to_light = to_display
+                # check if the background task is done, if it is display results
                 if not suggested and task and task.done():
-                    score = task.result()
-                    await self.led_score(int(score.score()))
+                    would_have_done = task.result()
+                    self.suggest_move(would_have_done, blink=True)
                     suggested = True
+                # actually change LEDs to light or blink
                 await self.blink_tick()
+                # loop is done. wait a little bit and then recalculate the diffs
                 await asyncio.sleep(0.2)
-                diff = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+                diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
+            if not task.done():
+                task.cancel()
             await asyncio.sleep(0.2)
         else:
             test = self.boardstate_as_fen()
             print(f"board correct:\n{chess.Board(test)}")
+        # Move is Fixed
         self.castling = False
         self.to_light = self.to_blink = []
         if self.undo_loop and len(self.board.move_stack) > 0:
@@ -288,7 +292,9 @@ class Game(ChessnutAir):
         self.move_end = None
 
     async def ai_move(self):
-        score_task = asyncio.create_task(self.game.get_score(self.board))
+        player_move = self.board.pop()
+        would_have_done_task = asyncio.create_task(self.game.getmovesuggestion(self.board.copy()))
+        self.board.push(player_move)
         rmove = await self.game.getcpumove(self.board)
         move = f"{rmove}"[:4]
         print("generating Move!", move)
@@ -296,7 +302,7 @@ class Game(ChessnutAir):
             print("ai is right")
             self.castling = True
         self.board.push_uci(move)
-        await self.fix_board(task=score_task)
+        await self.fix_board(task=would_have_done_task)
         self.player_turn = True
 
     async def find_start_move(self):
@@ -317,12 +323,13 @@ class Game(ChessnutAir):
             move = start_move + self.move_end[0]
             if self.player_turn:
                 moves = list(map(lambda m: f'{m}', filter(lambda m: f"{m}".startswith(move), self.board.legal_moves)))
-                if moves != [] and len(moves) > 1:
+                if len(moves) > 1:  # more then 1 move is legal -> promotion move
+                    # we have to figure out the new piece
                     move += self.move_end[1].lower()
                 if self.board.is_legal(chess.Move.from_uci(move)):
                     self.board.push_uci(move)
                     print(self.board)
-                    print("Users last move: ", move)
+                    print("Player move: ", move)
                     self.to_blink = self.to_light = []
                     self.player_turn = False
                     self.undo_loop = False
@@ -333,7 +340,6 @@ class Game(ChessnutAir):
                         self.board.pop()
                         if len(self.board.move_stack) < 1:
                             self.to_light = self.to_blink = []
-                            #await self.change_leds([])
                             await self.ai_move()
                         else:
                             self.board.pop()
@@ -345,31 +351,20 @@ class Game(ChessnutAir):
             self.move_end = None
 
     async def game_loop(self):
-        await self.play_animation(animations.start_anim)
-        await asyncio.sleep(1)  # wait for board to settle
-        self.winner = None
-        if self.should_read:
-            self.board = chess.Board(f'{self.boardstate_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
-            print(f'Read boardstate:\n{self.board}')
-            self.should_read = False
+        if self.play_animations:
+            await self.play_animation(animations.start_anim)
         else:
-            print("Board settled")
-            await self.fix_board()
+            await asyncio.sleep(1)  # wait for board to settle
+        self.winner = None
+        await self.maybe_read_board()
         self.inited = True
-        if self.player_color is None:
-            self.player_color = chess.WHITE
-            self.player_turn = True
-            self.player_color_select = True
-            print('select a color by picking up a king')
-            await self.play_animation(animations.pick_anim, sleep_time=0.4)
-            self.to_blink = ["e8", "e1"]
-        while self.player_color_select:
-            await self.blink_tick()
-            await asyncio.sleep(0.5)
+        await self.select_player_color()
         self.player_turn = self.board.turn == self.player_color
-        self.to_blink = []
-        await self.play_animation(animations.game_start_amin, sleep_time=0.1)
+        self.to_blink = self.to_light = []
+        if self.play_animations:
+            await self.play_animation(animations.game_start_amin, sleep_time=0.1)
         self.running = True
+        # all initializing is done to loop can finally begin
         while self.running:
             await self.blink_tick()
             self.is_check = self.board.is_check()
@@ -400,6 +395,28 @@ class Game(ChessnutAir):
         self.setup()
         await self.game_loop()
         self.game.quitchess()
+
+    async def maybe_read_board(self):
+        if self.should_read:
+            self.board = chess.Board(f'{self.boardstate_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
+            print(f'Read boardstate:\n{self.board}')
+            self.should_read = False
+        else:
+            print("Board settled")
+            await self.fix_board()
+
+    async def select_player_color(self):
+        if self.player_color is None:
+            self.player_color = chess.WHITE
+            self.player_turn = True
+            self.player_color_select = True
+            print('select a color by picking up a king')
+            if self.play_animations:
+                await self.play_animation(animations.pick_anim, sleep_time=0.4)
+            self.to_blink = ["e8", "e1"]
+        while self.player_color_select:
+            await self.blink_tick()
+            await asyncio.sleep(0.5)
 
     def print_openings(self):
         cur_var = self.game.ecopgn
