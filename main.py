@@ -101,7 +101,7 @@ class Game(ChessnutAir):
         # check if score exists, else await score
         score = score if score else int((await self.game.get_score(self.board)).score())
         print(score)
-        # Max score is divided into increments via half of the led matrix.
+        # Max score is divided into increments via half of the LED matrix.
         # I.e. if leds has 8 entries, increments = 200/ 4 = 50
         leds = ['a4', 'a3', 'a2', 'a1', 'a8', 'a7', 'a6', 'a5']
         max_score = 200
@@ -184,7 +184,6 @@ class Game(ChessnutAir):
     def check_check(self):
         if self.is_check:
             # find king in check
-            test = list(map(lambda p: convertDict[p], pieces_from_data(self.boardstate)))
             pos = filter(lambda p: p[1] == 'k' or p[1] == 'K',
                          enumerate(map(lambda p: convertDict[p], pieces_from_data(self.boardstate))))
             pos = list(pos)
@@ -272,7 +271,7 @@ class Game(ChessnutAir):
                     suggested = True
                 # actually change LEDs to light or blink
                 await self.blink_tick()
-                # loop is done. wait a little bit and then recalculate the diffs
+                # loop is done. wait a bit and then recalculate the diffs
                 await asyncio.sleep(0.2)
                 diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
@@ -323,7 +322,7 @@ class Game(ChessnutAir):
             move = start_move + self.move_end[0]
             if self.player_turn:
                 moves = list(map(lambda m: f'{m}', filter(lambda m: f"{m}".startswith(move), self.board.legal_moves)))
-                if len(moves) > 1:  # more then 1 move is legal -> promotion move
+                if len(moves) > 1:  # more than 1 move is legal -> promotion move
                     # we have to figure out the new piece
                     move += self.move_end[1].lower()
                 if self.board.is_legal(chess.Move.from_uci(move)):
