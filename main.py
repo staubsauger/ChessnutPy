@@ -426,7 +426,7 @@ class Game(ChessnutAir):
 
 # noinspection SpellCheckingInspection
 async def go():
-    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make there 3 vars configurable by argument
+    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make these 3 vars configurable by argument
     engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
     engine_suggest_dir = "stockfish"
     b = Game(show_valid_moves=True,
