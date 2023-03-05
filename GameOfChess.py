@@ -3,6 +3,7 @@ import chess.engine
 import chess.polyglot
 import chess.pgn
 import time
+# noinspection PyUnresolvedReferences
 import asyncio
 
 
@@ -85,9 +86,7 @@ class GameOfChess:
         """
         read the ecofile -> get:
         'E94    1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O "King's Indian, Classical Variation"'
-        and return:
-        [["E94", ["d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 Nf3 O-O Be2 e5 O-O"], ["King's Indian, Classical Variation"]], [[...], [...], [...]]]
-
+        and fill self.ecopgn with the moves and names
         """
         with open("eco", "rt") as eco_file:
             eco_line = eco_file.readline()
@@ -105,8 +104,9 @@ class GameOfChess:
                     id_string = f'({name}, {code})\n'
                     if cur_var.has_variation(cur_move):
                         if id_string not in cur_var.variation(cur_move).comment:
-                            if len(uci_moves) == i+1:
-                                cur_var.variation(cur_move).comment = id_string + '\n' +cur_var.variation(cur_move).comment
+                            if len(uci_moves) == i+1:  # if it ends here put it on the front of the string
+                                cur_var.variation(cur_move).comment =\
+                                    f'{id_string}\n{cur_var.variation(cur_move).comment}'
                             else:
                                 cur_var.variation(cur_move).comment += id_string
 

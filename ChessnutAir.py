@@ -1,38 +1,37 @@
-"""Discover chessnut Air devices.
-See pdf file Chessnut_comunications.pdf 
-for more information."""
+"""
+Discover and talk to chessnut Air devices.
+See pdf file Chessnut_communications.pdf
+for more information.
+"""
 
 import asyncio
-import logging
 
-import chess
-
-from constants import WRITECHARACTERISTICS, INITIALIZASION_CODE, READDATA
-
+from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from constants import DEVICELIST
-import data2fen
-from setledhelpers import turnOffat, turnOnat
+from constants import DEVICE_LIST
 
 
 def loc_to_pos(location):
+    # noinspection SpellCheckingInspection
     return "hgfedcba"[location % 8]+str(8-(location//8))
 
 
 class ChessnutAir:
+    # noinspection SpellCheckingInspection
     """Class created to discover and connect to chessnut Air devices.
-    It discovers the first device with a name that maches the names in DEVICELIST.
-    """
+        It discovers the first device with a name that matches the names in DEVICE_LIST.
+        """
     def __init__(self):
-        self.deviceNameList = DEVICELIST  # valid device name list
+        self.deviceNameList = DEVICE_LIST  # valid device name list
         self.device = self.advertisement_data = self.connection = None
-        self.boardstate = [0]*32
+        self.board_state = [0] * 32
         self.old_data = [0]*32
         self.led_command = bytearray([0x0A, 0x08])
 
+    # noinspection PyUnusedLocal
     def filter_by_name(
         self,
         device: BLEDevice,
@@ -59,7 +58,7 @@ class ChessnutAir:
     async def piece_up(self, location, piece_id):
         raise NotImplementedError
 
-    async def piece_down(self, location, piece_id):  # location -> pos: x = location%8, y = location//8
+    async def piece_down(self, location, piece_id):
         raise NotImplementedError
 
     async def game_loop(self):
@@ -75,7 +74,7 @@ class ChessnutAir:
             return
         for pos in list_of_pos:
             arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
-        await self.connection.write_gatt_char(WRITECHARACTERISTICS, self.led_command + arr)
+        await self.connection.write_gatt_char(WRITE_CHARACTERISTIC, self.led_command + arr)
 
     async def play_animation(self, list_of_frames, sleep_time=0.5):
         """
@@ -87,7 +86,7 @@ class ChessnutAir:
             await self.change_leds(frame)
             await asyncio.sleep(sleep_time)
 
-
+    # noinspection PyUnusedLocal
     async def handler(self, char, data):
         async def send_message(loc, old, new):
             if old != new:
@@ -97,7 +96,7 @@ class ChessnutAir:
                     await self.piece_down(loc, new)
         rdata = data[2:34]
         if rdata != self.old_data:
-            self.boardstate = rdata
+            self.board_state = rdata
             od = self.old_data
             self.old_data = rdata
             for i in range(32):
@@ -109,7 +108,7 @@ class ChessnutAir:
                     await send_message(i*2, old_left, cur_left)
                     await send_message(i*2+1, old_right, cur_right)
 
-    async def run(self, debug=False):
+    async def run(self):
         """ Connect to the device and run the notification handler."""
         print("device.address: ", self.device.address)
 
@@ -117,8 +116,8 @@ class ChessnutAir:
             self.connection = client
             print(f"Connected: {client.is_connected}")
             # send initialisation string!
-            await client.write_gatt_char(WRITECHARACTERISTICS, INITIALIZASION_CODE)  # send initialisation string
+            await client.write_gatt_char(WRITE_CHARACTERISTIC, INITIALIZATION_CODE)  # send initialisation string
             print("Initialized")
-            await client.start_notify(READDATA, self.handler)  # start another notification handler
+            await client.start_notify(READ_DATA_CHARACTERISTIC, self.handler)  # start another notification handler
             await self.game_loop()  # call user game loop
-            await client.stop_notify(READDATA)  # stop the notification handler
+            await client.stop_notify(READ_DATA_CHARACTERISTIC)  # stop the notification handler

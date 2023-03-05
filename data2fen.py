@@ -1,4 +1,5 @@
-from constants import convertDict, MASKLOW
+from constants import convertDict
+
 
 def pieces_from_data(data):
     """"
@@ -13,10 +14,10 @@ def pieces_from_data(data):
         new_x = 3 - x
         new_i = (y * 4) + new_x
         double_field = data[new_i]
-        rfield = double_field & 0xf
-        lfield = double_field >> 4
-        yield lfield
-        yield rfield
+        r_field = double_field & 0xf
+        l_field = double_field >> 4
+        yield l_field
+        yield r_field
 
 
 def convert_to_fen(data):

@@ -3,13 +3,11 @@ import math
 
 import animations
 from data2fen import convert_to_fen, pieces_from_data
-from constants import INITIALIZASION_CODE, WRITECHARACTERISTICS, READCONFIRMATION, READDATA, convertDict, MASKLOW
+from constants import convertDict
 from ChessnutAir import ChessnutAir, loc_to_pos
 from GameOfChess import GameOfChess
 import chess
 from bleak import BleakError
-from chess.engine import Cp
-import random
 
 from fencompare import compare_chess_fens, fen_diff_leds
 
@@ -84,7 +82,7 @@ class Game(ChessnutAir):
         self.is_check = False
 
     def boardstate_as_fen(self):
-        self.cur_fen = convert_to_fen(self.boardstate)
+        self.cur_fen = convert_to_fen(self.board_state)
         return self.cur_fen
 
     async def suggest_move(self, move, blink=False):
@@ -108,8 +106,9 @@ class Game(ChessnutAir):
         increments = (max_score*2)/len(leds)
         # return the score relative to the increments that we just created
         score_in_increments = int(math.ceil(score/increments))  # ceiling to only have 0 leds at scaore = 0
-        score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2) # assert!! -len(leds)/2<score<len(leds)/2
-        #define the LEDs we need to light for this move, and light them!
+        # make sure we are within -len(leds)/2<score_in_increments<len(leds)/2
+        score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2)
+        # define the LEDs we need to light for this move, and light them!
         start = 0 if score_in_increments >= 0 else score_in_increments+1
         end = score_in_increments if score_in_increments > 0 else len(leds)
         self.to_blink = leds[start:end]
@@ -138,7 +137,6 @@ class Game(ChessnutAir):
             print("LED Score")
             await self.led_score()
 
-
     async def piece_down(self, location, piece_id):
         async def king_hover_action():
             if (self.player_color == chess.WHITE and p_str == 'K')\
@@ -158,13 +156,11 @@ class Game(ChessnutAir):
             else:
                 await king_hover_action()
 
-
     async def piece_up(self, location, piece_id):
         pos = loc_to_pos(location)
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} up")
         self.to_light.append(pos)
-        #await self.change_leds(self.to_light)
         self.move_end = None
         self.move_start.append((pos, p_str))
         if self.show_valid:
@@ -185,7 +181,7 @@ class Game(ChessnutAir):
         if self.is_check:
             # find king in check
             pos = filter(lambda p: p[1] == 'k' or p[1] == 'K',
-                         enumerate(map(lambda p: convertDict[p], pieces_from_data(self.boardstate))))
+                         enumerate(map(lambda p: convertDict[p], pieces_from_data(self.board_state))))
             pos = list(pos)
             if self.board.turn == chess.WHITE:
                 pos = filter(lambda p: p[1] == 'K', pos)
@@ -214,7 +210,7 @@ class Game(ChessnutAir):
         """
         relevant_poss = []
 
-        for i, piece in enumerate(pieces_from_data(self.boardstate)):
+        for i, piece in enumerate(pieces_from_data(self.board_state)):
             # i(0) = A1, i(63) = H8
             x = i % 8
             y = i // 8
@@ -267,7 +263,7 @@ class Game(ChessnutAir):
                 # check if the background task is done, if it is display results
                 if not suggested and task and task.done():
                     would_have_done = task.result()
-                    self.suggest_move(would_have_done, blink=True)
+                    await self.suggest_move(would_have_done, blink=True)
                     suggested = True
                 # actually change LEDs to light or blink
                 await self.blink_tick()
@@ -432,7 +428,7 @@ class Game(ChessnutAir):
 
 
 async def go():
-    b = Game(show_valid_moves=True) #board_fen="r1b1kb1r/p1pp1ppp/3n4/4p3/2Bn2Pq/5P1P/PP6/RNBQK1NR", player_color=chess.WHITE, turn='w')#, read_board=True)  #board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn='w', player_color='w')
+    b = Game(show_valid_moves=True)
     while not b.device:
         await b.discover()
     try:

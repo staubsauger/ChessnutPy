@@ -2,11 +2,13 @@
 a python function which compares two chess fens and returns on which fields a piece is wrong
 """
 
+
 def convert_fen(fen):
+    # noinspection SpellCheckingInspection
     """
-    convert "r1bqkbnr/pppppppp/2n5/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2"
-    to "r1bqkbnr/pppppppp/11n11111/11111111/11P11111/11111111/PP1PPPPP/RNBQKBNR"
-    """
+        convert "r1bqkbnr/pppppppp/2n5/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2"
+        to "r1bqkbnr/pppppppp/11n11111/11111111/11P11111/11111111/PP1PPPPP/RNBQKBNR"
+        """
     fen = fen.split()[0]
     new_fen = ""
     for piece in fen:
@@ -40,8 +42,6 @@ def compare_chess_fens(target_fen, cur_fen):
             col = 0
             for b in range(len(cur_rows[i])):  # also wieder 8 :)
                 if target_rows[i][b] != cur_rows[i][b]:
-                    # print("ungleich", target_rows[i][b], cur_rows[i][b], str(col_as_letter[col]) + str(row_as_num(row)))
-                    # print("Piece:", cur_rows[i][b], "at ", str(col_as_letter[col]) + str(row_as_num(row)))
                     pos = str(col_as_letter[col]) + str(row_as_num(row))
                     cur_piece = cur_rows[i][b]
                     target_piece = target_rows[i][b]
