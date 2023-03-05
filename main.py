@@ -430,7 +430,9 @@ async def go():
     engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
     engine_suggest_dir = "stockfish"
     b = Game(show_valid_moves=True,
-             suggestion_book_dir=suggestion_book_dir, engine_dir=engine_dir, engine_suggest_dir=engine_suggest_dir)
+             suggestion_book_dir=suggestion_book_dir,
+             engine_dir=engine_dir,
+             engine_suggest_dir=engine_suggest_dir)
     while not b.device:
         await b.discover()
     try:
