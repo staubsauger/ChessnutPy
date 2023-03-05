@@ -21,9 +21,10 @@ def loc_to_pos(location):
 
 class ChessnutAir:
     # noinspection SpellCheckingInspection
-    """Class created to discover and connect to chessnut Air devices.
-        It discovers the first device with a name that matches the names in DEVICE_LIST.
-        """
+    """
+    Class created to discover and connect to chessnut Air devices.
+    It discovers the first device with a name that matches the names in DEVICE_LIST.
+    """
     def __init__(self):
         self.deviceNameList = DEVICE_LIST  # valid device name list
         self.device = self.advertisement_data = self.connection = None
@@ -31,15 +32,12 @@ class ChessnutAir:
         self.old_data = [0]*32
         self.led_command = bytearray([0x0A, 0x08])
 
-    # noinspection PyUnusedLocal
-    def filter_by_name(
-        self,
-        device: BLEDevice,
-        advertisement_data: AdvertisementData,
-    ) -> bool:
-        """Callback for each discovered device.
+    def filter_by_name(self, device: BLEDevice, _: AdvertisementData) -> bool:
+        """
+        Callback for each discovered device.
         return True if the device name is in the list of 
-        valid device names otherwise it returns False"""
+        valid device names otherwise it returns False
+        """
         if any(ext in device.name for ext in self.deviceNameList):
             self.device = device
             return True
@@ -56,17 +54,22 @@ class ChessnutAir:
         print("done scanning")
 
     async def piece_up(self, location, piece_id):
+        """Should be overriden with a function that handles piece up events."""
         raise NotImplementedError
 
     async def piece_down(self, location, piece_id):
+        """Should be overriden with a function that handles piece up events."""
         raise NotImplementedError
 
     async def game_loop(self):
+        """Should be overriden with a function that creates an endless game loop."""
         raise NotImplementedError
 
     async def change_leds(self, list_of_pos):
-        """Turns on all LEDs in list_of_pos and turns off all others.
-            list_of_pos := ["e3", "a4",...]"""
+        """
+        Turns on all LEDs in list_of_pos and turns off all others.
+            list_of_pos := ["e3", "a4",...]
+        """
         conv_letter = {"a": 128, "b": 64, "c": 32, "d": 16, "e": 8, "f": 4, "g": 2, "h": 1}
         conv_number = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
         arr = bytearray([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
@@ -78,7 +81,8 @@ class ChessnutAir:
 
     async def play_animation(self, list_of_frames, sleep_time=0.5):
         """
-            changes LED to a frame popped from list_of_frames, waits for sleep_time and repeats until no more frames
+            changes LED to a frame popped from beginning of list_of_frames
+            waits for sleep_time and repeats until no more frames
         """
         list_of_frames = list(reversed(list_of_frames.copy()))
         while list_of_frames:
@@ -86,7 +90,7 @@ class ChessnutAir:
             await self.change_leds(frame)
             await asyncio.sleep(sleep_time)
 
-    async def handler(self, _, data):
+    async def _handler(self, _, data):
         async def send_message(loc, old, new):
             if old != new:
                 if new == 0:
@@ -117,6 +121,6 @@ class ChessnutAir:
             # send initialisation string!
             await client.write_gatt_char(WRITE_CHARACTERISTIC, INITIALIZATION_CODE)  # send initialisation string
             print("Initialized")
-            await client.start_notify(READ_DATA_CHARACTERISTIC, self.handler)  # start another notification handler
+            await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start another notification handler
             await self.game_loop()  # call user game loop
             await client.stop_notify(READ_DATA_CHARACTERISTIC)  # stop the notification handler
