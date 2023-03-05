@@ -14,7 +14,7 @@ READ_DATA_CHARACTERISTIC = '1B7E8262-2877-41C3-B46E-CF057C562023'
 # Within each byte the lower 4 bits represent the 
 # first square and the higher 4 bits represent the 
 # second square
-MASKLOW = 0b00001111
+MASK_LOW = 0b00001111
 
 # Each square has a value specifying the piece:
 convertDict = {0: " ",

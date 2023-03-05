@@ -11,6 +11,7 @@ from bleak import BleakError
 
 from fencompare import compare_chess_fens, fen_diff_leds
 
+# noinspection SpellCheckingInspection
 """
 Mindmap:
 
@@ -32,10 +33,9 @@ funktionsweise pi:
 
 
 class Game(ChessnutAir):
-    def __init__(self, board_fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", turn="w", castle="KQkq",
+    def __init__(self, board_fen=None, turn="w", castle="KQkq",
                  player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True,
-                 suggestion_book_dir="/usr/share/scid/books/Elo2400.bin",
-                 engine_dir="/home/rudi/Games/schach/texel-chess/texel/build/texel", engine_suggest_dir="stockfish"):
+                 suggestion_book_dir="", engine_dir="", engine_suggest_dir=""):
         ChessnutAir.__init__(self)
         self.no_help = no_help
         self.should_read = read_board
@@ -49,7 +49,7 @@ class Game(ChessnutAir):
         self.to_blink = []
         self.to_light = []
         self.player_color = player_color
-        self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1")
+        self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1") if board_fen else chess.Board()
         self.target_fen = ""
         self.waiting_for_move = True
         self.undo_loop = False
@@ -83,7 +83,7 @@ class Game(ChessnutAir):
         self.inited = False
         self.is_check = False
 
-    def boardstate_as_fen(self):
+    def board_state_as_fen(self):
         self.cur_fen = convert_to_fen(self.board_state)
         return self.cur_fen
 
@@ -107,7 +107,7 @@ class Game(ChessnutAir):
         max_score = 200
         increments = (max_score*2)/len(leds)
         # return the score relative to the increments that we just created
-        score_in_increments = int(math.ceil(score/increments))  # ceiling to only have 0 leds at scaore = 0
+        score_in_increments = int(math.ceil(score/increments))  # ceiling to only have 0 leds at score = 0
         # make sure we are within -len(leds)/2<score_in_increments<len(leds)/2
         score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2)
         # define the LEDs we need to light for this move, and light them!
@@ -124,7 +124,7 @@ class Game(ChessnutAir):
             self.player_color = chess.WHITE
             self.player_color_select = False
         else:
-            move = await self.game.getmovesuggestion(self.board)
+            move = await self.game.get_move_suggestion(self.board)
             print(f"suggesting move: {move}")
             await self.suggest_move(move)
             self.move_end = None
@@ -209,11 +209,11 @@ class Game(ChessnutAir):
 
     async def check_quit(self) -> bool:
         """
-        Check if game should end because the kings were placed in ther middle in specific ways
+        Check if game should end because the kings were placed in the middle in specific ways
         if both kings are on black: black wins
         if both kings are on white: white wins
         if mixed and vertical: draw
-        if mixed and horizontal: quit completly
+        if mixed and horizontal: quit completely
         """
         def filter_fun(i, _):
             x = i % 8
@@ -229,13 +229,13 @@ class Game(ChessnutAir):
             return True
         elif (e4 and e5) or (d4 and d5):  # Draw
             return True
-        elif (e4 and d4) or (e5 and d5):  # we want to quit completly
+        elif (e4 and d4) or (e5 and d5):  # we want to quit completely
             self.more_games = False  # maybe quit() here?
             return True
         return False
 
     async def fix_board(self, task=None):
-        diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+        diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
         self.to_blink = self.to_light = []  # turn off any lights that might still be on
         if diffs:
             print("board incorrect!\nplease fix")
@@ -268,13 +268,13 @@ class Game(ChessnutAir):
                     suggested = True
                 # actually change LEDs to light or blink and sleep a little
                 await self.blink_tick(sleep_time=0.2)
-                diffs = compare_chess_fens(self.board.fen(), self.boardstate_as_fen())
+                diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
             if task and not task.done():
                 task.cancel()
             await asyncio.sleep(0.2)
         else:
-            test = self.boardstate_as_fen()
+            test = self.board_state_as_fen()
             print(f"board correct:\n{chess.Board(test)}")
         # Move is Fixed
         self.castling = False
@@ -287,12 +287,12 @@ class Game(ChessnutAir):
 
     async def ai_move(self):
         player_move = self.board.pop()
-        would_have_done_task = asyncio.create_task(self.game.getmovesuggestion(self.board.copy()))
+        would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy()))
         self.board.push(player_move)
-        rmove = await self.game.getcpumove(self.board)
-        move = f"{rmove}"[:4]
+        raw_move = await self.game.get_cpu_move(self.board)
+        move = f"{raw_move}"[:4]
         print("generating Move!", move)
-        if self.board.is_castling(rmove):
+        if self.board.is_castling(raw_move):
             print("ai is right")
             self.castling = True
         self.board.push_uci(move)
@@ -369,6 +369,7 @@ class Game(ChessnutAir):
                 continue
             elif self.board.is_stalemate():
                 await self.play_animation(animations.stalemate_anim)
+                # noinspection SpellCheckingInspection
                 print("Remis!")
                 self.running = False
             if self.player_turn:
@@ -386,12 +387,12 @@ class Game(ChessnutAir):
         # reset this object and call game_loop again
         self.setup()
         await self.game_loop()
-        self.game.quitchess()
+        self.game.quit_chess_engines()
 
     async def maybe_read_board(self):
         if self.should_read:
-            self.board = chess.Board(f'{self.boardstate_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
-            print(f'Read boardstate:\n{self.board}')
+            self.board = chess.Board(f'{self.board_state_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
+            print(f'Read board state:\n{self.board}')
             self.should_read = False
         else:
             print("Board settled")
@@ -410,7 +411,7 @@ class Game(ChessnutAir):
             await self.blink_tick(sleep_time=0.5)
 
     def print_openings(self):
-        cur_var = self.game.ecopgn
+        cur_var = self.game.eco_pgn
         for n in self.board.move_stack:
             if cur_var.has_variation(n):
                 cur_var = cur_var.variation(n)
@@ -423,8 +424,9 @@ class Game(ChessnutAir):
             print(f'not openers found: {" ".join(map(lambda m: m.uci(), self.board.move_stack))}')
 
 
+# noinspection SpellCheckingInspection
 async def go():
-    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"
+    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make there 3 vars configurable by argument
     engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
     engine_suggest_dir = "stockfish"
     b = Game(show_valid_moves=True,
@@ -434,7 +436,7 @@ async def go():
     try:
         await b.run()
     except BleakError:
-        print("Board Disconnected. Retring connection.")
+        print("Board Disconnected. Retrying connection.")
         await go()
         quit()
     except KeyboardInterrupt:

@@ -22,25 +22,24 @@ def convert_fen(fen):
 
 
 def compare_chess_fens(target_fen, cur_fen):
+    # noinspection SpellCheckingInspection
     """
-    takes target_fen and cur_fen and returns which pieces are wrong on fen2
-    fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
-    """
+        takes target_fen and cur_fen and returns which pieces are wrong on fen2
+        fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
+        """
     def row_as_num(x):
         return 8 - x
 
     col_as_letter = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
     target_rows = convert_fen(target_fen).split("/")
     cur_rows = convert_fen(cur_fen).split("/")
-    # print(target_rows, cur_rows)
     differences = []
     row = 0
-    for i in range(len(target_rows)):  # für also 8
+    for i in range(len(target_rows)):
         if target_rows[i] != cur_rows[i]:
-            # print("ungleich", target_rows[i], cur_rows[i], row_as_num(row))
             col = 0
-            for b in range(len(cur_rows[i])):  # also wieder 8 :)
+            for b in range(len(cur_rows[i])):
                 if target_rows[i][b] != cur_rows[i][b]:
                     pos = str(col_as_letter[col]) + str(row_as_num(row))
                     cur_piece = cur_rows[i][b]
@@ -84,8 +83,3 @@ def fen_diff_leds(fen_diff):
             leds.append([start[1]])  # we never found a pair
     return leds
 
-# fen1 = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-# fen2 = "rnbqkbnr/ppp2ppp/3p4/4P3/2PP4/8/PP3PPP/RNBQKBNR b KQkq - 0 1"
-# differences = compare_chess_fens(fen1, fen2)
-# print(differences)
-# print(fen_diff_leds(differences))

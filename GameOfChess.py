@@ -20,26 +20,24 @@ class GameOfChess:
         self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
         self.checkmate = False
         self.engines_running = True
-        self.ecopgn = chess.pgn.Game()
-        # self.ecolist[move_str] -> (ecocode, econame)
+        self.eco_pgn = chess.pgn.Game()
         self.init_eco_file()
 
-    async def getcpumove(self, board):
-        cpumove = self.engine.play(board, self.limit)
-        return cpumove.move
+    async def get_cpu_move(self, board):
+        return self.engine.play(board, self.limit)
 
     async def get_score(self, board):
         score = self.engine_suggest.analyse(board, self.limit_sug).get('score')
         return score.pov(True)  # returns score in cp relative to white -> always
 
-    async def getmovesuggestion(self, board):
-        move = self.getbookmove(board)
+    async def get_move_suggestion(self, board):
+        move = self.get_book_move(board)
         if not move:
             print("Engine move")
             move = self.engine.play(board, self.limit_sug).move
         return f"{move}"  # ex "e3e4"
 
-    def getbookmove(self, board):
+    def get_book_move(self, board):
         with chess.polyglot.open_reader(self.suggestion_book) as reader:
             try:
                 move = reader.weighted_choice(board)
@@ -48,49 +46,50 @@ class GameOfChess:
             except IndexError:
                 return None
 
-    def quitchess(self):
+    def quit_chess_engines(self):
         if self.engines_running:
             self.engine.quit()
             self.engine_suggest.quit()
             self.engines_running = False
 
-    def write_to_pgn(self, gameboard):
-        t = time.localtime()
-        day_str = f'{t.tm_year}.{t.tm_mon:02}.{t.tm_mday:02}'
-        tstr = f"{day_str}_{t.tm_hour}_{t.tm_min}"
+    def write_to_pgn(self, board):
+        cur_time = time.localtime()
+        day_str = f'{cur_time.tm_year}.{cur_time.tm_mon:02}.{cur_time.tm_mday:02}'
+        time_str = f"{day_str}_{cur_time.tm_hour}_{cur_time.tm_min}"
         game = chess.pgn.Game()
+        # noinspection SpellCheckingInspection
         game.headers["Event"] = "VakantOS"
         game.headers["Date"] = day_str
-        if gameboard.player_color:
+        if board.player_color:
             game.headers["White"] = "Rudi"
             game.headers["Black"] = str(self.engine.id["name"])
         else:
             game.headers["Black"] = "Rudi"
             game.headers["White"] = str(self.engine.id["name"])
-        res = gameboard.board.result()
+        res = board.board.result()
         if res == '*':
-            if gameboard.winner == chess.WHITE:
+            if board.winner == chess.WHITE:
                 res = '1-0'
-            elif gameboard.winner == chess.BLACK:
+            elif board.winner == chess.BLACK:
                 res = '0-1'
             else:
                 res = '1/2-1/2'
         game.headers["Result"] = res
-        if len(gameboard.board.move_stack) == 0:
+        if len(board.board.move_stack) == 0:
             print("No PGN Written")
             return
-        move = gameboard.board.move_stack.pop(0)
+        move = board.board.move_stack.pop(0)
         node = game.add_main_variation(move)
-        for move in gameboard.board.move_stack:
+        for move in board.board.move_stack:
             node = node.add_main_variation(move)
-        print(game, file=open(f"/home/rudi/Desktop/{tstr}.pgn", 'w'), end="\n\n")
+        print(game, file=open(f"/home/rudi/Desktop/{time_str}.pgn", 'w'), end="\n\n")
         print("PGN written")
 
-    def init_eco_file(self, ):  # -> bester weg um nicht städing die datei neu zu lesen?
+    def init_eco_file(self, ):
         """
-        read the ecofile -> get:
+        read the eco file with format:
         'E94    1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O "King's Indian, Classical Variation"'
-        and fill self.ecopgn with the moves and names
+        and fill self.eco_pgn with the moves and names
         """
         with open("eco", "rt") as eco_file:
             eco_line = eco_file.readline()
@@ -103,7 +102,7 @@ class GameOfChess:
                 moves = list(filter(lambda m: len(m) > 1 and '.' not in m, split[1:]))
                 b = chess.Board()
                 uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
-                cur_var = self.ecopgn
+                cur_var = self.eco_pgn
                 for i, cur_move in enumerate(uci_moves):
                     id_string = f'({name}, {code})\n'
                     if cur_var.has_variation(cur_move):
@@ -118,7 +117,3 @@ class GameOfChess:
                         cur_var.add_variation(cur_move).comment = id_string
                     cur_var = cur_var.variation(cur_move)
                 eco_line = eco_file.readline()
-
-# c = GameOfChess()
-# c.init_eco_file()
-# print(c.ecolist)
