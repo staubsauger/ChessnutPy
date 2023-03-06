@@ -96,6 +96,7 @@ class Game(ChessnutAir):
             self.to_blink = leds
         else:
             self.to_light = leds
+            self.to_blink = []
 
     async def led_score(self, score=None):
         # check if score exists, else await score
@@ -157,6 +158,9 @@ class Game(ChessnutAir):
                 self.to_blink = []
             else:
                 await king_hover_action()
+            if self.player_color_select:
+                self.move_start = []
+                self.to_blink = ['e1', 'e8']
 
     async def piece_up(self, location, piece_id):
         pos = loc_to_pos(location)
@@ -165,6 +169,7 @@ class Game(ChessnutAir):
         self.to_light.append(pos)
         self.move_end = None
         self.move_start.append((pos, p_str))
+        self.to_blink = []
         if self.show_valid:
             for move in self.board.legal_moves:
                 m_str = f"{move}"
@@ -186,9 +191,9 @@ class Game(ChessnutAir):
                          enumerate(map(lambda p: convertDict[p], pieces_from_data(self.board_state))))
             pos = list(pos)
             if self.board.turn == chess.WHITE:
-                pos = filter(lambda p: p[1] == 'K', pos)
+                pos = filter(lambda _, p: p == 'K', pos)
             else:
-                pos = filter(lambda p: p[1] == 'k', pos)
+                pos = filter(lambda _, p: p == 'k', pos)
             pos = list(pos)
             if len(pos) > 0:
                 pos = pos[0]
@@ -215,12 +220,13 @@ class Game(ChessnutAir):
         if mixed and vertical: draw
         if mixed and horizontal: quit completely
         """
-        def filter_fun(i, _):
+        def filter_fun(i):
+            i = i[0]
             x = i % 8
             y = i // 8
             return 3 <= x <= 4 and 3 <= y <= 4  # -> four squares in the center
         relevant_positions = filter(filter_fun, enumerate(pieces_from_data(self.board_state)))  # should always be 4
-        d5, e5, d4, e4 = map(lambda _, pos: pos == 'k' or pos == 'K', relevant_positions)
+        d5, e5, d4, e4 = map(lambda pos: pos[1] == 'k' or pos[1] == 'K', relevant_positions)
         if d5 and e4:  # both on white
             self.winner = chess.WHITE
             return True
@@ -289,7 +295,7 @@ class Game(ChessnutAir):
         player_move = self.board.pop()
         would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy()))
         self.board.push(player_move)
-        raw_move = await self.game.get_cpu_move(self.board)
+        raw_move = (await self.game.get_cpu_move(self.board)).move
         move = f"{raw_move}"[:4]
         print("generating Move!", move)
         if self.board.is_castling(raw_move):
@@ -354,6 +360,7 @@ class Game(ChessnutAir):
         self.inited = True
         await self.select_player_color()
         self.player_turn = self.board.turn == self.player_color
+        await self.fix_board()
         self.to_blink = self.to_light = []
         if self.play_animations:
             await self.play_animation(animations.game_start_amin, sleep_time=0.1)

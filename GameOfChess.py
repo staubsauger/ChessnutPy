@@ -10,7 +10,7 @@ import asyncio
 class GameOfChess:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
-                 suggestion_limit=chess.engine.Limit(time=1.5),
+                 suggestion_limit=chess.engine.Limit(time=5.5),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin") -> None:
         self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
         self.engine_suggest = chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
@@ -21,7 +21,7 @@ class GameOfChess:
         self.checkmate = False
         self.engines_running = True
         self.eco_pgn = chess.pgn.Game()
-        self.init_eco_file()
+        self.init_scid_eco_file()
 
     async def get_cpu_move(self, board):
         return self.engine.play(board, self.limit)
@@ -92,7 +92,7 @@ class GameOfChess:
         and fill self.eco_pgn with the moves and names
         """
         with open("eco", "rt") as eco_file:
-            eco_line = eco_file.readline()
+            eco_line = eco_file.readline().strip()
             while eco_line:
                 split = eco_line.split('"')
                 name = split[1] if len(split) > 1 else ""
@@ -107,8 +107,8 @@ class GameOfChess:
                     id_string = f'({name}, {code})\n'
                     if cur_var.has_variation(cur_move):
                         if id_string not in cur_var.variation(cur_move).comment:
-                            if len(uci_moves) == i+1:  # if it ends here put it on the front of the string
-                                cur_var.variation(cur_move).comment =\
+                            if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
+                                cur_var.variation(cur_move).comment = \
                                     f'{id_string}\n{cur_var.variation(cur_move).comment}'
                             else:
                                 cur_var.variation(cur_move).comment += id_string
@@ -117,3 +117,66 @@ class GameOfChess:
                         cur_var.add_variation(cur_move).comment = id_string
                     cur_var = cur_var.variation(cur_move)
                 eco_line = eco_file.readline()
+
+    def init_scid_eco_file(self):
+        """
+        read the eco file with format:
+        'A03 "Bird: 1...d5 2.Nf3 Nf6 3.g3 g6: 5.d3"
+            1.f4 d5 2.Nf3 Nf6 3.g3 g6 4.Bg2 Bg7 5.d3 *' -> ["1", "f4 d5 2", "Nf3 Nf6 3", ...]
+        and fill self.eco_pgn with the moves and names
+        """
+        with open("scid.eco", "rt") as eco_file:
+            count = 0
+
+            def read_line():
+                nonlocal count
+                count += 1
+                return eco_file.readline().strip(' \n')
+
+            eco_line = read_line()
+            while eco_line:
+                eco_line = eco_line.strip(' \n')
+                while eco_line.startswith("#"):
+                    eco_line = read_line()
+                while len(eco_line) == 0 or eco_line[-1] != '*':
+                    eco_line += ' '+read_line()
+                split = eco_line.split('"')
+                code = split[0].strip()
+                name = split[1] if len(split) > 1 else ""
+                rest = split[2]
+                split = rest.split('.')
+                turns = map(lambda m: m[:-2].split(), filter(lambda m: len(m.strip()) > 1, split))
+                moves = []
+                for t in turns:
+                    m1 = t[0]  ### wir finden kein openings....
+                    moves.append(m1)
+                    if len(t) > 1:
+                        m2 = t[1]
+                        moves.append(m2)
+        # ------------------#
+                b = chess.Board()
+                id_string = f'({name}, {code})\n'
+                uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
+                cur_var = self.eco_pgn
+                if len(uci_moves) < 1:
+                    cur_var.comment += id_string
+                for i, cur_move in enumerate(uci_moves):
+                    if cur_var.has_variation(cur_move):
+                        if id_string not in cur_var.variation(cur_move).comment:
+                            if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
+                                cur_var.variation(cur_move).comment = \
+                                    f'{id_string}\n{cur_var.variation(cur_move).comment}'
+                            else:
+                                cur_var.variation(cur_move).comment += id_string
+
+                    else:
+                        cur_var.add_variation(cur_move).comment = id_string
+                    cur_var = cur_var.variation(cur_move)
+                eco_line = eco_file.readline()
+                count += 1
+        print(count)
+
+
+# c = GameOfChess("/home/rudi/Games/schach/texel-chess/texel/build/texel", "stockfish")
+#c.init_scid_eco_file()
+#print(c.eco_pgn)
