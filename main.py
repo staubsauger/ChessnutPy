@@ -65,6 +65,7 @@ class Game(ChessnutAir):
         self.is_check = False
         self.play_animations = play_animations
         self.fixing_board = False
+        self.overrode_ai = False
 
     def setup(self):
         self.target_move = None
@@ -85,6 +86,7 @@ class Game(ChessnutAir):
         self.winner = None
         self.inited = False
         self.is_check = False
+        self.overrode_ai = False
 
     def board_state_as_fen(self):
         self.cur_fen = convert_to_fen(self.board_state)
@@ -251,8 +253,8 @@ class Game(ChessnutAir):
             x = i % 8
             y = i // 8
             return 3 <= x <= 4 and 3 <= y <= 4  # -> four squares in the center
-        relevant_positions = filter(filter_fun, enumerate(pieces_from_data(self.board_state)))  # should always be 4
-        d5, e5, d4, e4 = map(lambda pos: pos[1] == 'k' or pos[1] == 'K', relevant_positions)
+        relevant_positions = list(filter(filter_fun, enumerate(pieces_from_data(self.board_state))))  # should always be 4
+        d5, e5, d4, e4 = map(lambda pos: convertDict[pos[1]] == 'k' or convertDict[pos[1]] == 'K', relevant_positions)
         if d5 and e4:  # both on white
             self.winner = chess.WHITE
             return True
@@ -269,11 +271,26 @@ class Game(ChessnutAir):
     async def fix_board(self, task=None):
         diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
         self.to_blink = self.to_light = []  # turn off any lights that might still be on
+        if self.undo_loop and len(diffs) == 0:
+            self.undo_loop = False
+            self.overrode_ai = False
         if diffs:
             self.fixing_board = True
             print("board incorrect!\nplease fix")
             suggested = False
             while diffs:
+                # check if we want to override an AI move
+                if self.undo_loop and len(diffs) == 2:
+                    move1 = chess.Move.from_uci(diffs[0][1]+diffs[1][1])
+                    move2 = chess.Move.from_uci(diffs[1][1]+diffs[0][1])
+                    if move1 in self.board.legal_moves:
+                        self.board.push(move1)
+                        self.overrode_ai = True
+                        break
+                    elif move2 in self.board.legal_moves:
+                        self.board.push(move2)
+                        self.overrode_ai = True
+                        break
                 # check if we want to quit/reset the game
                 self.winner = None
                 want_to_quit = await self.check_quit()
@@ -322,9 +339,12 @@ class Game(ChessnutAir):
         self.move_end = None
 
     async def ai_move(self):
-        player_move = self.board.pop()
-        would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
-        self.board.push(player_move)
+        has_player_move = len(self.board.move_stack) > 0
+        would_have_done_task = None
+        if has_player_move:
+            player_move = self.board.pop()
+            would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
+            self.board.push(player_move)
         ai_play = await self.game.get_cpu_move(self.board)
         raw_move = ai_play.move
         move = f"{raw_move}"[:4]
@@ -362,7 +382,8 @@ class Game(ChessnutAir):
                     print("Movestack: ", list(map(lambda m: f'{m}', self.board.move_stack)))
                     print("Player move: ", move)
                     self.to_blink = self.to_light = []
-                    self.player_turn = False
+                    self.player_turn = self.overrode_ai
+                    self.overrode_ai = False
                     self.undo_loop = False
                 else:
                     # check if we want to undo a move
@@ -422,11 +443,10 @@ class Game(ChessnutAir):
         print(f'winner was {self.winner}!')
         # save PGN here
         self.game.write_to_pgn(self)
-        if not self.more_games:
-            return
-        # reset this object and call game_loop again
-        self.setup()
-        await self.game_loop()
+        if self.more_games:
+            # reset this object and call game_loop again
+            self.setup()
+            await self.game_loop()
         await self.game.quit_chess_engines()
 
     async def maybe_read_board(self):
@@ -500,3 +520,4 @@ async def go():
 
 asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
 asyncio.run(go())
+#asyncio.get_event_loop().close()

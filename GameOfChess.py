@@ -38,7 +38,7 @@ class GameOfChess:
         try:
             return await self.engine.play(board, self.limit)
         except asyncio.CancelledError:
-            print("ai move stopped?")
+            print("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
         score = await self.engine_suggest.analyse(board, self.limit_sug).get('score')
@@ -128,6 +128,8 @@ class GameOfChess:
                 self.movelist_to_pgn(id_string, uci_moves)
                 eco_line = eco_file.readline()
 
+    def init_scid_eco_both(self):
+        pass
 
     def init_scid_eco_file(self):
         """
