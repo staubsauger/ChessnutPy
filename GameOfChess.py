@@ -34,8 +34,8 @@ class GameOfChess:
         self.eco_file = eco_file
         self.dict_cache_file = 'eco_dict.cache'
         if eco_file:
-            if os.path.exists(self.dict_cache_file):
-                self.read_eco_dict()
+            if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
+                pass
             else:
                 self.init_scid_eco_dict()
                 self.write_eco_dict()
@@ -193,7 +193,7 @@ class GameOfChess:
             cur_var = cur_var.variation(cur_move)
 
     def write_eco_dict(self):
-        with open(self.dict_cache_file, 'w') as f:
+        with open("eco_dict.cache", 'w') as f:
             h = hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest()
             print(h, file=f)
             for key in self.eco_dict:

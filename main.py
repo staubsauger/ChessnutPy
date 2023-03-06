@@ -180,12 +180,7 @@ class Game(ChessnutAir):
                 await king_hover_action()
             if not ms and len(self.board.move_stack) > 0:
                 undo_move = f'{self.board.move_stack[-1]}'
-                # for p in self.move_start:
-                #     if p == undo_move[:2]:
-                #         ms = True
-                # if ms:
-                ms = filter(lambda p: p[0] == undo_move[2:], self.move_start)
-                if any(ms):
+                if any(filter(lambda p: p[0] == undo_move[2:], self.move_start)):
                     self.move_end = (pos, p_str)
             if self.player_color_select:
                 self.move_start = []
@@ -217,19 +212,16 @@ class Game(ChessnutAir):
     def check_and_display_check(self):
         if self.is_check:
             # find king in check
-            pos = filter(lambda p: p[1] == 'k' or p[1] == 'K',
-                         enumerate(map(lambda p: convertDict[p], pieces_from_data(self.board_state))))
-            pos = list(pos)
+            square = filter(lambda p: p[1] == 'k' or p[1] == 'K',
+                            enumerate(map(lambda p: convertDict[p],
+                                      pieces_from_data(self.board_state))))
             if self.board.turn == chess.WHITE:
-                pos = filter(lambda _, p: p == 'K', pos)
+                square = filter(lambda _, p: p == 'K', square)
             else:
-                pos = filter(lambda _, p: p == 'k', pos)
-            pos = list(pos)
-            if len(pos) > 0:
-                pos = pos[0]
-                x = pos[0] % 8
-                y = 8-pos[0] // 8
-                pos = "abcdefgh"[x]+str(y)
+                square = filter(lambda _, p: p == 'k', square)
+            square = list(square)
+            if len(square) > 0:
+                pos = loc_to_pos(square[0])
                 self.to_blink = [pos]
 
     async def blink_tick(self, sleep_time=0.0):
