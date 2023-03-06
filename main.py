@@ -119,7 +119,16 @@ class Game(ChessnutAir):
         await asyncio.sleep(1.5)
         await self.blink_tick()
 
-    async def player_king_hover_action(self):
+    async def player_queen_hover_action(self):
+        pass
+
+    async def cpu_queen_hover_action(self):
+        pass
+
+    async def last_piece_moved_hover_action(self): # -> get the eval of the last move made and better choices
+        pass
+
+    async def player_king_hover_action(self): # -> get bookmove first and then analyses engine output
         if self.player_color_select:
             print("Selected White")
             self.player_color = chess.WHITE
@@ -141,6 +150,8 @@ class Game(ChessnutAir):
             await self.led_score()
 
     async def piece_down(self, location, piece_id):
+        ## Figuren schleifen???? Delay??
+
         async def king_hover_action():
             if (self.player_color == chess.WHITE and p_str == 'K')\
                     or (self.player_color == chess.BLACK and p_str == 'k'):
@@ -329,6 +340,7 @@ class Game(ChessnutAir):
                 if self.board.is_legal(chess.Move.from_uci(move)):
                     self.board.push_uci(move)
                     print(self.board)
+                    print("Movestack: ", self.board.move_stack)
                     print("Player move: ", move)
                     self.to_blink = self.to_light = []
                     self.player_turn = False
