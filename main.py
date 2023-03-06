@@ -62,6 +62,7 @@ class Game(ChessnutAir):
         self.show_valid = show_valid_moves
         self.is_check = False
         self.play_animations = play_animations
+        self.fixing_board = False
 
     def setup(self):
         self.target_move = None
@@ -161,7 +162,7 @@ class Game(ChessnutAir):
         pos = loc_to_pos(location)
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} down")
-        if self.player_turn and len(self.move_start) > 0:
+        if self.player_turn and len(self.move_start) > 0 and not self.fixing_board:
             self.to_light = []
             ms = await self.find_start_move()
             if ms and ms != pos:
@@ -180,20 +181,18 @@ class Game(ChessnutAir):
         self.to_light.append(pos)
         self.move_end = None
         self.move_start.append((pos, p_str))
-        self.to_blink = []
-        if self.show_valid:
-            for move in self.board.legal_moves:
-                m_str = f"{move}"
-                from_square = m_str[:2]
-                if from_square == pos:
-                    self.to_blink.append(m_str[2:])
-                to_square = m_str[2:]
-                if to_square == pos:
-                    self.to_blink.append(m_str[:2])
-        if len(self.board.move_stack) > 0:
-            undo = f"{self.board.peek()}"
-            if undo[2:] == pos:
-                self.to_blink.append(undo[:2])
+        if not self.fixing_board:
+            self.to_blink = []
+            if self.show_valid:
+                for move in self.board.legal_moves:
+                    m_str = f"{move}"
+                    from_square = m_str[:2]
+                    to_square = m_str[2:]
+                    self.to_blink.append(from_square if to_square == pos else (to_square if from_square == pos else []))
+            if len(self.board.move_stack) > 0:
+                undo = f"{self.board.peek()}"
+                if undo[2:] == pos:
+                    self.to_blink.append(undo[:2])
 
     def check_check(self):
         if self.is_check:
@@ -255,6 +254,7 @@ class Game(ChessnutAir):
         diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
         self.to_blink = self.to_light = []  # turn off any lights that might still be on
         if diffs:
+            self.fixing_board = True
             print("board incorrect!\nplease fix")
             suggested = False
             while diffs:
@@ -287,6 +287,7 @@ class Game(ChessnutAir):
                 await self.blink_tick(sleep_time=0.2)
                 diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
+            self.fixing_board = False
             if task and not task.done():
                 task.cancel()
             await asyncio.sleep(0.2)
