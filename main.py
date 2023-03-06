@@ -375,7 +375,7 @@ class Game(ChessnutAir):
                     print("Movestack: ", list(map(lambda m: f'{m}', self.board.move_stack)))
                     print("Player move: ", move)
                     self.to_blink = self.to_light = []
-                    self.player_turn = self.overrode_ai
+                    self.player_turn = self.board.turn == self.player_color
                     self.overrode_ai = False
                     self.undo_loop = False
                 else:
