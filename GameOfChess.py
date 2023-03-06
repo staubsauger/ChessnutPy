@@ -10,32 +10,54 @@ import asyncio
 class GameOfChess:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
-                 suggestion_limit=chess.engine.Limit(time=5.5),
+                 suggestion_limit=chess.engine.Limit(time=10.5),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin") -> None:
-        self.engine = chess.engine.SimpleEngine.popen_uci(engine_path)
-        self.engine_suggest = chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
+        self.engine_path = engine_path
+        self.transport = None
+        self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
+        self.suggestion_engine_path = suggestion_engine_path
+        self.transport_suggest = None
+        self.engine_suggest = None  # chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
         self.suggestion_book = suggestion_book_path
         self.limit = engine_limit
         self.limit_sug = suggestion_limit
-        self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
         self.checkmate = False
+        self.engines_running = False
+        self.eco_pgn = None  # chess.pgn.Game()
+        self.eco_dict = {}
+        # self.init_scid_eco_file()
+        self.init_scid_eco_dict()
+
+    async def init_engines(self):
+        self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
+        self.transport_suggest, self.engine_suggest = await chess.engine.popen_uci(self.suggestion_engine_path)
+        await self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
         self.engines_running = True
-        self.eco_pgn = chess.pgn.Game()
-        self.init_scid_eco_file()
 
     async def get_cpu_move(self, board):
-        return self.engine.play(board, self.limit)
+        try:
+            return await self.engine.play(board, self.limit)
+        except asyncio.CancelledError:
+            print("ai move stopped?")
 
     async def get_score(self, board):
-        score = self.engine_suggest.analyse(board, self.limit_sug).get('score')
+        score = await self.engine_suggest.analyse(board, self.limit_sug).get('score')
         return score.pov(True)  # returns score in cp relative to white -> always
 
-    async def get_move_suggestion(self, board):
-        move = self.get_book_move(board)
-        if not move:
-            print("Engine move")
-            move = self.engine.play(board, self.limit_sug).move
-        return f"{move}"  # ex "e3e4"
+    async def get_move_suggestion(self, board, min_time=0.0):
+        try:
+            start_time = time.time()
+            move = self.get_book_move(board)
+            if not move:
+                print("Engine move: ", end='')
+                move = (await self.engine_suggest.play(board, self.limit_sug)).move
+                print(move)
+            time_spend = time.time() - start_time
+            if time_spend < min_time:
+                await asyncio.sleep(min_time-time_spend)
+            return f"{move}"  # ex "e3e4"
+        except asyncio.exceptions.CancelledError:
+            print("suggestion was canceled")
 
     def get_book_move(self, board):
         with chess.polyglot.open_reader(self.suggestion_book) as reader:
@@ -46,10 +68,10 @@ class GameOfChess:
             except IndexError:
                 return None
 
-    def quit_chess_engines(self):
+    async def quit_chess_engines(self):
         if self.engines_running:
-            self.engine.quit()
-            self.engine_suggest.quit()
+            await self.engine.quit()
+            await self.engine_suggest.quit()
             self.engines_running = False
 
     def write_to_pgn(self, board):
@@ -101,22 +123,11 @@ class GameOfChess:
                 code = split[0]
                 moves = list(filter(lambda m: len(m) > 1 and '.' not in m, split[1:]))
                 b = chess.Board()
+                id_string = f'({name}, {code})\n'
                 uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
-                cur_var = self.eco_pgn
-                for i, cur_move in enumerate(uci_moves):
-                    id_string = f'({name}, {code})\n'
-                    if cur_var.has_variation(cur_move):
-                        if id_string not in cur_var.variation(cur_move).comment:
-                            if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
-                                cur_var.variation(cur_move).comment = \
-                                    f'{id_string}\n{cur_var.variation(cur_move).comment}'
-                            else:
-                                cur_var.variation(cur_move).comment += id_string
-
-                    else:
-                        cur_var.add_variation(cur_move).comment = id_string
-                    cur_var = cur_var.variation(cur_move)
+                self.movelist_to_pgn(id_string, uci_moves)
                 eco_line = eco_file.readline()
+
 
     def init_scid_eco_file(self):
         """

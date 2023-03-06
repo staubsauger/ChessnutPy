@@ -1,5 +1,6 @@
 import asyncio
 import math
+import sys
 
 import animations
 from data2fen import convert_to_fen, pieces_from_data
@@ -7,6 +8,7 @@ from constants import convertDict
 from ChessnutAir import ChessnutAir, loc_to_pos
 from GameOfChess import GameOfChess
 import chess
+import chess.engine
 from bleak import BleakError
 
 from fencompare import compare_chess_fens, fen_diff_leds
@@ -135,8 +137,11 @@ class Game(ChessnutAir):
             self.player_color = chess.WHITE
             self.player_color_select = False
         else:
+            await self.blink_tick()
+            print("suggesting move: ", end='')
             move = await self.game.get_move_suggestion(self.board)
-            print(f"suggesting move: {move}")
+            print(move)
+            self.to_blink = self.to_light = []
             await self.suggest_move(move)
             self.move_end = None
             self.move_start = []
@@ -165,11 +170,20 @@ class Game(ChessnutAir):
         if self.player_turn and len(self.move_start) > 0 and not self.fixing_board:
             self.to_light = []
             ms = await self.find_start_move()
+            self.to_blink = []
             if ms and ms != pos:
                 self.move_end = (pos, p_str)
-                self.to_blink = []
             else:
                 await king_hover_action()
+            if not ms and len(self.board.move_stack) > 0:
+                undo_move = f'{self.board.move_stack[-1]}'
+                # for p in self.move_start:
+                #     if p == undo_move[:2]:
+                #         ms = True
+                # if ms:
+                ms = filter(lambda p: p[0] == undo_move[2:], self.move_start)
+                if any(ms):
+                    self.move_end = (pos, p_str)
             if self.player_color_select:
                 self.move_start = []
                 self.to_blink = ['e1', 'e8']
@@ -272,6 +286,8 @@ class Game(ChessnutAir):
                 if len(to_display) == 1:        # if only 1 LED needed
                     self.to_blink = to_display  # blink LED instead of lighting it
                 else:
+                    if not suggested:
+                        self.to_blink = []
                     if self.castling and len(led_pairs) > 1:
                         # if the AI is doing a castling move we want to display the King pair
                         # if no king move exists display any pair
@@ -307,13 +323,13 @@ class Game(ChessnutAir):
 
     async def ai_move(self):
         player_move = self.board.pop()
-        would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy()))
+        would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
         self.board.push(player_move)
-        raw_move = (await self.game.get_cpu_move(self.board)).move
+        ai_play = await self.game.get_cpu_move(self.board)
+        raw_move = ai_play.move
         move = f"{raw_move}"[:4]
         print("generating Move!", move)
         if self.board.is_castling(raw_move):
-            print("ai is right")
             self.castling = True
         self.board.push_uci(move)
         await self.fix_board(task=would_have_done_task)
@@ -343,7 +359,7 @@ class Game(ChessnutAir):
                 if self.board.is_legal(chess.Move.from_uci(move)):
                     self.board.push_uci(move)
                     print(self.board)
-                    print("Movestack: ", self.board.move_stack)
+                    print("Movestack: ", list(map(lambda m: f'{m}', self.board.move_stack)))
                     print("Player move: ", move)
                     self.to_blink = self.to_light = []
                     self.player_turn = False
@@ -366,6 +382,7 @@ class Game(ChessnutAir):
             self.move_end = None
 
     async def game_loop(self):
+        await self.game.init_engines()
         if self.play_animations:
             await self.play_animation(animations.start_anim)
         else:
@@ -410,7 +427,7 @@ class Game(ChessnutAir):
         # reset this object and call game_loop again
         self.setup()
         await self.game_loop()
-        self.game.quit_chess_engines()
+        await self.game.quit_chess_engines()
 
     async def maybe_read_board(self):
         if self.should_read:
@@ -434,24 +451,37 @@ class Game(ChessnutAir):
             await self.blink_tick(sleep_time=0.5)
 
     def print_openings(self):
-        cur_var = self.game.eco_pgn
-        for n in self.board.move_stack:
-            if cur_var.has_variation(n):
-                cur_var = cur_var.variation(n)
+        if self.game.eco_pgn:
+            cur_var = self.game.eco_pgn
+            for n in self.board.move_stack:
+                if cur_var.has_variation(n):
+                    cur_var = cur_var.variation(n)
+                else:
+                    cur_var = None
+                    break
+            if cur_var:
+                print('\n'.join(reversed(cur_var.comment.split('\n'))))
             else:
-                cur_var = None
-                break
-        if cur_var:
-            print('\n'.join(reversed(cur_var.comment.split('\n'))))
+                print(f'not openers found: {" ".join(map(lambda m: m.uci(), self.board.move_stack))}')
         else:
-            print(f'not openers found: {" ".join(map(lambda m: m.uci(), self.board.move_stack))}')
+            fen = self.board.board_fen()
+            try:
+                print(self.game.eco_dict[fen])
+            except KeyError:
+                print("No opening found.")
 
 
 # noinspection SpellCheckingInspection
 async def go():
-    suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make these 3 vars configurable by argument
-    engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
-    engine_suggest_dir = "stockfish"
+    dirs = sys.argv[1:]
+    if len(dirs) == 3:
+        suggestion_book_dir, engine_dir, engine_suggest_dir = dirs
+    else:
+        suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make these 3 vars configurable by argument
+        engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
+        engine_suggest_dir = "stockfish"
+    # t, e = await chess.engine.popen_uci(engine_dir)
+    # move = asyncio.create_task(e.play(chess.Board(), chess.engine.Limit(time=10.5)))
     b = Game(show_valid_moves=True,
              suggestion_book_dir=suggestion_book_dir,
              engine_dir=engine_dir,
@@ -468,4 +498,5 @@ async def go():
         print(b.board.fen())
         quit()
 
+asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
 asyncio.run(go())
