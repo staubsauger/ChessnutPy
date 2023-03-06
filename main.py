@@ -194,7 +194,7 @@ class Game(ChessnutAir):
                 if undo[2:] == pos:
                     self.to_blink.append(undo[:2])
 
-    def check_check(self):
+    def check_and_display_check(self):
         if self.is_check:
             # find king in check
             pos = filter(lambda p: p[1] == 'k' or p[1] == 'K',
@@ -214,7 +214,6 @@ class Game(ChessnutAir):
 
     async def blink_tick(self, sleep_time=0.0):
         self.tick = not self.tick
-        self.check_check()
         if self.tick:
             await self.change_leds(self.to_blink+self.to_light)
         else:
@@ -398,6 +397,7 @@ class Game(ChessnutAir):
                 self.print_openings()
                 await self.ai_move()
                 self.print_openings()
+            self.check_and_display_check()
             await self.blink_tick(sleep_time=0.3)
         print(f'winner was {self.winner}!')
         # save PGN here
