@@ -116,7 +116,7 @@ class GameOfChess:
         node = game.add_main_variation(move)
         for move in board.board.move_stack:
             node = node.add_main_variation(move)
-        print(game, file=open(f"/home/{time_str}.pgn", 'w'), end="\n\n")
+        print(game, file=open(f"{time_str}.pgn", 'w'), end="\n\n")
         print("PGN written")
 
     def init_eco_file(self, ):
