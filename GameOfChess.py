@@ -1,3 +1,7 @@
+import hashlib
+import os.path
+import pathlib
+
 import chess
 import chess.engine
 import chess.polyglot
@@ -11,7 +15,8 @@ class GameOfChess:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
                  suggestion_limit=chess.engine.Limit(time=10.5),
-                 suggestion_book_path="/usr/share/scid/books/Elo2400.bin") -> None:
+                 suggestion_book_path="/usr/share/scid/books/Elo2400.bin",
+                 eco_file=None) -> None:
         self.engine_path = engine_path
         self.transport = None
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
@@ -26,7 +31,14 @@ class GameOfChess:
         self.eco_pgn = None  # chess.pgn.Game()
         self.eco_dict = {}
         # self.init_scid_eco_file()
-        self.init_scid_eco_dict()
+        self.eco_file = eco_file
+        self.dict_cache_file = 'eco_dict.cache'
+        if eco_file:
+            if os.path.exists(self.dict_cache_file):
+                self.read_eco_dict()
+            else:
+                self.init_scid_eco_dict()
+                self.write_eco_dict()
 
     async def init_engines(self):
         self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
@@ -113,7 +125,7 @@ class GameOfChess:
         'E94    1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O "King's Indian, Classical Variation"'
         and fill self.eco_pgn with the moves and names
         """
-        with open("eco", "rt") as eco_file:
+        with open(self.eco_file, "rt") as eco_file:
             eco_line = eco_file.readline().strip()
             while eco_line:
                 split = eco_line.split('"')
@@ -129,7 +141,15 @@ class GameOfChess:
                 eco_line = eco_file.readline()
 
     def init_scid_eco_both(self):
-        pass
+        self.eco_pgn = chess.pgn.Game()
+        with open(self.eco_file, "rt") as eco_file:
+            for name, code, uci_moves, board in read_scid_eco_entrys(eco_file):
+                self.movelist_to_pgn(f'({name}, {code})\n', uci_moves)
+                fen = board.board_fen()
+                try:
+                    self.eco_dict[fen].append((name, code))
+                except KeyError:
+                    self.eco_dict[fen] = [(name, code)]
 
     def init_scid_eco_file(self):
         """
@@ -138,18 +158,22 @@ class GameOfChess:
             1.f4 d5 2.Nf3 Nf6 3.g3 g6 4.Bg2 Bg7 5.d3 *' -> ["1", "f4 d5 2", "Nf3 Nf6 3", ...]
         and fill self.eco_pgn with the moves and names
         """
-        with open("scid.eco", "rt") as eco_file:
+        self.eco_pgn = chess.pgn.Game()
+        with open(self.eco_file, "rt") as eco_file:
             for name, code, uci_moves in read_scid_eco_entrys(eco_file):
                 self.movelist_to_pgn(f'({name}, {code})\n', uci_moves)
 
     def init_scid_eco_dict(self):
-        with open("scid.eco", 'r') as eco_file:
+        with open(self.eco_file, 'r') as eco_file:
+            duplicates = 0
             for name, code, moves, board in read_scid_eco_entrys(eco_file):
                 fen = board.board_fen()
                 try:
                     self.eco_dict[fen].append((name, code))
+                    duplicates += 1
                 except KeyError:
                     self.eco_dict[fen] = [(name, code)]
+            print(f'duplicates: {duplicates}')
 
     def movelist_to_pgn(self, id_string, uci_moves):
         cur_var = self.eco_pgn
@@ -167,6 +191,28 @@ class GameOfChess:
             else:
                 cur_var.add_variation(cur_move).comment = id_string
             cur_var = cur_var.variation(cur_move)
+
+    def write_eco_dict(self):
+        with open(self.dict_cache_file, 'w') as f:
+            h = hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest()
+            print(h, file=f)
+            for key in self.eco_dict:
+                val = self.eco_dict[key]
+                print(f'{key}|{val[0][1]}|{val[0][0]}', file=f)
+        print('wrote eco_dict')
+
+    def read_eco_dict(self):
+        with open(self.dict_cache_file, 'r') as f:
+            h = str(hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest())
+            nh = f.readline().strip()
+            if h != nh:
+                print(f'hashes didnt match:\n{h}\n{nh}')
+                return False
+            for line in f:
+                fen, name, code = line.strip(' \n').split('|')
+                self.eco_dict[fen] = [(name, code)]
+        print('read eco_dict')
+        return True
 
 
 def read_scid_eco_entrys(eco_file):

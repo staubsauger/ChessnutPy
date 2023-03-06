@@ -37,7 +37,7 @@ funktionsweise pi:
 class Game(ChessnutAir):
     def __init__(self, board_fen=None, turn="w", castle="KQkq",
                  player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True,
-                 suggestion_book_dir="", engine_dir="", engine_suggest_dir=""):
+                 suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None):
         ChessnutAir.__init__(self)
         self.no_help = no_help
         self.should_read = read_board
@@ -56,7 +56,8 @@ class Game(ChessnutAir):
         self.waiting_for_move = True
         self.undo_loop = False
         self.player_turn = False
-        self.game = GameOfChess(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir)
+        self.game = GameOfChess(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
+                                eco_file=eco_file)
         self.more_games = True
         self.winner = None
         self.inited = False
@@ -130,10 +131,10 @@ class Game(ChessnutAir):
     async def cpu_queen_hover_action(self):
         pass
 
-    async def last_piece_moved_hover_action(self): # -> get the eval of the last move made and better choices
+    async def last_piece_moved_hover_action(self):  # -> get the eval of the last move made and better choices
         pass
 
-    async def player_king_hover_action(self): # -> get bookmove first and then analyses engine output
+    async def player_king_hover_action(self):  # -> get book move first and then analyses engine output
         if self.player_color_select:
             print("Selected White")
             self.player_color = chess.WHITE
@@ -253,7 +254,7 @@ class Game(ChessnutAir):
             x = i % 8
             y = i // 8
             return 3 <= x <= 4 and 3 <= y <= 4  # -> four squares in the center
-        relevant_positions = list(filter(filter_fun, enumerate(pieces_from_data(self.board_state))))  # should always be 4
+        relevant_positions = filter(filter_fun, enumerate(pieces_from_data(self.board_state)))  # should always be 4
         d5, e5, d4, e4 = map(lambda pos: convertDict[pos[1]] == 'k' or convertDict[pos[1]] == 'K', relevant_positions)
         if d5 and e4:  # both on white
             self.winner = chess.WHITE
@@ -505,7 +506,8 @@ async def go():
     b = Game(show_valid_moves=True,
              suggestion_book_dir=suggestion_book_dir,
              engine_dir=engine_dir,
-             engine_suggest_dir=engine_suggest_dir)
+             engine_suggest_dir=engine_suggest_dir,
+             eco_file='scid.eco')
     while not b.device:
         await b.discover()
     try:
