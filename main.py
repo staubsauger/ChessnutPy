@@ -521,5 +521,7 @@ async def go():
         quit()
 
 asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
-asyncio.run(go())
-#asyncio.get_event_loop().close()
+try:
+    asyncio.run(go())
+except KeyboardInterrupt:
+    asyncio.get_event_loop().close()
