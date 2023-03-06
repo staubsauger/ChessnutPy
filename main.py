@@ -188,7 +188,10 @@ class Game(ChessnutAir):
                     m_str = f"{move}"
                     from_square = m_str[:2]
                     to_square = m_str[2:]
-                    self.to_blink.append(from_square if to_square == pos else (to_square if from_square == pos else []))
+                    if from_square == pos:
+                        self.to_blink.append(to_square)
+                    elif to_square == pos:
+                        self.to_blink.append(from_square)
             if len(self.board.move_stack) > 0:
                 undo = f"{self.board.peek()}"
                 if undo[2:] == pos:

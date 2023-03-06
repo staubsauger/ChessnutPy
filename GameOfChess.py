@@ -126,56 +126,70 @@ class GameOfChess:
         and fill self.eco_pgn with the moves and names
         """
         with open("scid.eco", "rt") as eco_file:
-            count = 0
+            for name, code, uci_moves in read_scid_eco_entrys(eco_file):
+                self.movelist_to_pgn(f'({name}, {code})\n', uci_moves)
 
-            def read_line():
-                nonlocal count
-                count += 1
-                return eco_file.readline().strip(' \n')
+    def init_scid_eco_dict(self):
+        with open("scid.eco", 'r') as eco_file:
+            for name, code, moves, board in read_scid_eco_entrys(eco_file):
+                fen = board.board_fen()
+                try:
+                    self.eco_dict[fen].append((name, code))
+                except KeyError:
+                    self.eco_dict[fen] = [(name, code)]
 
-            eco_line = read_line()
-            while eco_line:
-                eco_line = eco_line.strip(' \n')
-                while eco_line.startswith("#"):
-                    eco_line = read_line()
-                while len(eco_line) == 0 or eco_line[-1] != '*':
-                    eco_line += ' '+read_line()
-                split = eco_line.split('"')
-                code = split[0].strip()
-                name = split[1] if len(split) > 1 else ""
-                rest = split[2]
-                split = rest.split('.')
-                turns = map(lambda m: m[:-2].split(), filter(lambda m: len(m.strip()) > 1, split))
-                moves = []
-                for t in turns:
-                    m1 = t[0]  ### wir finden kein openings....
-                    moves.append(m1)
-                    if len(t) > 1:
-                        m2 = t[1]
-                        moves.append(m2)
-        # ------------------#
-                b = chess.Board()
-                id_string = f'({name}, {code})\n'
-                uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
-                cur_var = self.eco_pgn
-                if len(uci_moves) < 1:
-                    cur_var.comment += id_string
-                for i, cur_move in enumerate(uci_moves):
-                    if cur_var.has_variation(cur_move):
-                        if id_string not in cur_var.variation(cur_move).comment:
-                            if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
-                                cur_var.variation(cur_move).comment = \
-                                    f'{id_string}\n{cur_var.variation(cur_move).comment}'
-                            else:
-                                cur_var.variation(cur_move).comment += id_string
-
+    def movelist_to_pgn(self, id_string, uci_moves):
+        cur_var = self.eco_pgn
+        if len(uci_moves) < 1:
+            cur_var.comment += id_string
+        for i, cur_move in enumerate(uci_moves):
+            if cur_var.has_variation(cur_move):
+                if id_string not in cur_var.variation(cur_move).comment:
+                    if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
+                        cur_var.variation(cur_move).comment = \
+                            f'{id_string}\n{cur_var.variation(cur_move).comment}'
                     else:
-                        cur_var.add_variation(cur_move).comment = id_string
-                    cur_var = cur_var.variation(cur_move)
-                eco_line = eco_file.readline()
-                count += 1
-        print(count)
+                        cur_var.variation(cur_move).comment += id_string
 
+            else:
+                cur_var.add_variation(cur_move).comment = id_string
+            cur_var = cur_var.variation(cur_move)
+
+
+def read_scid_eco_entrys(eco_file):
+    count = 0
+
+    def read_line():
+        nonlocal count
+        count += 1
+        return eco_file.readline().strip(' \n')
+
+    eco_line = read_line()
+    while eco_line:
+        eco_line = eco_line.strip(' \n')
+        while eco_line.startswith("#"):
+            eco_line = read_line()
+        while len(eco_line) == 0 or eco_line[-1] != '*':
+            eco_line += ' ' + read_line()
+        split = eco_line.split('"')
+        code = split[0].strip()
+        name = split[1] if len(split) > 1 else ""
+        rest = split[2]
+        split = rest.split('.')
+        turns = map(lambda m: m[:-2].split(), filter(lambda m: len(m.strip()) > 1, split))
+        moves = []
+        for t in turns:
+            m1 = t[0]
+            moves.append(m1)
+            if len(t) > 1:
+                m2 = t[1]
+                moves.append(m2)
+        b = chess.Board()
+        uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
+        yield name, code, uci_moves, b
+        count += 1
+        eco_line = eco_file.readline()
+    print(count)
 
 # c = GameOfChess("/home/rudi/Games/schach/texel-chess/texel/build/texel", "stockfish")
 #c.init_scid_eco_file()
