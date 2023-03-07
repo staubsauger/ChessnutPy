@@ -288,7 +288,9 @@ class BoardGame(ChessnutAir):
                     await self.suggest_move(would_have_done, blink=True)
                     suggested = True
                 # actually change LEDs to light or blink and sleep a little
-                await self.blink_tick(sleep_time=0.2)
+                await self.blink_tick()
+                # todo: figure out if we should handle blinking in ChessnutAit so it happpens while we await changes
+                # await self.board_has_changed()
                 diffs = compare_chess_fens(self.board.fen(), self.board_state_as_fen())
             print(f"board fixed!\n{self.board.fen()}")
             self.fixing_board = False
