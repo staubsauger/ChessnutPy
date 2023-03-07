@@ -59,6 +59,10 @@ class BoardAppHandlers:
     async def last_score_handler(self, request):
         return web.json_response(self.game_board.last_score/100 if self.game_board.last_score else None)
 
+    async def read_board_handler(self, request):
+        await self.game_board.exit_read_board_and_select_color()
+        return web.Response()
+
 
 async def start_server(board):
     app = web.Application()
@@ -69,5 +73,6 @@ async def start_server(board):
     app.router.add_route('GET', '/opening', handlers.opening_handler)
     app.router.add_route('GET', '/move_stack', handlers.move_stack_handler)
     app.router.add_route('GET', '/last_score', handlers.last_score_handler)
+    app.router.add_route('POST', '/read_board', handlers.read_board_handler)
     return app
 

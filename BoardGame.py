@@ -249,7 +249,7 @@ class BoardGame(ChessnutAir):
             self.fixing_board = True
             print("board incorrect!\nplease fix")
             suggested = False
-            while diffs:
+            while self.running and diffs:
                 # check if we want to override an AI move
                 if self.undo_loop and len(diffs) == 2:
                     move1 = chess.Move.from_uci(diffs[0][1]+diffs[1][1])
@@ -384,6 +384,10 @@ class BoardGame(ChessnutAir):
             self.undo_loop = True
             return True
         return False
+
+    async def exit_read_board_and_select_color(self):
+        self.running = False
+        self.should_read = True
 
     async def game_loop(self):
         await self.game.init_engines()
