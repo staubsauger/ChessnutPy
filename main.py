@@ -65,9 +65,19 @@ async def go():
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     try:
-        # web.run_app(go(), host=['localhost', '192.168.0.4'], port=8080)
-        web.run_app(go(), host='localhost', port=8080)
-        # asyncio.run()
+        if "no-server" in sys.argv:
+            sys.argv = sys.argv.remove("no-server")
+            asyncio.run()
+        else:
+            host = filter(lambda arg: arg.startswith("host:"), sys.argv)
+            if any(host):
+                hosts = list(host)
+                for h in hosts:
+                    sys.argv = sys.argv.remove(h)
+                host = hosts[0].split(':')[1:]
+                web.run_app(go(), host=host.append('localhost'), port=8080)
+            else:
+                web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:
         pass
     asyncio.get_event_loop().close()

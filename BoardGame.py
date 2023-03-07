@@ -30,7 +30,6 @@ class BoardGame(ChessnutAir):
         self.player_color = player_color
         self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1") if board_fen else chess.Board()
         self.target_fen = ""
-        self.waiting_for_move = True
         self.undo_loop = False
         self.player_turn = False
         self.game = GameOfChess(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
@@ -46,8 +45,6 @@ class BoardGame(ChessnutAir):
         self.overrode_ai = False
         self.last_score = None
 
-
-
     def setup(self):
         self.target_move = None
         self.move_end = None
@@ -61,7 +58,6 @@ class BoardGame(ChessnutAir):
         self.player_color = None
         self.board = chess.Board()
         self.target_fen = ""
-        self.waiting_for_move = True
         self.undo_loop = False
         self.player_turn = False
         self.winner = None
@@ -154,7 +150,12 @@ class BoardGame(ChessnutAir):
             if ms and ms != pos:
                 self.move_end = (pos, p_str)
             else:
-                await king_hover_action()
+                p_moves = list(filter(lambda m: m[1] == 'K' or m[1] == 'k', self.move_start))
+                if len(p_moves) > 0:
+                    ms = p_moves[0][0]
+                    if ms == pos:
+                        await king_hover_action()
+                self.move_end = (pos, p_str)
             if not ms and len(self.board.move_stack) > 0:
                 undo_move = f'{self.board.move_stack[-1]}'
                 if any(filter(lambda p: p[0] == undo_move[2:], self.move_start)):
@@ -375,7 +376,9 @@ class BoardGame(ChessnutAir):
             self.board.pop()
             if len(self.board.move_stack) < 1:
                 self.to_light = self.to_blink = []
-                await self.ai_move()
+                if self.board.turn != self.player_color:
+                    await self.ai_move()
+                self.move_start = []
             else:
                 self.board.pop()
             self.undo_loop = True

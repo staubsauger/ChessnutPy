@@ -132,7 +132,7 @@ class GameOfChess:
         else:
             game.headers["Black"] = "Rudi"
             game.headers["White"] = str(self.engine.id["name"])
-        res = board.game_board.result()
+        res = board.board.result()
         if res == '*':
             if board.winner == chess.WHITE:
                 res = '1-0'
@@ -141,12 +141,12 @@ class GameOfChess:
             else:
                 res = '1/2-1/2'
         game.headers["Result"] = res
-        if len(board.game_board.move_stack) == 0:
+        if len(board.board.move_stack) == 0:
             print("No PGN Written")
             return
-        move = board.game_board.move_stack.pop(0)
+        move = board.board.move_stack.pop(0)
         node = game.add_main_variation(move)
-        for move in board.game_board.move_stack:
+        for move in board.board.move_stack:
             node = node.add_main_variation(move)
         print(game, file=open(f"{time_str}.pgn", 'w'), end="\n\n")
         print("PGN written")
