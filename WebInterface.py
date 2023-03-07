@@ -10,7 +10,7 @@ def svg_board(board, player_color):
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
-    attackable = filter(lambda pos: board.piece_at(pos).color == board.turn and
+    attackable = filter(lambda pos: board.piece_at(pos) and board.piece_at(pos).color == board.turn and
                                     board.is_attacked_by(not board.turn, pos),
                         chess.SQUARES)
     for square in attackable:
