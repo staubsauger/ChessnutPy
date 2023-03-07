@@ -19,7 +19,7 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
             document.getElementById('move_stack').innerHTML = "" + data;
-            document.getElementById('boardImage').src = ''
+            document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime()
         }
         get_current_opening()
     </script>
@@ -27,7 +27,7 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
 <body>
 <h1>ChessComputer</h1>
 <p>Board:</p>
-<img id="boardImage" alt="Current Gameboard" height="350" onload="(function(){setTimeout(function(){document.getElementById('boardImage').src=document.getElementById('boardImage').src.split('?')[0]+'?time='+new Date().getTime();},500);}())" src="board.svg" width="350" />
+<img id="boardImage" alt="Current Gameboard" src="board.svg"/>
 <p id="opening">Current Opening: CUR_OPENING</p>
 <p>Current Move Stack:</p>
 <p id="move_stack">CUR_MOVE_STACK</p>
