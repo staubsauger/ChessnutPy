@@ -66,14 +66,14 @@ if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     try:
         if "no-server" in sys.argv:
-            sys.argv = sys.argv.remove("no-server")
+            sys.argv.remove("no-server")
             asyncio.run()
         else:
             host = list(filter(lambda arg: arg.startswith("host:"), sys.argv))
             if len(host) > 0:
                 hosts = host
                 for h in hosts:
-                    sys.argv = sys.argv.remove(h)
+                    sys.argv.remove(h)
                 host = hosts[0].split(':')[1:]
                 web.run_app(go(), host=host.append('localhost'), port=8080)
             else:
