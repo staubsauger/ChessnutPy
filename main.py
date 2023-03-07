@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import socket
 
 from aiohttp import web
 
@@ -31,7 +32,7 @@ funktionsweise pi:
 
 
 # noinspection SpellCheckingInspection
-async def go():
+async def go(hosts=[]):
     dirs = sys.argv[1:]
     if len(dirs) == 3:
         suggestion_book_dir, engine_dir, engine_suggest_dir = dirs
@@ -62,12 +63,28 @@ async def go():
         b.game.quit_chess_engines()
         quit()
 
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    # noinspection PyBroadException
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     try:
         if "no-server" in sys.argv:
             sys.argv.remove("no-server")
-            asyncio.run()
+            asyncio.run(go())
         else:
             host = list(filter(lambda arg: arg.startswith("host:"), sys.argv))
             if len(host) > 0:
@@ -75,7 +92,14 @@ if __name__ == "__main__":
                 for h in hosts:
                     sys.argv.remove(h)
                 host = hosts[0].split(':')[1:]
-                web.run_app(go(), host=host.append('localhost'), port=8080)
+                host.append('localhost')
+                web.run_app(go(hosts=host), host=host, port=8080)
+            elif 'auto-host' in sys.argv:
+                sys.argv.remove('auto-host')
+                host = get_ip()
+                print(host)
+                hosts = [host, 'localhost']
+                web.run_app(go(hosts=hosts), host=hosts, port=8080)
             else:
                 web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:

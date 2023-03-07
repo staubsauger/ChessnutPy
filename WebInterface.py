@@ -6,12 +6,12 @@ import chess
 import BoardGame
 
 
-def svg_board(board):
+def svg_board(board, player_color):
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
     return chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
-                           fill=fill)
+                           fill=fill, flipped=not player_color)
 
 
 class BoardAppHandlers:
@@ -36,7 +36,7 @@ class BoardAppHandlers:
         return res
 
     async def board_svg_handler(self, request):
-        text = svg_board(self.game_board.board)
+        text = svg_board(self.game_board.board, self.game_board.player_color)
         res = web.Response(text=text)
         res.content_type = 'image/svg+xml'
         return res
