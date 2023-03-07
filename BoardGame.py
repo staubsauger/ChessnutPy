@@ -44,6 +44,8 @@ class BoardGame(ChessnutAir):
         self.play_animations = play_animations
         self.fixing_board = False
         self.overrode_ai = False
+        self.last_score = None
+
 
 
     def setup(self):
@@ -66,6 +68,7 @@ class BoardGame(ChessnutAir):
         self.inited = False
         self.is_check = False
         self.overrode_ai = False
+        self.last_score = None
 
     def board_state_as_fen(self):
         self.cur_fen = convert_to_fen(self.board_state)
@@ -86,22 +89,24 @@ class BoardGame(ChessnutAir):
         # check if score exists, else await score
         score = score if score else int((await self.game.get_score(self.board)).score())
         print(score)
+        self.last_score = score
         # Max score is divided into increments via half of the LED matrix.
         # I.e. if leds has 8 entries, increments = 200/ 4 = 50
         # if leds has 64 entires, increments = 1000/32 = 31.25
+        #                                    =  320/32 = 10
         leds = ['a4', 'a3', 'a2', 'a1', 'b1', 'b2', 'b3', 'b4', 'c4', 'c3', 'c2', 'c1', 'd1', 'd2', 'd3', 'd4',
                 'e4', 'e3', 'e2', 'e1', 'f1', 'f2', 'f3', 'f4', 'g4', 'g3', 'g2', 'g1', 'h1', 'h2', 'h3', 'h4',
-                'h8', 'h6', 'h7', 'h8', 'g5', 'g6', 'g7', 'g8', 'f8', 'f6', 'f7', 'f8', 'e5', 'e6', 'e7', 'e8',
-                'd8', 'd6', 'd7', 'd8', 'c5', 'c6', 'c7', 'c8', 'b8', 'b6', 'b7', 'b8', 'a8', 'a7', 'a6', 'a5']
-        max_score = 1000
+                'h5', 'h6', 'h7', 'h8', 'g8', 'g7', 'g6', 'g5', 'f5', 'f6', 'f7', 'f8', 'e8', 'e7', 'e6', 'e5',
+                'd5', 'd6', 'd7', 'd8', 'c8', 'c7', 'c6', 'c5', 'b5', 'b6', 'b7', 'b8', 'a8', 'a7', 'a6', 'a5']
+        max_score = 320
         increments = (max_score*2)/len(leds)
         # return the score relative to the increments that we just created
         score_in_increments = int(math.ceil(score/increments))  # ceiling to only have 0 leds at score = 0
         # make sure we are within -len(leds)/2<score_in_increments<len(leds)/2
         score_in_increments = max(min(score_in_increments, len(leds)//2), -len(leds)//2)
         # define the LEDs we need to light for this move, and light them!
-        start = 0 if score_in_increments >= 0 else score_in_increments+1
-        end = score_in_increments if score_in_increments > 0 else len(leds)
+        start = 0 if score_in_increments >= 0 else score_in_increments
+        end = score_in_increments if score_in_increments >= 0 else len(leds)
         self.to_blink = leds[start:end]
         await self.change_leds(self.to_blink)
         await asyncio.sleep(1.5)

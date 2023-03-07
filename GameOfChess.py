@@ -33,6 +33,7 @@ class GameOfChess:
         # self.init_scid_eco_file()
         self.eco_file = eco_file
         self.dict_cache_file = 'eco_dict.cache'
+        self.last_suggestion = None
         if eco_file:
             if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
                 pass
@@ -60,10 +61,14 @@ class GameOfChess:
         try:
             start_time = time.time()
             move = self.get_book_move(board)
+            play = None
             if not move:
                 print("Engine move: ", end='')
-                move = (await self.engine_suggest.play(board, self.limit_sug)).move
+                play = await self.engine_suggest.play(board, self.limit_sug)
+                move = play.move
                 print(move)
+            if min_time == 0.0:
+                self.last_suggestion = play if play else move
             time_spend = time.time() - start_time
             if time_spend < min_time:
                 await asyncio.sleep(min_time-time_spend)
@@ -77,6 +82,13 @@ class GameOfChess:
                 move = reader.weighted_choice(board)
                 print(move)
                 return move.move
+            except IndexError:
+                return None
+
+    def get_book_moves(self, board):
+        with chess.polyglot.open_reader(self.suggestion_book) as reader:
+            try:
+                return reader.find_all(board)
             except IndexError:
                 return None
 

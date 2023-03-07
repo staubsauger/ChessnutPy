@@ -47,6 +47,9 @@ class BoardAppHandlers:
         text = board.variation_san(data)
         return web.Response(text=text)
 
+    async def last_score_handler(self, request):
+        return web.json_response(self.game_board.last_score/100 if self.game_board.last_score else None)
+
 
 async def start_server(board):
     app = web.Application()
@@ -56,5 +59,6 @@ async def start_server(board):
     app.router.add_route('GET', '/board.svg', handlers.board_svg_handler)
     app.router.add_route('GET', '/opening', handlers.opening_handler)
     app.router.add_route('GET', '/move_stack', handlers.move_stack_handler)
+    app.router.add_route('GET', '/last_score', handlers.last_score_handler)
     return app
 

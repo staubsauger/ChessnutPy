@@ -15,11 +15,14 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
         async function get_current_opening() {
             const opening_response = await fetch('opening');
             const move_stack_response = await fetch('move_stack')
+            const last_score_response = await fetch('last_score')
             let data = await opening_response.json();
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
             document.getElementById('move_stack').innerHTML = "" + data;
             document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime()
+            data = await last_score_response.json();
+            document.getElementById('last_score').innerHTML = 'Last calculated score: '+ (data ? data : "never calculated")
         }
         get_current_opening()
     </script>
@@ -31,5 +34,6 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
 <p id="opening">Current Opening: CUR_OPENING</p>
 <p>Current Move Stack:</p>
 <p id="move_stack">CUR_MOVE_STACK</p>
+<p id="last_score">Last calculated score: never calculated</p>
 </body>
 </html>
