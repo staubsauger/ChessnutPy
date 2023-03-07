@@ -14,7 +14,7 @@ def convert_fen(fen):
     for piece in fen:
         if piece not in ["k", "K", "q", "Q", "b", "B", "p", "P", "r", "R", "n", "N", "/", "1"]:
             for count in range(int(piece)):
-                new_fen = new_fen+"1" 
+                new_fen += "1"
         else: 
             new_fen = new_fen+piece
     # print("Your new fen ", new_fen)
@@ -82,4 +82,3 @@ def fen_diff_leds(fen_diff):
         else:
             leds.append([start[1]])  # we never found a pair
     return leds
-

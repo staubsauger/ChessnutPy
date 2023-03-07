@@ -137,14 +137,14 @@ class GameOfChess:
                 b = chess.Board()
                 id_string = f'({name}, {code})\n'
                 uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
-                self.movelist_to_pgn(id_string, uci_moves)
+                self.move_list_to_pgn(id_string, uci_moves)
                 eco_line = eco_file.readline()
 
     def init_scid_eco_both(self):
         self.eco_pgn = chess.pgn.Game()
         with open(self.eco_file, "rt") as eco_file:
-            for name, code, uci_moves, board in read_scid_eco_entrys(eco_file):
-                self.movelist_to_pgn(f'({name}, {code})\n', uci_moves)
+            for name, code, uci_moves, board in read_scid_eco_entries(eco_file):
+                self.move_list_to_pgn(f'({name}, {code})\n', uci_moves)
                 fen = board.board_fen()
                 try:
                     self.eco_dict[fen].append((name, code))
@@ -160,13 +160,13 @@ class GameOfChess:
         """
         self.eco_pgn = chess.pgn.Game()
         with open(self.eco_file, "rt") as eco_file:
-            for name, code, uci_moves in read_scid_eco_entrys(eco_file):
-                self.movelist_to_pgn(f'({name}, {code})\n', uci_moves)
+            for name, code, uci_moves in read_scid_eco_entries(eco_file):
+                self.move_list_to_pgn(f'({name}, {code})\n', uci_moves)
 
     def init_scid_eco_dict(self):
         with open(self.eco_file, 'r') as eco_file:
             duplicates = 0
-            for name, code, moves, board in read_scid_eco_entrys(eco_file):
+            for name, code, moves, board in read_scid_eco_entries(eco_file):
                 fen = board.board_fen()
                 try:
                     self.eco_dict[fen].append((name, code))
@@ -175,7 +175,7 @@ class GameOfChess:
                     self.eco_dict[fen] = [(name, code)]
             print(f'duplicates: {duplicates}')
 
-    def movelist_to_pgn(self, id_string, uci_moves):
+    def move_list_to_pgn(self, id_string, uci_moves):
         cur_var = self.eco_pgn
         if len(uci_moves) < 1:
             cur_var.comment += id_string
@@ -215,7 +215,7 @@ class GameOfChess:
         return True
 
 
-def read_scid_eco_entrys(eco_file):
+def read_scid_eco_entries(eco_file):
     count = 0
 
     def read_line():
@@ -251,5 +251,5 @@ def read_scid_eco_entrys(eco_file):
     print(count)
 
 # c = GameOfChess("/home/rudi/Games/schach/texel-chess/texel/build/texel", "stockfish")
-#c.init_scid_eco_file()
-#print(c.eco_pgn)
+# c.init_scid_eco_file()
+# print(c.eco_pgn)

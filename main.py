@@ -159,8 +159,7 @@ class Game(ChessnutAir):
             await self.led_score()
 
     async def piece_down(self, location, piece_id):
-        ## Figuren schleifen???? Delay??
-
+        #  todo: handle player pushing pieces instead of lifting them (up and down event are reversed)
         async def king_hover_action():
             if (self.player_color == chess.WHITE and p_str == 'K')\
                     or (self.player_color == chess.BLACK and p_str == 'k'):
@@ -372,7 +371,7 @@ class Game(ChessnutAir):
                 if self.board.is_legal(chess.Move.from_uci(move)):
                     self.board.push_uci(move)
                     print(self.board)
-                    print("Movestack: ", list(map(lambda m: f'{m}', self.board.move_stack)))
+                    print("Move-stack: ", list(map(lambda m: f'{m}', self.board.move_stack)))
                     print("Player move: ", move)
                     self.to_blink = self.to_light = []
                     self.player_turn = self.board.turn == self.player_color
