@@ -52,7 +52,9 @@ class BoardAppHandlers:
 
     async def move_stack_handler(self, request) -> web.Response:
         data = self.game_board.board.move_stack
-        board = chess.Board()
+        board = self.game_board.board.copy()
+        while len(board.move_stack) > 0:
+            board.pop()
         text = board.variation_san(data)
         return web.Response(text=text)
 
