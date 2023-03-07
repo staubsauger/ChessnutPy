@@ -45,6 +45,7 @@ class BoardGame(ChessnutAir):
         self.fixing_board = False
         self.overrode_ai = False
 
+
     def setup(self):
         self.target_move = None
         self.move_end = None

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- HTML Codes by Quackit.com -->
+<title>
+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {background-color:#ffffff;background-repeat:no-repeat;background-position:top left;background-attachment:fixed;}
+h1{font-family:Arial, sans-serif;letter-spacing:20px;color:#000000;background-color:#ffffff;}
+p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color:#000000;background-color:#ffffff;}
+</style>
+    <script>
+        const myVar2 = setInterval(get_current_opening, 500);
+        async function get_current_opening() {
+            const opening_response = await fetch('opening');
+            const move_stack_response = await fetch('move_stack')
+            let data = await opening_response.json();
+            document.getElementById('opening').innerHTML = "Current Opening: " + data;
+            data = await move_stack_response.text();
+            document.getElementById('move_stack').innerHTML = "" + data;
+            cument.getElementById('boardImage').src = ''
+        }
+        get_current_opening()
+    </script>
+</head>
+<body>
+<h1>ChessComputer</h1>
+<p>Board:</p>
+<img id="boardImage" alt="Current Gameboard" height="350" onload="(function(){setTimeout(function(){document.getElementById('boardImage').src=document.getElementById('boardImage').src.split('?')[0]+'?time='+new Date().getTime();},500);}())" src="board.svg" width="350" />
+<p id="opening">Current Opening: CUR_OPENING</p>
+<p>Current Move Stack:</p>
+<p id="move_stack">CUR_MOVE_STACK</p>
+</body>
+</html>
