@@ -10,6 +10,11 @@ def svg_board(board, player_color):
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
+    attackable = filter(lambda pos: board.piece_at(pos).color == board.turn and
+                                    board.is_attacked_by(not board.turn, pos),
+                        chess.SQUARES)
+    for square in attackable:
+        fill[square] = 'yellow'
     return chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
                            fill=fill, flipped=not player_color)
 
