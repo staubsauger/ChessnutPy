@@ -14,7 +14,7 @@ import asyncio
 class GameOfChess:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
-                 suggestion_limit=chess.engine.Limit(time=10.5),
+                 suggestion_limit=chess.engine.Limit(time=3.5),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin",
                  eco_file=None) -> None:
         self.engine_path = engine_path
