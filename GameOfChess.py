@@ -28,7 +28,7 @@ class GameOfChess:
         self.limit_sug = suggestion_limit
         self.checkmate = False
         self.engines_running = False
-        self.eco_pgn = None  # chess.pgn.Game()
+        self.eco_pgn = None  # chess.pgn.BoardGame()
         self.eco_dict = {}
         # self.init_scid_eco_file()
         self.eco_file = eco_file
@@ -79,6 +79,26 @@ class GameOfChess:
                 return move.move
             except IndexError:
                 return None
+
+    def print_openings(self, board):
+        if self.eco_pgn:
+            cur_var = self.eco_pgn
+            for n in board.move_stack:
+                if cur_var.has_variation(n):
+                    cur_var = cur_var.variation(n)
+                else:
+                    cur_var = None
+                    break
+            if cur_var:
+                print('\n'.join(reversed(cur_var.comment.split('\n'))))
+            else:
+                print(f'not openers found: {" ".join(map(lambda m: m.uci(), board.move_stack))}')
+        else:
+            fen = board.board_fen()
+            try:
+                print(self.eco_dict[fen])
+            except KeyError:
+                print("No opening found.")
 
     async def quit_chess_engines(self):
         if self.engines_running:
@@ -182,7 +202,7 @@ class GameOfChess:
         for i, cur_move in enumerate(uci_moves):
             if cur_var.has_variation(cur_move):
                 if id_string not in cur_var.variation(cur_move).comment:
-                    if len(uci_moves) == i + 1:  # if it ends here put it on the front of the string
+                    if len(uci_moves) == i + 1:  # if this is the last move: put id on the front of the string
                         cur_var.variation(cur_move).comment = \
                             f'{id_string}\n{cur_var.variation(cur_move).comment}'
                     else:
@@ -225,7 +245,8 @@ def read_scid_eco_entries(eco_file):
 
     eco_line = read_line()
     while eco_line:
-        eco_line = eco_line.strip(' \n')
+        # lines gathered right before the while check cant already be stripped, or we will endless loop
+        eco_line = eco_line.strip(' \n')  # so we strip them here
         while eco_line.startswith("#"):
             eco_line = read_line()
         while len(eco_line) == 0 or eco_line[-1] != '*':

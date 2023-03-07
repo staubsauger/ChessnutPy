@@ -31,6 +31,7 @@ class ChessnutAir:
         self.board_state = [0] * 32
         self.old_data = [0]*32
         self.led_command = bytearray([0x0A, 0x08])
+        self.board_changed = False
 
     def filter_by_name(self, device: BLEDevice, _: AdvertisementData) -> bool:
         """
@@ -64,6 +65,12 @@ class ChessnutAir:
     async def game_loop(self):
         """Should be overriden with a function that creates an endless game loop."""
         raise NotImplementedError
+
+    async def board_has_changed(self):
+        """Sleeps until the board has changed."""
+        self.board_changed = False
+        while not self.board_changed:
+            await asyncio.sleep(0.1)
 
     async def change_leds(self, list_of_pos):
         """
@@ -99,6 +106,7 @@ class ChessnutAir:
                     await self.piece_down(loc, new)
         rdata = data[2:34]
         if rdata != self.old_data:
+            self.board_changed = True
             self.board_state = rdata
             od = self.old_data
             self.old_data = rdata
@@ -112,7 +120,10 @@ class ChessnutAir:
                     await send_message(i*2+1, old_right, cur_right)
 
     async def run(self):
-        """ Connect to the device and run the notification handler."""
+        """
+        Connect to the device, start the notification handler (self.piece_up(), self.piece_down())
+        and wait for self.game_loop() to return.
+        """
         print("device.address: ", self.device.address)
 
         async with BleakClient(self.device) as client:
