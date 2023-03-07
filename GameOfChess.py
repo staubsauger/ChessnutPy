@@ -14,7 +14,7 @@ import asyncio
 
 class GameOfChess:
 
-    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.1),
+    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
                  suggestion_limit=chess.engine.Limit(time=3.5),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin",
                  eco_file=None) -> None:
@@ -27,7 +27,6 @@ class GameOfChess:
         self.suggestion_book = suggestion_book_path
         self.limit = engine_limit
         self.limit_sug = suggestion_limit
-        self.checkmate = False
         self.engines_running = False
         self.eco_pgn = None  # chess.pgn.BoardGame()
         self.eco_dict = {}
@@ -91,15 +90,15 @@ class GameOfChess:
                     cur_var = None
                     break
             if cur_var:
-                print('\n'.join(reversed(cur_var.comment.split('\n'))))
+                return '\n'.join(reversed(cur_var.comment.split('\n')))
             else:
-                print(f'not openers found: {" ".join(map(lambda m: m.uci(), board.move_stack))}')
+                return f'not openers found: {" ".join(map(lambda m: m.uci(), board.move_stack))}'
         else:
             fen = board.board_fen()
             try:
                 return self.eco_dict[fen]
             except KeyError:
-                print("No opening found.")
+                return "No opening found."
 
     async def quit_chess_engines(self):
         if self.engines_running:

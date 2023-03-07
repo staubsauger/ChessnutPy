@@ -19,7 +19,7 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
             document.getElementById('move_stack').innerHTML = "" + data;
-            cument.getElementById('boardImage').src = ''
+            document.getElementById('boardImage').src = ''
         }
         get_current_opening()
     </script>

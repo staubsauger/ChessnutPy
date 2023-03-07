@@ -1,9 +1,13 @@
 import asyncio
 import sys
 
+from aiohttp import web
+
 from BoardGame import BoardGame
 import chess.engine
 from bleak import BleakError
+
+from WebInterface import start_server
 
 # noinspection SpellCheckingInspection
 """
@@ -44,10 +48,13 @@ async def go():
                   eco_file='scid.eco')
     await b.connect()
     try:
-        await b.run()
+        run_task = asyncio.create_task(b.run())
+        return await start_server(b)
+        # while not run_task.done():
+        #     await asyncio.sleep(1.0)
     except BleakError:
         print("Board Disconnected. Retrying connection.")
-        await go()
+        run_task = asyncio.create_task(b.run())
         quit()
     except KeyboardInterrupt:
         print(b.board.fen())
@@ -58,7 +65,8 @@ async def go():
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     try:
-        asyncio.run(go())
+        web.run_app(go(), host='localhost', port=8080)
+        # asyncio.run()
     except KeyboardInterrupt:
         pass
     asyncio.get_event_loop().close()
