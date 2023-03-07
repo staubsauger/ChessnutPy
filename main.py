@@ -516,4 +516,5 @@ asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
 try:
     asyncio.run(go())
 except KeyboardInterrupt:
-    asyncio.get_event_loop().close()
+    pass
+asyncio.get_event_loop().close()

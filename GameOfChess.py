@@ -53,7 +53,7 @@ class GameOfChess:
             print("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
-        score = await self.engine_suggest.analyse(board, self.limit_sug).get('score')
+        score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')
         return score.pov(True)  # returns score in cp relative to white -> always
 
     async def get_move_suggestion(self, board, min_time=0.0):
