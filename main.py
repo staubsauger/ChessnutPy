@@ -42,8 +42,7 @@ async def go():
                   engine_dir=engine_dir,
                   engine_suggest_dir=engine_suggest_dir,
                   eco_file='scid.eco')
-    while not b.device:
-        await b.discover()
+    await b.connect()
     try:
         await b.run()
     except BleakError:
@@ -52,11 +51,14 @@ async def go():
         quit()
     except KeyboardInterrupt:
         print(b.board.fen())
+        await b.stop_handler()
+        b.game.quit_chess_engines()
         quit()
 
-asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
-try:
-    asyncio.run(go())
-except KeyboardInterrupt:
-    pass
-asyncio.get_event_loop().close()
+if __name__ == "__main__":
+    asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
+    try:
+        asyncio.run(go())
+    except KeyboardInterrupt:
+        pass
+    asyncio.get_event_loop().close()
