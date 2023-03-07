@@ -69,9 +69,9 @@ if __name__ == "__main__":
             sys.argv = sys.argv.remove("no-server")
             asyncio.run()
         else:
-            host = filter(lambda arg: arg.startswith("host:"), sys.argv)
-            if any(host):
-                hosts = list(host)
+            host = list(filter(lambda arg: arg.startswith("host:"), sys.argv))
+            if len(host) > 0:
+                hosts = host
                 for h in hosts:
                     sys.argv = sys.argv.remove(h)
                 host = hosts[0].split(':')[1:]
