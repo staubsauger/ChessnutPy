@@ -119,6 +119,12 @@ class GameOfChess:
             self.engines_running = False
 
     def write_to_pgn(self, board):
+        # check if we have a full movestack
+        temp_board = board.board.copy()
+        for i in range(len(temp_board.move_stack)):
+            temp_board.pop()
+        if temp_board.fen() != chess.Board().fen():
+            return
         cur_time = time.localtime()
         day_str = f'{cur_time.tm_year}.{cur_time.tm_mon:02}.{cur_time.tm_mday:02}'
         time_str = f"{day_str}_{cur_time.tm_hour}_{cur_time.tm_min}"

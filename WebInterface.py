@@ -62,6 +62,7 @@ class BoardAppHandlers:
         return web.json_response(self.game_board.last_score/100 if self.game_board.last_score else None)
 
     async def read_board_handler(self, request):
+        t = request
         await self.game_board.exit_read_board_and_select_color()
         return web.Response()
 

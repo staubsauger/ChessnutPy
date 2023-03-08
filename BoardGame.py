@@ -44,6 +44,7 @@ class BoardGame(ChessnutAir):
         self.fixing_board = False
         self.overrode_ai = False
         self.last_score = None
+        self.maybe_read = True
 
     def setup(self):
         self.target_move = None
@@ -113,6 +114,10 @@ class BoardGame(ChessnutAir):
             print("Selected White")
             self.player_color = chess.WHITE
             self.player_color_select = False
+            if self.maybe_read:
+                self.should_read = True
+                await self.maybe_read_board()
+                self.maybe_read = False
         else:
             await self.blink_tick()
             print("suggesting move: ", end='')
@@ -128,6 +133,10 @@ class BoardGame(ChessnutAir):
             print("Selected Black")
             self.player_color = chess.BLACK
             self.player_color_select = False
+            if self.maybe_read:
+                self.should_read = True
+                await self.maybe_read_board()
+                self.maybe_read = False
         else:
             print("LED Score")
             await self.led_score()
@@ -245,11 +254,11 @@ class BoardGame(ChessnutAir):
         if self.undo_loop and len(diffs) == 0:
             self.undo_loop = False
             self.overrode_ai = False
-        if diffs:
+        if diffs and not self.maybe_read:
             self.fixing_board = True
             print("board incorrect!\nplease fix")
             suggested = False
-            while self.running and diffs:
+            while diffs:
                 # check if we want to override an AI move
                 if self.undo_loop and len(diffs) == 2:
                     move1 = chess.Move.from_uci(diffs[0][1]+diffs[1][1])
