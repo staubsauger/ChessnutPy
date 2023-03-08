@@ -34,6 +34,7 @@ class GameOfChess:
         self.eco_file = eco_file
         self.dict_cache_file = 'eco_dict.cache'
         self.last_suggestion = None
+        self.last_ai_move = None
         if eco_file:
             if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
                 pass
@@ -49,7 +50,8 @@ class GameOfChess:
 
     async def get_cpu_move(self, board):
         try:
-            return await self.engine.play(board, self.limit)
+            self.last_ai_move = await self.engine.play(board, self.limit)
+            return self.last_ai_move
         except asyncio.CancelledError:
             print("AI move stopped.\nThis should never happen.")
 

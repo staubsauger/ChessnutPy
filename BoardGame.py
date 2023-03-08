@@ -447,7 +447,10 @@ class BoardGame(ChessnutAir):
 
     async def maybe_read_board(self):
         if self.should_read:
-            self.board = chess.Board(f'{self.board_state_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
+            if self.board_state_as_fen() == chess.Board().board_fen():
+                self.board = chess.Board()
+            else:
+                self.board = chess.Board(f'{self.board_state_as_fen()} {"w" if self.player_color == chess.WHITE else "b"}')
             print(f'Read board state:\n{self.board}')
             self.should_read = False
         else:
