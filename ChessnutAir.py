@@ -5,6 +5,8 @@ for more information.
 """
 
 import asyncio
+import math
+import time
 
 from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC
 
@@ -14,9 +16,9 @@ from bleak.backends.scanner import AdvertisementData
 from constants import DEVICE_LIST
 
 
-def loc_to_pos(location):
+def loc_to_pos(location, rev=False):
     # noinspection SpellCheckingInspection
-    return "hgfedcba"[location % 8]+str(8-(location//8))
+    return "hgfedcba"[location % 8]+str((8-(location//8)) if not rev else (location//8))
 
 
 class ChessnutAir:
@@ -71,11 +73,15 @@ class ChessnutAir:
         """Should be overriden with a function that creates an endless game loop."""
         raise NotImplementedError
 
-    async def board_has_changed(self):
-        """Sleeps until the board has changed."""
+    async def board_has_changed(self, timeout=0.0):
+        """Sleeps until the board has changed or until timeout (if >0)."""
         self._board_changed = False
+        end_time = time.time()+timeout if timeout > 0 else math.inf
         while not self._board_changed:
+            if time.time() >= end_time:
+                return False
             await asyncio.sleep(0.1)
+        return True
 
     async def change_leds(self, list_of_pos):
         """

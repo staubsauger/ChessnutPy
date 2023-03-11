@@ -31,6 +31,8 @@ funktionsweise pi:
     wenn beide weißen damen nebeneinander shutdown
 """
 
+options = None
+
 
 # noinspection SpellCheckingInspection
 async def go():
@@ -76,6 +78,24 @@ def get_ip():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
+    p = configargparse.ArgParser(default_config_files=["./default.config", '~/.config/chessnutair.config'],
+                                 ignore_unknown_config_file_keys=False)
+    p.add_argument("--no_server", default=False, required=False, action="store_true")
+    p.add_argument("--hosts", default='auto-hosts', required=False,
+                   help='ip1:ip2, or auto-hosts to use local address')
+    p.add_argument('-p', '--port', default=8080, type=int)
+    p.add_argument('-e', "--engine_cmd", default="stockfish")
+    p.add_argument('--no_suggestions', default=False, action="store_true", help='disable suggestions')
+    p.add_argument('--engine_suggest_cmd', default='stockfish')
+    p.add_argument('--suggestion_book_dir', default='/usr/share/scid/books/Elo2400.bin')
+    p.add_argument('--eco_file', default='./scid.eco')
+    p.add_argument('--experimental_dragging_detection', default=False, action="store_true")
+    p.add_argument('--experimental_dragging_timeout', default=0.3, type=float)
+    p.add_argument('--show_valid_moves', default=True, action="store_true")
+    p.add_argument('--play_animations', default=True, action="store_true")
+    options = p.parse_args()
+    print(options)
+    print(options.no_server)
     try:
         if options.no_server:
             asyncio.run(go())
@@ -84,7 +104,12 @@ if __name__ == "__main__":
                 host = get_ip()
                 print(host)
                 hosts = [host, 'localhost']
-                web.run_app(go(hosts=hosts), host=hosts, port=8080)
+                web.run_app(go(), host=hosts, port=8080)
+            elif len(options.hosts) > 0:
+                hosts = options.hosts
+                host = hosts[0].split(':')[1:]
+                host.append('localhost')
+                web.run_app(go(), host=host, port=options.port)
             else:
                 web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:

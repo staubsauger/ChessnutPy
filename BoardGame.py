@@ -16,8 +16,9 @@ class BoardGame(ChessnutAir):
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
                  experimental_dragging_detection=False, experimental_dragging_timeout=0.3):
         ChessnutAir.__init__(self)
-        self.no_help = no_help
-        self.should_read = read_board
+        self.experimental_dragging_timeout = experimental_dragging_timeout
+        self.no_suggestions = no_suggestions
+        self.should_read = False
         self.target_move = None
         self.move_end = None
         self.move_start = []
@@ -28,7 +29,7 @@ class BoardGame(ChessnutAir):
         self.to_blink = []
         self.to_light = []
         self.player_color = player_color
-        self.board = chess.Board(f"{board_fen} {turn} {castle} - 0 1") if board_fen else chess.Board()
+        self.board = chess.Board()
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
@@ -180,7 +181,8 @@ class BoardGame(ChessnutAir):
         p_str = convertDict[piece_id]
         print(f"piece: {p_str} at {pos} up")
         self.to_light.append(pos)
-        self.move_end = None
+        if not self.experimental_dragging_detection:
+            self.move_end = None
         self.move_start.append((pos, p_str))
         if not self.fixing_board:
             self.to_blink = []
@@ -210,7 +212,7 @@ class BoardGame(ChessnutAir):
                 square = filter(lambda p: p[1] == 'k', square)
             square = list(square)
             if len(square) > 0:
-                pos = loc_to_pos(square[0][0])
+                pos = loc_to_pos(square[0][0], rev=True)
                 self.to_blink = [pos]
 
     async def blink_tick(self, sleep_time=0.0):
@@ -361,12 +363,42 @@ class BoardGame(ChessnutAir):
                 if len(moves) > 1:  # more than 1 move is legal -> promotion move
                     # we have to figure out the new piece
                     move += self.move_end[1].lower()
+                if await self.maybe_wait_for_board_settle():
+                    self.move_start = []
+                    self.move_end = None
+                    return
                 if not await self.player_move_is_valid(move):
                     if not await self.want_to_undo(move):
                         print(f"illegal move {move}\n{self.board}")
                     await self.fix_board()
             self.move_start = []
             self.move_end = None
+
+    async def maybe_wait_for_board_settle(self):
+        if not self.experimental_dragging_detection:
+            return False
+        while await self.board_has_changed(timeout=self.experimental_dragging_timeout):
+            pass
+        # do legal move check through fen compare
+        # generate all legal fens
+        board = self.board.copy()
+
+        def move_to_fen(m):
+            nonlocal board
+            board.push(m)
+            fen = board.board_fen()
+            board.pop()
+            return fen, m
+
+        legal_fens = map(move_to_fen, self.board.legal_moves)
+        # see if cur fen is legal
+        bs = self.board_state_as_fen()
+        f_m = filter(lambda m: m[0] == bs, legal_fens)
+        f_ms = list(f_m)
+        if len(f_ms) > 0:
+            await self.player_move_is_valid(f_ms[0][1].uci())
+            return True
+        return False
 
     async def player_move_is_valid(self, move):
         if self.board.is_legal(chess.Move.from_uci(move)):
