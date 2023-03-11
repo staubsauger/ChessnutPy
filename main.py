@@ -32,21 +32,15 @@ funktionsweise pi:
 
 
 # noinspection SpellCheckingInspection
-async def go(hosts=[]):
-    dirs = sys.argv[1:]
-    if len(dirs) == 3:
-        suggestion_book_dir, engine_dir, engine_suggest_dir = dirs
-    else:
-        suggestion_book_dir = "/usr/share/scid/books/Elo2400.bin"  # maybe make these 3 vars configurable by argument
-        engine_dir = "/home/rudi/Games/schach/texel-chess/texel/build/texel"
-        engine_suggest_dir = "stockfish"
-    # t, e = await chess.engine.popen_uci(engine_dir)
-    # move = asyncio.create_task(e.play(chess.Board(), chess.engine.Limit(time=10.5)))
-    b = BoardGame(show_valid_moves=True,
-                  suggestion_book_dir=suggestion_book_dir,
-                  engine_dir=engine_dir,
-                  engine_suggest_dir=engine_suggest_dir,
-                  eco_file='scid.eco')
+async def go():
+    b = BoardGame(show_valid_moves=options.show_valid_moves,
+                  suggestion_book_dir=options.suggestion_book_dir,
+                  engine_dir=options.engine_cmd,
+                  engine_suggest_dir=options.engine_suggest_cmd,
+                  eco_file=options.eco_file,
+                  experimental_dragging_detection=options.experimental_dragging_detection,
+                  experimental_dragging_timeout=options.experimental_dragging_timeout,
+                  play_animations=options.play_animations)
     await b.connect()
     try:
         run_task = asyncio.create_task(b.run())
@@ -86,16 +80,7 @@ if __name__ == "__main__":
             sys.argv.remove("no-server")
             asyncio.run(go())
         else:
-            host = list(filter(lambda arg: arg.startswith("host:"), sys.argv))
-            if len(host) > 0:
-                hosts = host
-                for h in hosts:
-                    sys.argv.remove(h)
-                host = hosts[0].split(':')[1:]
-                host.append('localhost')
-                web.run_app(go(hosts=host), host=host, port=8080)
-            elif 'auto-host' in sys.argv:
-                sys.argv.remove('auto-host')
+            if options.hosts == 'auto-hosts':
                 host = get_ip()
                 print(host)
                 hosts = [host, 'localhost']

@@ -12,7 +12,7 @@ import time
 import asyncio
 
 
-class GameOfChess:
+class EngineManager:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
                  suggestion_limit=chess.engine.Limit(time=3.5),

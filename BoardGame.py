@@ -5,7 +5,7 @@ import chess
 
 import animations
 from ChessnutAir import ChessnutAir, loc_to_pos
-from GameOfChess import GameOfChess
+from EngineManager import EngineManager
 from constants import convertDict
 from data2fen import convert_to_fen, pieces_from_data
 from fencompare import compare_chess_fens, fen_diff_leds
@@ -32,8 +32,8 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
-        self.game = GameOfChess(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
-                                eco_file=eco_file)
+        self.game = EngineManager(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
+                                  eco_file=eco_file)
         self.more_games = True
         self.winner = None
         self.inited = False
@@ -72,7 +72,7 @@ class BoardGame(ChessnutAir):
         return self.cur_fen
 
     async def suggest_move(self, move, blink=False):
-        if self.no_help:
+        if self.no_suggestions:
             return
         move = move[:4]
         leds = [move[2:], move[:2]]
