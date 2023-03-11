@@ -12,9 +12,9 @@ from fencompare import compare_chess_fens, fen_diff_leds
 
 
 class BoardGame(ChessnutAir):
-    def __init__(self, board_fen=None, turn="w", castle="KQkq",
-                 player_color=None, read_board=False, no_help=False, show_valid_moves=True, play_animations=True,
-                 suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None):
+    def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,
+                 suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
+                 experimental_dragging_detection=False, experimental_dragging_timeout=0.3):
         ChessnutAir.__init__(self)
         self.no_help = no_help
         self.should_read = read_board
@@ -45,6 +45,7 @@ class BoardGame(ChessnutAir):
         self.overrode_ai = False
         self.last_score = None
         self.maybe_read = True
+        self.experimental_dragging_detection = experimental_dragging_detection
 
     def setup(self):
         self.target_move = None
@@ -122,9 +123,10 @@ class BoardGame(ChessnutAir):
             await self.blink_tick()
             print("suggesting move: ", end='')
             move = await self.game.get_move_suggestion(self.board)
-            print(move)
             self.to_blink = self.to_light = []
-            await self.suggest_move(move)
+            if move is not None:
+                print(move)
+                await self.suggest_move(move)
             self.move_end = None
             self.move_start = []
 
@@ -468,4 +470,3 @@ class BoardGame(ChessnutAir):
             self.to_blink = ["e8", "e1"]
         while self.player_color_select:
             await self.blink_tick(sleep_time=0.5)
-

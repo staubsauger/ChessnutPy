@@ -9,6 +9,7 @@ import chess.engine
 from bleak import BleakError
 
 from WebInterface import start_server
+import configargparse
 
 # noinspection SpellCheckingInspection
 """
@@ -76,8 +77,7 @@ def get_ip():
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     try:
-        if "no-server" in sys.argv:
-            sys.argv.remove("no-server")
+        if options.no_server:
             asyncio.run(go())
         else:
             if options.hosts == 'auto-hosts':
