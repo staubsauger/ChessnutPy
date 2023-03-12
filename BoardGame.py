@@ -470,7 +470,7 @@ class BoardGame(ChessnutAir):
                 print("Remis!")
                 self.running = False
             if self.player_turn:
-                self.check_and_display_check()
+                # self.check_and_display_check()
                 await self.player_move()
             else:
                 print(self.game.print_openings(self.board))
