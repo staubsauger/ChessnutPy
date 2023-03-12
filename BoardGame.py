@@ -332,19 +332,21 @@ class BoardGame(ChessnutAir):
 
     async def ai_move(self):
         has_player_move = len(self.board.move_stack) > 0
-        would_have_done_task = None
-        if has_player_move:
-            player_move = self.board.pop()
-            would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
-            self.board.push(player_move)
+        # would_have_done_task = None
+        # if has_player_move:
+        #     player_move = self.board.pop()
+        #     would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
+        #     self.board.push(player_move)
         ai_play = await self.game.get_cpu_move(self.board)
         raw_move = ai_play.move
-        move = f"{raw_move}"[:4]
+        # move = f"{raw_move}"[:4]
+        move = f"{raw_move}"
         print("generating Move!", move)
         if self.board.is_castling(raw_move):
             self.castling = True
         self.board.push_uci(move)
-        await self.fix_board(task=would_have_done_task)
+        # await self.fix_board(task=would_have_done_task)
+        await self.fix_board()
         self.player_turn = True
 
     async def find_start_move(self):
