@@ -2,7 +2,7 @@ import asyncio
 import math
 
 import chess
-
+import chess.engine
 import animations
 from ChessnutAir import ChessnutAir, loc_to_pos
 from EngineManager import EngineManager
@@ -14,7 +14,8 @@ from fencompare import compare_chess_fens, fen_diff_leds
 class BoardGame(ChessnutAir):
     def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
-                 experimental_dragging_detection=False, experimental_dragging_timeout=0.3):
+                 experimental_dragging_detection=False, experimental_dragging_timeout=0.3, engine_cfg={},
+                 engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5, sug_depth=None, sug_nodes=None):
         ChessnutAir.__init__(self)
         self.experimental_dragging_timeout = experimental_dragging_timeout
         self.no_suggestions = no_suggestions
@@ -34,7 +35,11 @@ class BoardGame(ChessnutAir):
         self.undo_loop = False
         self.player_turn = False
         self.game = EngineManager(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
-                                  eco_file=eco_file)
+                                  eco_file=eco_file, engine_cfg=engine_cfg,
+                                  engine_limit=chess.engine.Limit(time=engine_time, nodes=engine_nodes,
+                                                                  depth=engine_depth),
+                                  suggestion_limit=chess.engine.Limit(time=sug_time, nodes=sug_nodes,
+                                                                      depth=sug_depth))
         self.more_games = True
         self.winner = None
         self.inited = False

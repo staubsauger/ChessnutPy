@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import sys
 import socket
@@ -41,9 +42,16 @@ async def go():
                   engine_dir=options.engine_cmd,
                   engine_suggest_dir=options.engine_suggest_cmd,
                   eco_file=options.eco_file,
+                  engine_cfg=ast.literal_eval(options.engine_cfg),
                   experimental_dragging_detection=options.experimental_dragging_detection,
                   experimental_dragging_timeout=options.experimental_dragging_timeout,
-                  play_animations=options.play_animations)
+                  play_animations=options.play_animations,
+                  engine_time=float(options.engine_time) if options.engine_time != 'None' else None,
+                  engine_nodes=int(options.engine_nodes) if options.engine_nodes != 'None' else None,
+                  engine_depth=int(options.engine_depth) if options.engine_depth != 'None' else None,
+                  sug_depth=int(options.sug_depth) if options.sug_depth != 'None' else None,
+                  sug_nodes=int(options.sug_nodes) if options.sug_nodes != 'None' else None,
+                  sug_time=float(options.sug_time) if options.sug_time != 'None' else None)
     await b.connect()
     try:
         run_task = asyncio.create_task(b.run())
@@ -80,11 +88,17 @@ if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
     p = configargparse.ArgParser(default_config_files=["./default.config", '~/.config/chessnutair.config'],
                                  ignore_unknown_config_file_keys=False)
-    p.add_argument("--no_server", default=False, required=False, action="store_true")
-    p.add_argument("--hosts", default='auto-hosts', required=False,
-                   help='ip1:ip2, or auto-hosts to use local address')
+    p.add_argument("--no_server", default=False, action="store_true")
+    p.add_argument("--hosts", default='auto-hosts', help='ip1:ip2, or auto-hosts to use local address')
     p.add_argument('-p', '--port', default=8080, type=int)
     p.add_argument('-e', "--engine_cmd", default="stockfish")
+    p.add_argument('--engine_cfg', default={}, help="Engine config dict")
+    p.add_argument('--engine_time', default=0.5, help='Time the engine has to think')
+    p.add_argument('--engine_depth', default=None, help='How deep can the engine calculate ahead')
+    p.add_argument('--engine_nodes', default=None, help='How many nodes can the engine use')
+    p.add_argument('--sug_time', default=5, help='Time the suggestions engine has to think')
+    p.add_argument('--sug_depth', default=None, help='How deep can the suggestions engine calculate ahead')
+    p.add_argument('--sug_nodes', default=None, help='How many nodes can the suggestions engine use')
     p.add_argument('--no_suggestions', default=False, action="store_true", help='disable suggestions')
     p.add_argument('--engine_suggest_cmd', default='stockfish')
     p.add_argument('--suggestion_book_dir', default='/usr/share/scid/books/Elo2400.bin')

@@ -1,6 +1,9 @@
+import ast
 import pathlib
+import json
 
 import chess.svg
+import chess.engine
 from aiohttp import web
 import chess
 import BoardGame
@@ -21,11 +24,11 @@ def svg_board(board, player_color):
 
 class BoardAppHandlers:
     def __init__(self, board: BoardGame, index_template='test.html'):
-        self.index_template = pathlib.Path(index_template).read_text()
+        self.index_template = index_template
         self.game_board: BoardGame = board
 
     async def hello(self, request):
-        text = self.index_template
+        text = pathlib.Path(self.index_template).read_text()
         text = text.replace("CUR_OPENING", str(self.game_board.game.print_openings(self.game_board.board)))
         b = map(lambda l: f'<p>{l}</p>\n', str(self.game_board.board).split('\n'))
         text = text.replace("BOARD_STATE", ' '.join(b))
@@ -59,12 +62,44 @@ class BoardAppHandlers:
         return web.Response(text=text)
 
     async def last_score_handler(self, request):
-        return web.json_response(self.game_board.last_score/100 if self.game_board.last_score else None)
+        return web.json_response(self.game_board.last_score / 100 if self.game_board.last_score else None)
 
     async def read_board_handler(self, request):
-        t = request
         await self.game_board.exit_read_board_and_select_color()
-        return web.Response()
+        return web.Response(status=303)
+
+    async def set_engine_limit(self, request):
+        # this is a POST request
+        # ?time: int, ?depth: int, ?nodes: int, ?engine_select: [cpu, suggest]
+        data = await request.post()
+        time = float(data['time'])
+        time = time if time > 0 else None
+        depth = int(data['depth'])
+        depth = depth if depth > 0 else None
+        nodes = int(data['nodes'])
+        nodes = nodes if nodes > 0 else None
+        limit = chess.engine.Limit(time=time, depth=depth, nodes=nodes)
+        print(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
+        if not (time or depth or nodes):
+            return web.Response(status=400, text='All Zeroes not allowed!')
+        if data['engine_select'] == 'CPU':
+            self.game_board.game.limit = limit
+        else:
+            self.game_board.game.limit_sug = limit
+        res = web.Response(status=303)
+        return res
+
+    async def set_engine_cfg(self, request):
+        # this is a POST request
+        # str that is dict of cfg
+        data = await request.post()
+        d = json.loads(data['cfg_dict'])
+        sanitized = {}
+        for key in d:
+            if key not in ['UCI_Chess960', 'UCI_Variant', 'MultiPV', 'Ponder']:
+                sanitized[key] = d[key]
+        await self.game_board.game.engine.configure(sanitized)
+        return web.Response(status=303)
 
 
 async def start_server(board):
@@ -77,5 +112,6 @@ async def start_server(board):
     app.router.add_route('GET', '/move_stack', handlers.move_stack_handler)
     app.router.add_route('GET', '/last_score', handlers.last_score_handler)
     app.router.add_route('POST', '/read_board', handlers.read_board_handler)
+    app.router.add_route('POST', '/set_engine_limit', handlers.set_engine_limit)
+    app.router.add_route('POST', '/set_engine_cfg', handlers.set_engine_cfg)
     return app
-

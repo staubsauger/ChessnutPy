@@ -15,9 +15,9 @@ import asyncio
 class EngineManager:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
-                 suggestion_limit=chess.engine.Limit(time=3.5),
+                 suggestion_limit=chess.engine.Limit(time=3.5, depth=None, nodes=None),
                  suggestion_book_path="/usr/share/scid/books/Elo2400.bin",
-                 eco_file=None) -> None:
+                 eco_file=None, engine_cfg={}) -> None:
         self.engine_path = engine_path
         self.transport = None
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
@@ -30,6 +30,7 @@ class EngineManager:
         self.engines_running = False
         self.eco_pgn = None  # chess.pgn.BoardGame()
         self.eco_dict = {}
+        self.engine_cfg = engine_cfg
         # self.init_scid_eco_file()
         self.eco_file = eco_file
         self.dict_cache_file = 'eco_dict.cache'
@@ -45,7 +46,7 @@ class EngineManager:
     async def init_engines(self):
         self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
         self.transport_suggest, self.engine_suggest = await chess.engine.popen_uci(self.suggestion_engine_path)
-        await self.engine.configure({'UCI_LimitStrength': True, 'UCI_Elo': 600, 'OwnBook': True})
+        await self.engine.configure(self.engine_cfg)
         self.engines_running = True
 
     async def get_cpu_move(self, board):
