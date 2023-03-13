@@ -335,7 +335,8 @@ class BoardGame(ChessnutAir):
         would_have_done_task = None
         if has_player_move:
             player_move = self.board.pop()
-            would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
+            would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(),
+                                                                                     min_time=self.game.limit_sug.time))
             self.board.push(player_move)
         ai_play = await self.game.get_cpu_move(self.board)
         raw_move = ai_play.move

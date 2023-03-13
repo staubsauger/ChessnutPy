@@ -8,12 +8,11 @@ import asyncio
 import math
 import time
 
-from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC
+from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from constants import DEVICE_LIST
 
 
 def loc_to_pos(location, rev=False):
@@ -22,7 +21,6 @@ def loc_to_pos(location, rev=False):
 
 
 class ChessnutAir:
-    # noinspection SpellCheckingInspection
     """
     Class created to discover and connect to chessnut Air devices.
     It discovers the first device with a name that matches the names in DEVICE_LIST.
@@ -102,9 +100,7 @@ class ChessnutAir:
             changes LED to a frame popped from beginning of list_of_frames
             waits for sleep_time and repeats until no more frames
         """
-        list_of_frames = list(reversed(list_of_frames.copy()))
-        while list_of_frames:
-            frame = list_of_frames.pop()
+        for frame in list_of_frames:
             await self.change_leds(frame)
             await asyncio.sleep(sleep_time)
 
@@ -132,7 +128,7 @@ class ChessnutAir:
 
     async def run(self):
         """
-        Connect to the device, start the notification handler (self.piece_up(), self.piece_down())
+        Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
         print("device.address: ", self._device.address)

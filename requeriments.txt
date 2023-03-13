@@ -4,3 +4,4 @@ bleak==0.19.5
 dbus-fast==1.83.1
 aiohttp==3.8.4
 ConfigArgParse==1.5.3
+chess==1.9.4
