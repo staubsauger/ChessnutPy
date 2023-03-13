@@ -51,7 +51,8 @@ async def go():
                   engine_depth=int(options.engine_depth) if options.engine_depth != 'None' else None,
                   sug_depth=int(options.sug_depth) if options.sug_depth != 'None' else None,
                   sug_nodes=int(options.sug_nodes) if options.sug_nodes != 'None' else None,
-                  sug_time=float(options.sug_time) if options.sug_time != 'None' else None)
+                  sug_time=float(options.sug_time) if options.sug_time != 'None' else None,
+                  show_would_have_done_move=options.show_would_have_done_move)
     await b.connect()
     try:
         run_task = asyncio.create_task(b.run())
@@ -107,6 +108,7 @@ if __name__ == "__main__":
     p.add_argument('--experimental_dragging_timeout', default=0.3, type=float)
     p.add_argument('--show_valid_moves', default=True, action="store_true")
     p.add_argument('--play_animations', default=True, action="store_true")
+    p.add_argument('--show_would_have_done_move', default=True, action='store_true')
     options = p.parse_args()
     print(options)
     print(options.no_server)

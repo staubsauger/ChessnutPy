@@ -15,8 +15,10 @@ class BoardGame(ChessnutAir):
     def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
                  experimental_dragging_detection=False, experimental_dragging_timeout=0.3, engine_cfg={},
-                 engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5, sug_depth=None, sug_nodes=None):
+                 engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5, sug_depth=None, sug_nodes=None,
+                 show_would_have_done_move=True):
         ChessnutAir.__init__(self)
+        self.show_would_have_done_move = show_would_have_done_move
         self.experimental_dragging_timeout = experimental_dragging_timeout
         self.no_suggestions = no_suggestions
         self.should_read = False
@@ -331,22 +333,23 @@ class BoardGame(ChessnutAir):
         self.move_end = None
 
     async def ai_move(self):
-        has_player_move = len(self.board.move_stack) > 0
-        # would_have_done_task = None
-        # if has_player_move:
-        #     player_move = self.board.pop()
-        #     would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(), min_time=5.0))
-        #     self.board.push(player_move)
+        would_have_done_task = None
+        if self.show_would_have_done_move:
+            has_player_move = len(self.board.move_stack) > 0
+            if has_player_move:
+                player_move = self.board.pop()
+                min_time = self.game.limit.time + 5.0
+                would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(),
+                                                                                         min_time=min_time))
+                self.board.push(player_move)
         ai_play = await self.game.get_cpu_move(self.board)
         raw_move = ai_play.move
-        # move = f"{raw_move}"[:4]
         move = f"{raw_move}"
-        print("generating Move!", move)
+        print("generated Move:", move)
         if self.board.is_castling(raw_move):
             self.castling = True
         self.board.push_uci(move)
-        # await self.fix_board(task=would_have_done_task)
-        await self.fix_board()
+        await self.fix_board(task=would_have_done_task)
         self.player_turn = True
 
     async def find_start_move(self):
