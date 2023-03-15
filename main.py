@@ -109,6 +109,7 @@ if __name__ == "__main__":
     p.add_argument('--show_valid_moves', default=True, action="store_true")
     p.add_argument('--play_animations', default=True, action="store_true")
     p.add_argument('--show_would_have_done_move', default=True, action='store_true')
+    # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
     print(options)
     print(options.no_server)

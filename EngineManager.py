@@ -75,7 +75,7 @@ class EngineManager:
             time_spend = time.time() - start_time
             if time_spend < min_time:
                 await asyncio.sleep(min_time-time_spend)
-            return f"{move}"  # ex "e3e4"
+            return move
         except asyncio.exceptions.CancelledError:
             print("suggestion was canceled")
 

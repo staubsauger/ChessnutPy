@@ -1,6 +1,7 @@
 """
 a python function which compares two chess fens and returns on which fields a piece is wrong
 """
+import chess
 
 
 def convert_fen(fen):
@@ -12,12 +13,7 @@ def convert_fen(fen):
     fen = fen.split()[0]
     new_fen = ""
     for piece in fen:
-        if piece not in ["k", "K", "q", "Q", "b", "B", "p", "P", "r", "R", "n", "N", "/", "1"]:
-            for count in range(int(piece)):
-                new_fen += "1"
-        else: 
-            new_fen = new_fen+piece
-    # print("Your new fen ", new_fen)
+        new_fen += "1"*int(piece) if piece.isdigit() and piece != '1' else piece
     return new_fen
 
 
@@ -53,8 +49,8 @@ def compare_chess_fens(target_fen, cur_fen):
 def fen_diff_leds(fen_diff):
     """
     find all led pairs to fix the board
-    [('P', d4, "1"), ("1", "d2", "P"), ("P", d5, '1')] ->
-    [("d4", "d2"), ("d5")]
+    [(chess.Piece('P'), chess.D4, None), (None, chess.D2, chess.Piece('P'), (chess.Piece('P'), chess.D5, None)] ->
+    [chess.SquareSet(chess.D4, chess.D2), chess.SquareSet(chess.D5)]
     """
     fen_diff = fen_diff.copy()
     leds = []
@@ -62,14 +58,14 @@ def fen_diff_leds(fen_diff):
     def find_pair(fd):
         for diff in fd:
             if start[2] == diff[0]:  # did we find a pair?
-                leds.append([diff[1], start[1]])
+                leds.append(chess.SquareSet([diff[1], start[1]]))
                 return diff
     while len(fen_diff) > 0:
         start = fen_diff.pop(0)
-        if start[2] == '1':
+        if start[2] is None:
             new_start = None
             for d in fen_diff:
-                if d[2] != '1':
+                if d[2] is not None:
                     fen_diff.append(start)
                     new_start = d
                     break
@@ -80,5 +76,5 @@ def fen_diff_leds(fen_diff):
         if partner:
             fen_diff.remove(partner)
         else:
-            leds.append([start[1]])  # we never found a pair
+            leds.append(chess.SquareSet([start[1]]))  # we never found a pair
     return leds
