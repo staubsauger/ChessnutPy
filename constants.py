@@ -5,11 +5,20 @@ INITIALIZATION_CODE = b'\x21\x01\x00'
 CONFIRMATION_CODE = b'\x21\x01\x00'
 # The signals from the board consist of a sequence of 38 bytes. The first two are:
 HEAD_BUFFER = b'\x01\x24'
+REQUEST_BATTERY_CODE = b'\x29\x01\x00'
 #  Communications using BLE
 DEVICE_LIST = ['Chessnut Air', 'Smart Chess']
-WRITE_CHARACTERISTIC = '1B7E8272-2877-41C3-B46E-CF057C562023'
-READ_CONFIRMATION_CHARACTERISTIC = '1B7E8273-2877-41C3-B46E-CF057C562023'
-READ_DATA_CHARACTERISTIC = '1B7E8262-2877-41C3-B46E-CF057C562023'
+WRITE_CHARACTERISTIC                = '1B7E8272-2877-41C3-B46E-CF057C562023'
+READ_CONFIRMATION_CHARACTERISTIC    = '1B7E8273-2877-41C3-B46E-CF057C562023'
+READ_DATA_CHARACTERISTIC            = '1B7E8262-2877-41C3-B46E-CF057C562023'
+## more charecteristics
+#                                      "1B7E8271-2877-41C3-B46E-CF057C562023" unknown
+#                                      "1B7E8272-2877-41C3-B46E-CF057C562023" -> general write
+#                                      "1B7E8273-2877-41C3-B46E-CF057C562023" -> akk and buttons
+#                                      "1B7E8261-2877-41C3-B46E-CF057C562023" unknown
+#                                      "1B7E8262-2877-41C3-B46E-CF057C562023" -> read board
+#                                      "1b7e8281-2877-41c3-b46e-cf057c562023" unknown
+#                                      "1b7e8283-2877-41c3-b46e-cf057c562023" unknown why public?
 
 # Within each byte the lower 4 bits represent the 
 # first square and the higher 4 bits represent the 
@@ -30,3 +39,4 @@ convertDict = {0: " ",
                10: "N",
                11: "Q",
                12: "K"}
+
