@@ -45,8 +45,11 @@ class BoardGame(ChessnutAir):
         self.play_animations = play_animations
         self.fixing_board = False
         self.last_score = None
-        self.maybe_read = True
+        self.maybe_read = False
         self.experimental_dragging_detection = experimental_dragging_detection
+        self.skip_pgn = False
+        self.force_quit = True
+        self.have_read_board = False
 
     def setup(self):
         self.target_move = None
@@ -67,6 +70,9 @@ class BoardGame(ChessnutAir):
         self.inited = False
         self.is_check = False
         self.last_score = None
+        self.skip_pgn = False
+        self.force_quit = True
+        self.have_read_board = False
 
     async def suggest_move(self, move: chess.Move, blink=False):
         if self.no_suggestions:
@@ -143,8 +149,10 @@ class BoardGame(ChessnutAir):
                     await self.player_king_hover_action()
                 else:
                     await self.cpu_king_hover_action()
-
         print(f"piece: {piece.symbol()} at {chess.square_name(square)} down")
+        if self.experimental_dragging_detection and len(self.move_start) == 0 and not self.fixing_board:
+            self.move_end = (square, piece)
+            return
         if self.player_turn and len(self.move_start) > 0 and not self.fixing_board:
             self.to_light.clear()
             ms = await self.find_start_move()
@@ -164,7 +172,7 @@ class BoardGame(ChessnutAir):
                     self.move_end = (square, piece)
             if self.player_color_select:
                 self.move_start = []
-                self.to_blink = chess.SquareSet([chess.E1, chess.E8])
+                #self.to_blink = chess.SquareSet([chess.E1, chess.E8])
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece):
         print(f"piece: {chess.square_name(square)} at {piece.symbol()} up")
@@ -184,6 +192,17 @@ class BoardGame(ChessnutAir):
                 undo = self.board.peek()
                 if undo.to_square == square:
                     self.to_blink.add(undo.from_square)
+
+    async def button_pressed(self, button):
+        print(f'Button {button} pressed!')
+        if button == 2:
+            # await self.request_battery_status()
+            await self.exit_read_board_and_select_color()
+        if button == 1:
+            print("New Game without PGN save")
+            self.skip_pgn = True
+            self.running = False
+            self.force_quit = True
 
     def check_and_display_check(self):
         if self.is_check:
@@ -234,6 +253,9 @@ class BoardGame(ChessnutAir):
             print("board incorrect!\nplease fix")
             suggested = False
             while diffs:
+                if self.force_quit:
+                    self.fixing_board = False
+                    return
                 # check if we want to override an AI move
                 if self.undo_loop and len(diffs) == 2:
                     move1 = chess.Move(diffs[0][1], diffs[1][1])
@@ -401,8 +423,11 @@ class BoardGame(ChessnutAir):
         return False
 
     async def exit_read_board_and_select_color(self):
+        print("in exit and select")
         self.running = False
+        self.force_quit = True
         self.should_read = True
+        self.skip_pgn = True
 
     async def game_loop(self):
         await self.game.init_engines()
@@ -411,8 +436,11 @@ class BoardGame(ChessnutAir):
         else:
             await asyncio.sleep(1)  # wait for board to settle
         self.winner = None
-        await self.maybe_read_board()
         self.inited = True
+        await self.request_battery_status()
+        while self.force_quit:
+            self.force_quit = False
+            await self.maybe_read_board()
         await self.select_player_color()
         self.player_turn = self.board.turn == self.player_color
         await self.fix_board()
@@ -444,8 +472,8 @@ class BoardGame(ChessnutAir):
                 print(self.game.print_openings(self.board))
             await self.blink_tick(sleep_time=0.3)
         print(f'winner was {self.winner}!')
-        # save PGN here
-        self.game.write_to_pgn(self)
+        if not self.skip_pgn:
+            self.game.write_to_pgn(self)
         if self.more_games:
             # reset this object and call game_loop again
             self.setup()
@@ -488,6 +516,7 @@ class BoardGame(ChessnutAir):
                 castling = castling if len(castling) > 0 else '-'
                 self.board = chess.Board(
                     f'{self.board_state_as_fen()} {"w" if self.player_color == chess.WHITE else "b"} {castling}')
+                self.have_read_board = True
             print(f'Read board state:\n{self.board.fen()}')
             self.should_read = False
         else:
@@ -507,3 +536,5 @@ class BoardGame(ChessnutAir):
             self.to_blink = chess.SquareSet(kings)
         while self.player_color_select:
             await self.board_has_changed(sleep_time=0.5)
+        if self.have_read_board and self.player_color != self.board.turn:
+            self.board.turn = self.player_color

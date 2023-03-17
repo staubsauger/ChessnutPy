@@ -10,6 +10,8 @@
 body {background-color: #312b2b;background-repeat:no-repeat;background-position:top left;background-attachment:fixed;}
 h1{font-family:Arial, sans-serif;letter-spacing:20px;color: #ffffff;background-color: #312b2b;}
 p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+label {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
 </style>
     <script>
         const myVar2 = setInterval(get_current_opening, 500);
@@ -17,13 +19,21 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
             const opening_response = await fetch('opening');
             const move_stack_response = await fetch('move_stack')
             const last_score_response = await fetch('last_score')
+            const counter_opening_response = await fetch('get_book_moves')
             let data = await opening_response.json();
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
             document.getElementById('move_stack').innerHTML = "" + data;
-            document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime()
+            document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime();
             data = await last_score_response.json();
-            document.getElementById('last_score').innerHTML = 'Last calculated score: '+ (data ? data : "never calculated")
+            document.getElementById('last_score').innerHTML = 'Last calculated score: '+ (data ? data : "never calculated");
+            data = await counter_opening_response.json();
+            let data_str = ""
+            data.forEach((l) => data_str += l+"<br>");
+            document.getElementById('counter_openings').innerHTML = (data_str.length>0 ? data_str : "No counter openings found.");
+            const battery_response = await fetch('battery_status')
+            document.getElementById('battery').innerHTML = 'Battery: '+await battery_response.text()
+
         }
         get_current_opening()
     </script>
@@ -33,9 +43,12 @@ p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:norma
 <p>Board:</p>
 <img id="boardImage" alt="Current Gameboard" src="board.svg"/>
 <p id="opening">Current Opening: CUR_OPENING</p>
+<p>Book Counter Openings:</p>
+<p id="counter_openings"></p>
 <p>Current Move Stack:</p>
 <p id="move_stack">CUR_MOVE_STACK</p>
 <p id="last_score">Last calculated score: never calculated</p>
+<p id="battery">Battery: </p>
 <form action="/read_board" method="post">
     <input type="hidden" name="test" value="3" >
     <button name="readBoard" value="read_board">Read Board</button>

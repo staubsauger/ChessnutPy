@@ -101,6 +101,20 @@ class BoardAppHandlers:
         await self.game_board.game.engine.configure(sanitized)
         return web.Response(status=303)
 
+    async def get_book_moves(self, request):
+        def move_to_opening(entry):
+            board = self.game_board.board.copy()
+            board.push(entry.move)
+            opening = self.game_board.game.print_openings(board)
+            return f'{opening} -> {entry.move.uci()} (weight={entry.weight})'
+        moves = [move_to_opening(e) for e in self.game_board.game.get_book_moves(self.game_board.board)]
+        return web.json_response(data=moves)
+
+    async def get_battery(self, request):
+        await self.game_board.request_battery_status()
+        data = f"{'CHARGING' if self.game_board.charging else 'DISCHARGING'}: {self.game_board.charge_percent}%"
+        return web.Response(text=data)
+
 
 async def start_server(board):
     app = web.Application()
@@ -114,4 +128,6 @@ async def start_server(board):
     app.router.add_route('POST', '/read_board', handlers.read_board_handler)
     app.router.add_route('POST', '/set_engine_limit', handlers.set_engine_limit)
     app.router.add_route('POST', '/set_engine_cfg', handlers.set_engine_cfg)
+    app.router.add_route('GET', '/get_book_moves', handlers.get_book_moves)
+    app.router.add_route('GET', '/battery_status', handlers.get_battery)
     return app

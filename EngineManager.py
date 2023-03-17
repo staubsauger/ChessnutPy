@@ -91,7 +91,8 @@ class EngineManager:
     def get_book_moves(self, board):
         with chess.polyglot.open_reader(self.suggestion_book) as reader:
             try:
-                return reader.find_all(board)
+                # we cant return the interator directly since we close the file after returning
+                return [e for e in reader.find_all(board)]
             except IndexError:
                 return None
 

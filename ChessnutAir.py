@@ -10,7 +10,8 @@ import time
 
 import chess
 
-from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict
+from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
+    READ_CONFIRMATION_CHARACTERISTIC, REQUEST_BATTERY_CODE
 
 from bleak import BleakScanner, BleakClient
 from bleak.backends.device import BLEDevice
@@ -49,6 +50,8 @@ class ChessnutAir:
         self.to_blink = chess.SquareSet()
         self.to_light = chess.SquareSet()
         self.tick = False
+        self.charging = False
+        self.charge_percent = 0
 
     async def blink_tick(self, sleep_time=0.0):
         self.tick = not self.tick
@@ -91,6 +94,10 @@ class ChessnutAir:
 
     async def piece_down(self, square: chess.Square, piece: chess.Piece):
         """Should be overriden with a function that handles piece up events."""
+        raise NotImplementedError
+
+    async def button_pressed(self, button):
+        """Should be overriden with a function that handles button events"""
         raise NotImplementedError
 
     async def game_loop(self):
@@ -142,6 +149,7 @@ class ChessnutAir:
                 else:
                     await self.piece_down(loc, chess.Piece.from_symbol(convertDict[new]))
         rdata = data[2:34]
+        time_stamp = int.from_bytes(data[34:], byteorder="little")
         if rdata != self._old_data:
             self._board_changed = True
             self.board_state = rdata
@@ -156,6 +164,17 @@ class ChessnutAir:
                     await send_message(63-i*2, old_left, cur_left)  # 63-i since we get the data backwards
                     await send_message(63-(i*2+1), old_right, cur_right)
 
+    async def _button_handler(self, _, data):
+        if data[0] == 0xf:  # this is a button event
+            # print([hex(p) for p in data])
+            button = data[2]
+            await self.button_pressed(button)
+        elif data[0] == 0x2A:
+            self.charging = data[3] == 1  # 1 if charging
+            self.charge_percent = min(data[2], 100)
+            #print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'))
+        # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
+
     async def run(self):
         """
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
@@ -169,7 +188,8 @@ class ChessnutAir:
             # send initialisation string!
             await client.write_gatt_char(WRITE_CHARACTERISTIC, INITIALIZATION_CODE)  # send initialisation string
             print("Initialized")
-            await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start notification handler
+            await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start board handler
+            await client.start_notify(READ_CONFIRMATION_CHARACTERISTIC, self._button_handler)  # start button handler
             await self.game_loop()  # call user game loop
             await self.stop_handler()
 
@@ -177,6 +197,10 @@ class ChessnutAir:
         """Allow stopping of the handler from outside."""
         if self._connection:
             await self._connection.stop_notify(READ_DATA_CHARACTERISTIC)  # stop the notification handler
+
+    async def request_battery_status(self):
+        if self._connection:
+            await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, REQUEST_BATTERY_CODE)
 
     def board_state_as_fen(self):
         fen = ''
