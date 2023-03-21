@@ -172,7 +172,7 @@ class BoardGame(ChessnutAir):
                     self.move_end = (square, piece)
             if self.player_color_select:
                 self.move_start = []
-                #self.to_blink = chess.SquareSet([chess.E1, chess.E8])
+                self.to_blink = chess.SquareSet(self.find_king_squares())
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece):
         print(f"piece: {chess.square_name(square)} at {piece.symbol()} up")
@@ -485,35 +485,7 @@ class BoardGame(ChessnutAir):
             if self.board_state_as_fen() == chess.Board().board_fen():
                 self.board = chess.Board()
             else:
-                castling = ''
-                kings = filter(lambda p: p[1] and p[1].piece_type == chess.KING,
-                               board_state_as_square_and_piece(self.board_state))
-                wk = bk = None
-                for k in kings:
-                    if k[1].color == chess.WHITE:
-                        wk = k[0]
-                    else:
-                        bk = k[0]
-                white_rooks = []
-                black_rooks = []
-                for square, piece in board_state_as_square_and_piece(self.board_state):
-                    if piece and piece.piece_type == chess.ROOK:
-                        (white_rooks if piece.color == chess.WHITE else black_rooks).append(square)
-                if wk == chess.E1:
-                    # white castling rights
-                    if len(white_rooks) > 0:
-                        if white_rooks[0] == chess.H1 or (len(white_rooks) > 1 and white_rooks[1] == chess.H1):
-                            castling += 'K'
-                        if white_rooks[0] == chess.A1 or (len(white_rooks) > 1 and white_rooks[1] == chess.A1):
-                            castling += 'Q'
-                if bk == chess.E8:
-                    # black castling rights
-                    if len(black_rooks) > 0:
-                        if black_rooks[0] == chess.H8 or (len(black_rooks) > 1 and black_rooks[1] == chess.H8):
-                            castling += 'k'
-                        if black_rooks[0] == chess.A8 or (len(black_rooks) > 1 and black_rooks[1] == chess.A8):
-                            castling += 'q'
-                castling = castling if len(castling) > 0 else '-'
+                castling = self.generate_castling_rights()
                 self.board = chess.Board(
                     f'{self.board_state_as_fen()} {"w" if self.player_color == chess.WHITE else "b"} {castling}')
                 self.have_read_board = True
@@ -523,6 +495,37 @@ class BoardGame(ChessnutAir):
             print("Board settled")
             await self.fix_board()
 
+    def generate_castling_rights(self):
+        castling = ''
+        kings = filter(lambda p: p[1] and p[1].piece_type == chess.KING,
+                       board_state_as_square_and_piece(self.board_state))
+        wk = bk = None
+        for k in kings:
+            if k[1].color == chess.WHITE:
+                wk = k[0]
+            else:
+                bk = k[0]
+        white_rooks = []
+        black_rooks = []
+        for square, piece in board_state_as_square_and_piece(self.board_state):
+            if piece and piece.piece_type == chess.ROOK:
+                (white_rooks if piece.color == chess.WHITE else black_rooks).append(square)
+        if wk == chess.E1:
+            # white castling rights
+            if len(white_rooks) > 0:
+                if white_rooks[0] == chess.H1 or (len(white_rooks) > 1 and white_rooks[1] == chess.H1):
+                    castling += 'K'
+                if white_rooks[0] == chess.A1 or (len(white_rooks) > 1 and white_rooks[1] == chess.A1):
+                    castling += 'Q'
+        if bk == chess.E8:
+            # black castling rights
+            if len(black_rooks) > 0:
+                if black_rooks[0] == chess.H8 or (len(black_rooks) > 1 and black_rooks[1] == chess.H8):
+                    castling += 'k'
+                if black_rooks[0] == chess.A8 or (len(black_rooks) > 1 and black_rooks[1] == chess.A8):
+                    castling += 'q'
+        return castling if len(castling) > 0 else '-'
+
     async def select_player_color(self):
         if self.player_color is None:
             self.player_color = chess.WHITE
@@ -531,10 +534,13 @@ class BoardGame(ChessnutAir):
             print('select a color by picking up a king')
             if self.play_animations:
                 await self.play_animation(animations.pick_anim, sleep_time=0.4)
-            kings = map(lambda s: s[0], filter(lambda p: p[1] and p[1].piece_type == chess.KING,
-                                               board_state_as_square_and_piece(self.board_state)))
-            self.to_blink = chess.SquareSet(kings)
-        while self.player_color_select:
+            self.to_blink = chess.SquareSet(self.find_king_squares())
+        while self.player_color_select and not self.force_quit:
             await self.board_has_changed(sleep_time=0.5)
         if self.have_read_board and self.player_color != self.board.turn:
             self.board.turn = self.player_color
+
+    def find_king_squares(self):
+        return map(lambda s: s[0], filter(lambda p: p[1] and p[1].piece_type == chess.KING,
+                                          board_state_as_square_and_piece(self.board_state)))
+
