@@ -13,7 +13,7 @@ from typing import Iterable, NamedTuple
 import chess
 
 from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
-    READ_CONFIRMATION_CHARACTERISTIC, REQUEST_BATTERY_CODE
+    READ_CONFIRMATION_CHARACTERISTIC, REQUEST_BATTERY_CODE, OTHER_CHARACTERISTICS
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
@@ -192,6 +192,8 @@ class ChessnutAir:
         """
         print("device.address: ", self._device.address)
 
+        def uk_hander(char, data):
+            print(f'{char}: {"".join(f"{p:20X}" for p in data)}')
         async with BleakClient(self._device) as client:
             self._connection = client
             print(f"Connected: {client.is_connected}")
@@ -200,6 +202,8 @@ class ChessnutAir:
             print("Initialized")
             await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start board handler
             await client.start_notify(READ_CONFIRMATION_CHARACTERISTIC, self._button_handler)  # start button handler
+            for c in OTHER_CHARACTERISTICS:
+                await client.start_notify(c, uk_hander)
             await self.game_loop()  # call user game loop
             await self.stop_handler()
 
