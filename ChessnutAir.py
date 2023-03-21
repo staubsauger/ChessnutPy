@@ -7,31 +7,37 @@ for more information.
 import asyncio
 import math
 import time
+from collections import namedtuple
+from typing import Iterable, NamedTuple
 
 import chess
 
 from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
     READ_CONFIRMATION_CHARACTERISTIC, REQUEST_BATTERY_CODE
 
-from bleak import BleakScanner, BleakClient
+from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 
-def loc_to_pos(location, rev=False):
+def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
-    return "hgfedcba"[location % 8]+str((8-(location//8)) if not rev else (location//8))
+    return "hgfedcba"[location % 8] + str((8 - (location // 8)) if not rev else (location // 8))
 
 
-def board_state_as_square_and_piece(board_state):
+SquareAndPiece = NamedTuple('SquareAndPiece', [('square', chess.Square), ('piece', chess.Piece)])
+
+
+def board_state_as_square_and_piece(board_state: bytearray) -> Iterable[SquareAndPiece]:
+    s_q = namedtuple("SquareAndPiece", "square, piece")
     for i in range(32):
         pair = board_state[i]
         left = pair & 0xf
         right = pair >> 4
         str_left = convertDict[left]
-        yield 63-i*2, chess.Piece.from_symbol(str_left) if str_left != ' ' else None
+        yield s_q(63 - i * 2, chess.Piece.from_symbol(str_left) if str_left != ' ' else None)
         str_right = convertDict[right]
-        yield 63-(i*2+1), chess.Piece.from_symbol(str_right) if str_right != ' ' else None
+        yield s_q(63 - (i * 2 + 1), chess.Piece.from_symbol(str_right) if str_right != ' ' else None)
 
 
 class ChessnutAir:
@@ -39,11 +45,12 @@ class ChessnutAir:
     Class created to discover and connect to chessnut Air devices.
     It discovers the first device with a name that matches the names in DEVICE_LIST.
     """
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.deviceNameList = DEVICE_LIST  # valid device name list
         self._device = self._advertisement_data = self._connection = None
-        self.board_state = [0] * 32
-        self._old_data = [0] * 32
+        self.board_state = bytearray(32)
+        self._old_data = bytearray(32)
         self._led_command = bytearray([0x0A, 0x08])
         self._board_changed = False
         self.cur_fen = " "
@@ -52,8 +59,9 @@ class ChessnutAir:
         self.tick = False
         self.charging = False
         self.charge_percent = 0
+        self.last_change = 0
 
-    async def blink_tick(self, sleep_time=0.0):
+    async def blink_tick(self, sleep_time: float = 0.0) -> None:
         self.tick = not self.tick
         if self.tick:
             await self.change_leds(self.to_blink.union(self.to_light))
@@ -73,48 +81,48 @@ class ChessnutAir:
             return True
         return False
 
-    async def discover(self):
+    async def discover(self) -> None:
         """Scan for chessnut Air devices"""
         print("scanning, please wait...")
         await BleakScanner.find_device_by_filter(
-            self._filter_by_name)
+                self._filter_by_name)
         if self._device is None:
             print("No chessnut Air devices found")
             return
         print("done scanning")
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Run discover() until device is found."""
         while not self._device:
             await self.discover()
 
-    async def piece_up(self, square: chess.Square, piece: chess.Piece):
+    async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
         """Should be overriden with a function that handles piece up events."""
         raise NotImplementedError
 
-    async def piece_down(self, square: chess.Square, piece: chess.Piece):
+    async def piece_down(self, square: chess.Square, piece: chess.Piece) -> None:
         """Should be overriden with a function that handles piece up events."""
         raise NotImplementedError
 
-    async def button_pressed(self, button):
+    async def button_pressed(self, button: int) -> None:
         """Should be overriden with a function that handles button events"""
         raise NotImplementedError
 
-    async def game_loop(self):
+    async def game_loop(self) -> None:
         """Should be overriden with a function that creates an endless game loop."""
         raise NotImplementedError
 
-    async def board_has_changed(self, timeout=0.0, sleep_time=0.4):
+    async def board_has_changed(self, timeout: float = 0.0, sleep_time: float = 0.4) -> bool:
         """Sleeps until the board has changed or until timeout (if >0)."""
         self._board_changed = False
-        end_time = time.time()+timeout if timeout > 0 else math.inf
+        end_time = time.time() + timeout if timeout > 0 else math.inf
         while not self._board_changed:
             if time.time() >= end_time:
                 return False
             await self.blink_tick(sleep_time=sleep_time if sleep_time < timeout or timeout == 0.0 else timeout)
         return True
 
-    async def change_leds(self, list_of_pos: list | chess.SquareSet):
+    async def change_leds(self, list_of_pos: list[str] | chess.SquareSet) -> None:
         """
         Turns on all LEDs in list_of_pos and turns off all others.
             list_of_pos := ["e3", "a4",...]
@@ -132,7 +140,7 @@ class ChessnutAir:
                 arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
         await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, self._led_command + arr)
 
-    async def play_animation(self, list_of_frames, sleep_time=0.5):
+    async def play_animation(self, list_of_frames: list[list[str] | chess.SquareSet], sleep_time: float = 0.5) -> None:
         """
             changes LED to a frame popped from beginning of list_of_frames
             waits for sleep_time and repeats until no more frames
@@ -141,16 +149,18 @@ class ChessnutAir:
             await self.change_leds(chess.SquareSet(map(lambda s: chess.parse_square(s), frame)))
             await asyncio.sleep(sleep_time)
 
-    async def _handler(self, _, data):
+    async def _handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         async def send_message(loc, old, new):
             if old != new:
                 if new == 0:
                     await self.piece_up(loc, chess.Piece.from_symbol(convertDict[old]))
                 else:
                     await self.piece_down(loc, chess.Piece.from_symbol(convertDict[new]))
+
         rdata = data[2:34]
         time_stamp = int.from_bytes(data[34:], byteorder="little")
         if rdata != self._old_data:
+            self.last_change = time_stamp
             self._board_changed = True
             self.board_state = rdata
             od = self._old_data
@@ -161,10 +171,10 @@ class ChessnutAir:
                     old_left = od[i] & 0xf
                     cur_right = rdata[i] >> 4
                     old_right = od[i] >> 4
-                    await send_message(63-i*2, old_left, cur_left)  # 63-i since we get the data backwards
-                    await send_message(63-(i*2+1), old_right, cur_right)
+                    await send_message(63 - i * 2, old_left, cur_left)  # 63-i since we get the data backwards
+                    await send_message(63 - (i * 2 + 1), old_right, cur_right)
 
-    async def _button_handler(self, _, data):
+    async def _button_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data[0] == 0xf:  # this is a button event
             # print([hex(p) for p in data])
             button = data[2]
@@ -172,10 +182,10 @@ class ChessnutAir:
         elif data[0] == 0x2A:
             self.charging = data[3] == 1  # 1 if charging
             self.charge_percent = min(data[2], 100)
-            #print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'))
+            # print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'))
         # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
 
-    async def run(self):
+    async def run(self) -> None:
         """
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
@@ -193,16 +203,16 @@ class ChessnutAir:
             await self.game_loop()  # call user game loop
             await self.stop_handler()
 
-    async def stop_handler(self):
+    async def stop_handler(self) -> None:
         """Allow stopping of the handler from outside."""
         if self._connection:
             await self._connection.stop_notify(READ_DATA_CHARACTERISTIC)  # stop the notification handler
 
-    async def request_battery_status(self):
+    async def request_battery_status(self) -> None:
         if self._connection:
             await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, REQUEST_BATTERY_CODE)
 
-    def board_state_as_fen(self):
+    def board_state_as_fen(self) -> str:
         fen = ''
         empty_count = 0
 
