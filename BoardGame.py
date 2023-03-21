@@ -207,7 +207,7 @@ class BoardGame(ChessnutAir):
     def check_and_display_check(self):
         if self.is_check:
             # find king in check
-            square = filter(lambda p: p[1].piece_type == chess.KING and p[1].color == self.board.turn,
+            square = filter(lambda p: p.piece and p.piece.piece_type == chess.KING and p.piece.color == self.board.turn,
                             board_state_as_square_and_piece(self.board_state))
             square = list(square)
             if len(square) > 0:
@@ -223,10 +223,11 @@ class BoardGame(ChessnutAir):
         """
 
         def filter_fun(s_p):
-            square = s_p[0]
-            return 3 <= chess.square_rank(square) <= 4 and 3 <= chess.square_file(square) <= 4
+            return
 
-        relevant_positions = filter(filter_fun, board_state_as_square_and_piece(self.board_state))  # should always be 4
+        relevant_positions = filter(lambda s_p: (3 <= chess.square_rank(s_p.square) <= 4 and
+                                                 3 <= chess.square_file(s_p.square) <= 4),
+                                    board_state_as_square_and_piece(self.board_state))  # should always be 4
         d5, e5, d4, e4 = map(lambda pos: pos[1].piece_type == chess.KING if pos[1] else False, relevant_positions)
         if d5 and e4:  # both on white
             self.winner = chess.WHITE
@@ -497,7 +498,7 @@ class BoardGame(ChessnutAir):
 
     def generate_castling_rights(self):
         castling = ''
-        kings = filter(lambda p: p[1] and p[1].piece_type == chess.KING,
+        kings = filter(lambda p: p.piece and p.piece.piece_type == chess.KING,
                        board_state_as_square_and_piece(self.board_state))
         wk = bk = None
         for k in kings:
@@ -541,6 +542,6 @@ class BoardGame(ChessnutAir):
             self.board.turn = self.player_color
 
     def find_king_squares(self):
-        return map(lambda s: s[0], filter(lambda p: p[1] and p[1].piece_type == chess.KING,
+        return map(lambda s: s[0], filter(lambda p: p.piece and p.piece.piece_type == chess.KING,
                                           board_state_as_square_and_piece(self.board_state)))
 
