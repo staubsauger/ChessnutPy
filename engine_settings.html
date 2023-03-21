@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- HTML Codes by Quackit.com -->
+<meta http-equiv="cache-control" content="no-cache" />
+<title>
+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    .small {
+        color: white;
+        font-weight: 300;
+        font-size: 20px;
+    }
+    .big {
+        color: white;
+        font-weight: 300;
+        font-size: 30px;
+    }
+
+label {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+
+</style>
+<body>
+
+<form action="/read_board" method="post">
+    <input type="hidden" name="test" value="3" >
+    <button name="readBoard" value="read_board">Read Board</button>
+</form>
+<form action="/set_engine_limit" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+    <br><label for="limit_time">Time:</label><input id="limit_time" name="time" type="number" min="0" step="0.1" value="0.5">
+    <br><label for="limit_depth">Depth:</label><input id="limit_depth" name="depth" type="number" min="0" step="0" value="0">
+    <br><label for="limit_nodes">Nodes:</label><input id="limit_nodes" name="nodes" type="number" min="0" step="0" value="0">
+    <br><input id="cpu_selected" type="radio" name="engine_select" value="CPU" checked><label for="cpu_selected">Set CPU Limit</label>
+    <br><input id="sug_selected" type="radio" name="engine_select" value="SUG"><label for="sug_selected">Set Suggestion Limit</label>
+    <br><input type="submit" value="Submit Limit">
+</form>
+<form action="/set_engine_cfg" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+    <br><label for="engine_cfg">Engine UCI Config:</label><textarea id="engine_cfg" name="cfg_dict" rows="5" cols="50">
+{
+    "UCI_LimitStrength": true,
+    "UCI_Elo": 1400,
+    "OwnBook": true
+}
+    </textarea>
+    <br><input type="submit" value="Submit Config">
+</form>
+</body>
