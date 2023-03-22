@@ -4,6 +4,7 @@ import math
 import chess
 import chess.engine
 import animations
+import constants
 from ChessnutAir import ChessnutAir, board_state_as_square_and_piece
 from EngineManager import EngineManager
 from fencompare import fen_diff_leds
@@ -195,8 +196,15 @@ class BoardGame(ChessnutAir):
 
     async def button_pressed(self, button):
         print(f'Button {button} pressed!')
+        await self._run_cmd(constants.BtCommands.query_otb)
+        #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
+        await self._run_cmd(constants.BtCommands.set_otb_upload_mode)
+        await self._run_cmd(constants.BtCommands.is_app_ready)
+        await self._run_cmd(constants.BtCommands.action_newest_data_tranfer)
+        await asyncio.sleep(1)
+        await self._run_cmd(constants.BtCommands.init_code)
+        # await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
         if button == 2:
-            # await self.request_battery_status()
             await self.exit_read_board_and_select_color()
         if button == 1:
             print("New Game without PGN save")

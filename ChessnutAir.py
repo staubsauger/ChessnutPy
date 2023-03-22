@@ -3,7 +3,6 @@ Discover and talk to chessnut Air devices.
 See pdf file Chessnut_communications.pdf
 for more information.
 """
-
 import asyncio
 import math
 import time
@@ -12,8 +11,9 @@ from typing import Iterable, NamedTuple
 
 import chess
 
-from constants import WRITE_CHARACTERISTIC, INITIALIZATION_CODE, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
-    READ_CONFIRMATION_CHARACTERISTIC, REQUEST_BATTERY_CODE, OTHER_CHARACTERISTICS
+import constants
+from constants import WRITE_CHARACTERISTIC, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
+    READ_CONFIRMATION_CHARACTERISTIC, OTHER_CHARACTERISTICS, BtCommands
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
@@ -140,6 +140,10 @@ class ChessnutAir:
                 arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
         await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, self._led_command + arr)
 
+    async def _run_cmd(self, cmd: bytearray):
+        # print(f'Cmd: {cmd}')
+        await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, cmd)
+
     async def play_animation(self, list_of_frames: list[list[str] | chess.SquareSet], sleep_time: float = 0.5) -> None:
         """
             changes LED to a frame popped from beginning of list_of_frames
@@ -150,6 +154,9 @@ class ChessnutAir:
             await asyncio.sleep(sleep_time)
 
     async def _handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
+        if data[:2] != constants.BtResponses.head_buffer:
+            print('Other data?')
+
         async def send_message(loc, old, new):
             if old != new:
                 if new == 0:
@@ -175,14 +182,27 @@ class ChessnutAir:
                     await send_message(63 - (i * 2 + 1), old_right, cur_right)
 
     async def _button_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
-        if data[0] == 0xf:  # this is a button event
+        if data == constants.BtResponses.heartbeat_code:
+            return
+        elif data == constants.BtResponses.board_not_read:
+            print('Board not ready!')
+        elif data.startswith(constants.BtResponses.otb_count_prefix):
+            print(f'OTB count = {data[2]}')
+        elif data.startswith(constants.BtResponses.file_size_prefix):
+            print(f'File size = {int.from_bytes(data[2:6], byteorder="little")} ({data[2:]})')
+        elif data == constants.BtResponses.file_start:
+            print('OTB File Start')
+        elif data == constants.BtResponses.file_end:
+            print('OTB File End')
+        elif data[0] == 0xf:  # this is a button event
             # print([hex(p) for p in data])
             button = data[2]
             await self.button_pressed(button)
         elif data[0] == 0x2A:
             self.charging = data[3] == 1  # 1 if charging
             self.charge_percent = min(data[2], 100)
-            # print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'))
+        else:
+            print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'), data)
         # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
 
     async def run(self) -> None:
@@ -192,18 +212,19 @@ class ChessnutAir:
         """
         print("device.address: ", self._device.address)
 
-        def uk_hander(char, data):
-            print(f'{char}: {"".join(f"{p:20X}" for p in data)}')
+        def uk_handler(char, data):
+            fen = self.board_state_as_fen(board_state=data[2:34])
+            print(fen)
         async with BleakClient(self._device) as client:
             self._connection = client
             print(f"Connected: {client.is_connected}")
-            # send initialisation string!
-            await client.write_gatt_char(WRITE_CHARACTERISTIC, INITIALIZATION_CODE)  # send initialisation string
-            print("Initialized")
             await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start board handler
             await client.start_notify(READ_CONFIRMATION_CHARACTERISTIC, self._button_handler)  # start button handler
+            # send initialisation string
+            await client.write_gatt_char(WRITE_CHARACTERISTIC, constants.BtCommands.init_code)
+            print("Initialized")
             for c in OTHER_CHARACTERISTICS:
-                await client.start_notify(c, uk_hander)
+                await client.start_notify(c, uk_handler)
             await self.game_loop()  # call user game loop
             await self.stop_handler()
 
@@ -214,9 +235,9 @@ class ChessnutAir:
 
     async def request_battery_status(self) -> None:
         if self._connection:
-            await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, REQUEST_BATTERY_CODE)
+            await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, BtCommands.get_battery_status)
 
-    def board_state_as_fen(self) -> str:
+    def board_state_as_fen(self, board_state=None) -> str:
         fen = ''
         empty_count = 0
 
@@ -226,7 +247,7 @@ class ChessnutAir:
                 fen += str(empty_count)
                 empty_count = 0
 
-        for square, piece in board_state_as_square_and_piece(self.board_state):
+        for square, piece in board_state_as_square_and_piece(board_state if board_state else self.board_state):
             if piece:
                 handle_empties()
                 fen += piece.symbol()
