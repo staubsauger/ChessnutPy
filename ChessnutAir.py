@@ -137,11 +137,11 @@ class ChessnutAir:
                 return
             for pos in list_of_pos:
                 arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
-        await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic, self._led_command + arr)
+        await self._connection.write_gatt_char(constants.BtCharacteristics.write, self._led_command + arr)
 
     async def _run_cmd(self, cmd: bytearray):
         # print(f'Cmd: {cmd}')
-        await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic, cmd)
+        await self._connection.write_gatt_char(constants.BtCharacteristics.write, cmd)
 
     async def play_animation(self, list_of_frames: list[list[str] | chess.SquareSet], sleep_time: float = 0.5) -> None:
         """
@@ -204,6 +204,10 @@ class ChessnutAir:
             print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'), data)
         # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
 
+    async def _otb_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
+        fen = self.board_state_as_fen(board_state=data[2:34])
+        print(fen)
+
     async def run(self) -> None:
         """
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
@@ -211,22 +215,19 @@ class ChessnutAir:
         """
         print("device.address: ", self._device.address)
 
-        def uk_handler(char, data):
-            fen = self.board_state_as_fen(board_state=data[2:34])
-            print(fen)
         async with BleakClient(self._device) as client:
             self._connection = client
             print(f"Connected: {client.is_connected}")
-            await client.start_notify(constants.BtCharacteristics.read_board_data_characteristic,
+            await client.start_notify(constants.BtCharacteristics.read_board_data,
                                       self._board_handler)  # start board handler
-            await client.start_notify(constants.BtCharacteristics.read_misc_data_characteristic,
-                                      self._misc_handler)  # start button handler
+            await client.start_notify(constants.BtCharacteristics.read_misc_data,
+                                      self._misc_handler)  # start misc handler
+            await client.start_notify(constants.BtCharacteristics.read_otb_data,
+                                      self._otb_handler)  # start otb handler
             # send initialisation string
-            await client.write_gatt_char(constants.BtCharacteristics.write_characteristic,
+            await client.write_gatt_char(constants.BtCharacteristics.write,
                                          constants.BtCommands.init_code)
             print("Initialized")
-            for c in OTHER_CHARACTERISTICS:
-                await client.start_notify(c, uk_handler)
             await self.game_loop()  # call user game loop
             await self.stop_handlers()
 
@@ -234,14 +235,13 @@ class ChessnutAir:
         """Allow stopping of the handler from outside."""
         if self._connection:
             # stop the notification handlers
-            await self._connection.stop_notify(constants.BtCharacteristics.read_board_data_characteristic)
-            await self._connection.stop_notify(constants.BtCharacteristics.read_misc_data_characteristic)
-            for c in OTHER_CHARACTERISTICS:
-                await self._connection.stop_notify(c)
+            await self._connection.stop_notify(constants.BtCharacteristics.read_board_data)
+            await self._connection.stop_notify(constants.BtCharacteristics.read_misc_data)
+            await self._connection.stop_notify(constants.BtCharacteristics.read_otb_data)
 
     async def request_battery_status(self) -> None:
         if self._connection:
-            await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic,
+            await self._connection.write_gatt_char(constants.BtCharacteristics.write,
                                                    BtCommands.get_battery_status)
 
     def board_state_as_fen(self, board_state=None) -> str:

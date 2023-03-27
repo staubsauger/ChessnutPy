@@ -1,15 +1,15 @@
 """ Constant used in the program"""
 DEVICE_LIST = ['Chessnut Air', 'Smart Chess']
-OTHER_CHARACTERISTICS = ["1b7e8283-2877-41c3-b46e-cf057c562023"]
 NONEXISTENT_CHARACTERISTICS = ["1B7E8271-2877-41C3-B46E-CF057C562023", "1B7E8261-2877-41C3-B46E-CF057C562023",
-                               "1b7e8281-2877-41c3-b46e-cf057c562023"]
+                               "1b7e8281-2877-41c3-b46e-cf057c562023"]  # maybe for another board?
 
 
 # todo: refactor old allcaps constants to use this class
 class BtCharacteristics:
-    write_characteristic =              '1B7E8272-2877-41C3-B46E-CF057C562023'# noqa
-    read_misc_data_characteristic =     '1B7E8273-2877-41C3-B46E-CF057C562023'# noqa
-    read_board_data_characteristic =    '1B7E8262-2877-41C3-B46E-CF057C562023'# noqa
+    write =             '1B7E8272-2877-41C3-B46E-CF057C562023'# noqa
+    read_misc_data =    '1B7E8273-2877-41C3-B46E-CF057C562023'# noqa
+    read_board_data =   '1B7E8262-2877-41C3-B46E-CF057C562023'# noqa
+    read_otb_data =     '1b7e8283-2877-41c3-b46e-cf057c562023'# noqa
 
 
 class BtCommands:
@@ -36,23 +36,10 @@ class BtResponses:
     file_size_prefix =  b'\x36\x08'     # noqa
     crc_len =           b'\x38\x04'     # noqa
 
-## more charecteristics
-#                                      "1B7E8271-2877-41C3-B46E-CF057C562023" unknown -- doesnt exist?
-#                                      "1B7E8261-2877-41C3-B46E-CF057C562023" unknown -- doesnt exist?
-#                                      "1b7e8281-2877-41c3-b46e-cf057c562023" unknown -- doesnt exist?
-#                                      "1b7e8283-2877-41c3-b46e-cf057c562023" unknown why public?
-#                                      "1B7E8272-2877-41C3-B46E-CF057C562023" -> general write
-#                                      "1B7E8273-2877-41C3-B46E-CF057C562023" -> akk and buttons
-#                                      "1B7E8262-2877-41C3-B46E-CF057C562023" -> read board
-
-# Within each byte the lower 4 bits represent the 
-# first square and the higher 4 bits represent the 
-# second square
-MASK_LOW = 0b00001111
 
 # Each square has a value specifying the piece:
 convertDict = {0: " ",
-               1: "q",  # 0b00000001
+               1: "q",  # 0b0000_0001
                2: "k",
                3: "b",
                4: "p",
@@ -62,5 +49,5 @@ convertDict = {0: " ",
                8: "r",
                9: "B",
                10: "N",
-               11: "Q",
+               11: "Q",  # 0b0000_1011
                12: "K"}
