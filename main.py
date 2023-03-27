@@ -65,7 +65,7 @@ async def go():
         quit()
     except KeyboardInterrupt:
         print(b.board.fen())
-        await b.stop_handler()
+        await b.stop_handlers()
         b.game.quit_chess_engines()
         quit()
 

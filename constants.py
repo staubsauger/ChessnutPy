@@ -1,8 +1,5 @@
 """ Constant used in the program"""
 DEVICE_LIST = ['Chessnut Air', 'Smart Chess']
-WRITE_CHARACTERISTIC = '1B7E8272-2877-41C3-B46E-CF057C562023'
-READ_CONFIRMATION_CHARACTERISTIC = '1B7E8273-2877-41C3-B46E-CF057C562023'
-READ_DATA_CHARACTERISTIC = '1B7E8262-2877-41C3-B46E-CF057C562023'
 OTHER_CHARACTERISTICS = ["1b7e8283-2877-41c3-b46e-cf057c562023"]
 NONEXISTENT_CHARACTERISTICS = ["1B7E8271-2877-41C3-B46E-CF057C562023", "1B7E8261-2877-41C3-B46E-CF057C562023",
                                "1b7e8281-2877-41c3-b46e-cf057c562023"]
@@ -11,8 +8,8 @@ NONEXISTENT_CHARACTERISTICS = ["1B7E8271-2877-41C3-B46E-CF057C562023", "1B7E8261
 # todo: refactor old allcaps constants to use this class
 class BtCharacteristics:
     write_characteristic =              '1B7E8272-2877-41C3-B46E-CF057C562023'# noqa
-    read_confirmation_characteristic =  '1B7E8273-2877-41C3-B46E-CF057C562023'# noqa
-    read_data_characteristic =          '1B7E8262-2877-41C3-B46E-CF057C562023'# noqa
+    read_misc_data_characteristic =     '1B7E8273-2877-41C3-B46E-CF057C562023'# noqa
+    read_board_data_characteristic =    '1B7E8262-2877-41C3-B46E-CF057C562023'# noqa
 
 
 class BtCommands:

@@ -12,8 +12,7 @@ from typing import Iterable, NamedTuple
 import chess
 
 import constants
-from constants import WRITE_CHARACTERISTIC, READ_DATA_CHARACTERISTIC, DEVICE_LIST, convertDict, \
-    READ_CONFIRMATION_CHARACTERISTIC, OTHER_CHARACTERISTICS, BtCommands
+from constants import DEVICE_LIST, convertDict, OTHER_CHARACTERISTICS, BtCommands
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
@@ -138,11 +137,11 @@ class ChessnutAir:
                 return
             for pos in list_of_pos:
                 arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
-        await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, self._led_command + arr)
+        await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic, self._led_command + arr)
 
     async def _run_cmd(self, cmd: bytearray):
         # print(f'Cmd: {cmd}')
-        await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, cmd)
+        await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic, cmd)
 
     async def play_animation(self, list_of_frames: list[list[str] | chess.SquareSet], sleep_time: float = 0.5) -> None:
         """
@@ -153,7 +152,7 @@ class ChessnutAir:
             await self.change_leds(chess.SquareSet(map(lambda s: chess.parse_square(s), frame)))
             await asyncio.sleep(sleep_time)
 
-    async def _handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
+    async def _board_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data[:2] != constants.BtResponses.head_buffer:
             print('Other data?')
 
@@ -181,7 +180,7 @@ class ChessnutAir:
                     await send_message(63 - i * 2, old_left, cur_left)  # 63-i since we get the data backwards
                     await send_message(63 - (i * 2 + 1), old_right, cur_right)
 
-    async def _button_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
+    async def _misc_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data == constants.BtResponses.heartbeat_code:
             return
         elif data == constants.BtResponses.board_not_read:
@@ -218,24 +217,32 @@ class ChessnutAir:
         async with BleakClient(self._device) as client:
             self._connection = client
             print(f"Connected: {client.is_connected}")
-            await client.start_notify(READ_DATA_CHARACTERISTIC, self._handler)  # start board handler
-            await client.start_notify(READ_CONFIRMATION_CHARACTERISTIC, self._button_handler)  # start button handler
+            await client.start_notify(constants.BtCharacteristics.read_board_data_characteristic,
+                                      self._board_handler)  # start board handler
+            await client.start_notify(constants.BtCharacteristics.read_misc_data_characteristic,
+                                      self._misc_handler)  # start button handler
             # send initialisation string
-            await client.write_gatt_char(WRITE_CHARACTERISTIC, constants.BtCommands.init_code)
+            await client.write_gatt_char(constants.BtCharacteristics.write_characteristic,
+                                         constants.BtCommands.init_code)
             print("Initialized")
             for c in OTHER_CHARACTERISTICS:
                 await client.start_notify(c, uk_handler)
             await self.game_loop()  # call user game loop
-            await self.stop_handler()
+            await self.stop_handlers()
 
-    async def stop_handler(self) -> None:
+    async def stop_handlers(self) -> None:
         """Allow stopping of the handler from outside."""
         if self._connection:
-            await self._connection.stop_notify(READ_DATA_CHARACTERISTIC)  # stop the notification handler
+            # stop the notification handlers
+            await self._connection.stop_notify(constants.BtCharacteristics.read_board_data_characteristic)
+            await self._connection.stop_notify(constants.BtCharacteristics.read_misc_data_characteristic)
+            for c in OTHER_CHARACTERISTICS:
+                await self._connection.stop_notify(c)
 
     async def request_battery_status(self) -> None:
         if self._connection:
-            await self._connection.write_gatt_char(WRITE_CHARACTERISTIC, BtCommands.get_battery_status)
+            await self._connection.write_gatt_char(constants.BtCharacteristics.write_characteristic,
+                                                   BtCommands.get_battery_status)
 
     def board_state_as_fen(self, board_state=None) -> str:
         fen = ''
