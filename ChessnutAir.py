@@ -12,7 +12,7 @@ from typing import Iterable, NamedTuple
 import chess
 
 import constants
-from constants import DEVICE_LIST, convertDict, OTHER_CHARACTERISTICS, BtCommands
+from constants import DEVICE_LIST, convertDict, BtCommands
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice

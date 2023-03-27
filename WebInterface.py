@@ -23,7 +23,7 @@ def svg_board(board, player_color):
 
 
 class BoardAppHandlers:
-    def __init__(self, board: BoardGame, index_template='test.html', engine_settings='engine_settings.html'):
+    def __init__(self, board: BoardGame, index_template='main_page.html', engine_settings='engine_settings.html'):
         self.index_template = index_template
         self.game_board: BoardGame = board
         self.engine_settings = engine_settings
