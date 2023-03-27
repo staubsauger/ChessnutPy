@@ -13,8 +13,8 @@ def svg_board(board, player_color):
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
-    attackable = filter(lambda pos: board.piece_at(pos) and board.piece_at(pos).color == board.turn and
-                                    board.is_attacked_by(not board.turn, pos),
+    attackable = filter(lambda pos: (board.piece_at(pos) and board.piece_at(pos).color == board.turn and
+                                     board.is_attacked_by(not board.turn, pos)),
                         chess.SQUARES)
     for square in attackable:
         fill[square] = 'yellow'
@@ -39,6 +39,11 @@ class BoardAppHandlers:
 
     async def engine_settings_handler(self, request):
         text = pathlib.Path(self.engine_settings).read_text()
+        text = text.replace('LIMIT_TIME', str(self.game_board.game.limit.time))
+        settings = {}
+        for k in self.game_board.game.engine.config:
+            settings[k] = self.game_board.game.engine.config[k]
+        text = text.replace('ENGINE_SETTINGS', json.dumps(settings))
         res = web.Response(text=text)
         res.content_type = 'text/html'
         return res
@@ -99,14 +104,15 @@ class BoardAppHandlers:
     async def set_engine_cfg(self, request):
         # this is a POST request
         # str that is dict of cfg
+        print(self.game_board.game.engine.config)
         data = await request.post()
         d = json.loads(data['cfg_dict'])
         sanitized = {}
         for key in d:
-            if key not in ['UCI_Chess960', 'UCI_Variant', 'MultiPV', 'Ponder']:
+            if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
                 sanitized[key] = d[key]
         await self.game_board.game.engine.configure(sanitized)
-        return web.Response(status=303)
+        return await self.engine_settings_handler(request)
 
     async def get_book_moves(self, request):
         def move_to_opening(entry):
@@ -137,4 +143,5 @@ async def start_server(board):
     app.router.add_route('POST', '/set_engine_cfg', handlers.set_engine_cfg)
     app.router.add_route('GET', '/get_book_moves', handlers.get_book_moves)
     app.router.add_route('GET', '/battery_status', handlers.get_battery)
+    app.router.add_route('GET', '/engine_settings', handlers.engine_settings_handler)
     return app
