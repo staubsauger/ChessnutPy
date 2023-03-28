@@ -23,10 +23,11 @@ def svg_board(board, player_color):
 
 
 class BoardAppHandlers:
-    def __init__(self, board: BoardGame, index_template='main_page.html', engine_settings='engine_settings.html'):
+    def __init__(self, board: BoardGame, index_template='main_page.html', engine_settings='engine_settings.html', online_game='online_game.html'):
         self.index_template = index_template
         self.game_board: BoardGame = board
         self.engine_settings = engine_settings
+        self.online_game = online_game
 
     async def hello(self, request):
         text = pathlib.Path(self.index_template).read_text()
@@ -44,6 +45,12 @@ class BoardAppHandlers:
         for k in self.game_board.game.engine.config:
             settings[k] = self.game_board.game.engine.config[k]
         text = text.replace('ENGINE_SETTINGS', json.dumps(settings))
+        res = web.Response(text=text)
+        res.content_type = 'text/html'
+        return res
+
+    async def online_game_handler(self, request):
+        text = pathlib.Path(self.online_game).read_text()
         res = web.Response(text=text)
         res.content_type = 'text/html'
         return res

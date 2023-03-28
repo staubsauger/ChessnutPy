@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- HTML Codes by Quackit.com -->
+<meta http-equiv="cache-control" content="no-cache" />
+<title>
+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+    .small {
+        color: white;
+        font-weight: 300;
+        font-size: 20px;
+    }
+    .big {
+        color: white;
+        font-weight: 300;
+        font-size: 30px;
+    }
+body {background-color: #312b2b;background-repeat:no-repeat;background-position:top left;background-attachment:fixed;}
+h1{font-family:Arial, sans-serif;letter-spacing:20px;color: #ffffff;background-color: #312b2b;}
+p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+label {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
+</style>
+    <script>
+        const myVar2 = setInterval(get_current_time, 500);
+        async function get_current_time() {
+            document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime();
+            const timers_response = await fetch('/timers');
+            const data = await timers_response.json();
+            const wmin = Math.floor(data[0] / 60);
+            const wsec = Math.floor(data[0] % 60).toString().padStart(2, '0');
+            const bmin = Math.floor(data[1] / 60);
+            const bsec = Math.floor(data[1] % 60).toString().padStart(2, '0');
+            document.getElementById('timers').innerHTML = 'white: ' + wmin + ':' + wsec + ', black: ' + bmin + ':' + bsec;
+            const chat_response = await fetch('/online_chat');
+            const lines = (await chat_response.text()).split('\n')
+            document.getElementById('chat').innerHTML = lines.map(l => '<p class="small">'+l+"</p>").join('')
+        }
+        get_current_time()
+    </script>
+
+</head>
+<body>
+<img id="boardImage" alt="Current Gameboard" src="board.svg"/>
+<p id="timers">white: 0:00, black: 0:00</p>
+<form action="/start_online_challenge" method="post">
+    <button name="onlineChallenge" value="start_online_challenge">Online Challenge</button>
+</form>
+<form action="/start_online_seek" method="post">
+    <br><label for="time">Time:</label><input id="time" name="time" type="number" min="0" step="1" max="180" value="0">
+    <br><label for="increment">Increment:</label><input id="increment" name="increment" type="number" min="0" step="1" max="180" value="0">
+    <br><label for="rated">Ranked:</label><input id="rated" name="rated" type="checkbox">
+    <br><label for="rating_range">Rating Range:</label><input id="rating_range" name="rating_range" type="text" value="800-1800">
+    <br><input id="color_random" type="radio" name="color" value="random" checked><label for="cpu_selected">Random Color</label>
+    <br><input id="color_white" type="radio" name="color" value="white"><label for="sug_selected">White</label>
+    <br><input id="color_black" type="radio" name="color" value="black"><label for="sug_selected">Black</label>
+    <br><input type="submit" value="Online Seek">
+</form>
+<p class="big">Chat</p> <div class="small" id="chat"></div>
+</body>
