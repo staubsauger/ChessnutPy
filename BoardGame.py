@@ -1,8 +1,11 @@
 import asyncio
 import math
+import typing
 
 import chess
 import chess.engine
+
+import LiChess
 import animations
 import constants
 from ChessnutAir import ChessnutAir, board_state_as_square_and_piece
@@ -15,7 +18,7 @@ class BoardGame(ChessnutAir):
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
                  experimental_dragging_detection=False, experimental_dragging_timeout=0.3,
                  engine_cfg: dict | None = None, engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5,
-                 sug_depth=None, sug_nodes=None, show_would_have_done_move=True):
+                 sug_depth=None, sug_nodes=None, show_would_have_done_move=True, lichess_token=''):
         ChessnutAir.__init__(self)
         self.show_would_have_done_move = show_would_have_done_move
         self.experimental_dragging_timeout = experimental_dragging_timeout
@@ -51,8 +54,13 @@ class BoardGame(ChessnutAir):
         self.skip_pgn = False
         self.force_quit = True
         self.have_read_board = False
+        self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
+        self.is_online_game = False
+        self.next_game_online = None
+        self.online_seek_info = None
 
     def setup(self):
+        print("in setup")
         self.target_move = None
         self.move_end = None
         self.move_start = []
@@ -74,9 +82,10 @@ class BoardGame(ChessnutAir):
         self.skip_pgn = False
         self.force_quit = True
         self.have_read_board = False
+        self.is_online_game = self.next_game_online is not None
 
     async def suggest_move(self, move: chess.Move, blink=False):
-        if self.no_suggestions:
+        if self.no_suggestions or self.is_online_game:
             return
         leds = chess.SquareSet([move.from_square, move.to_square])
         if blink:
@@ -86,6 +95,8 @@ class BoardGame(ChessnutAir):
             self.to_blink.clear()
 
     async def led_score(self, score=None):
+        if self.is_online_game:
+            return
         # check if score exists, else await score
         score = score if score else int((await self.game.get_score(self.board)).score())
         print(score)
@@ -196,14 +207,14 @@ class BoardGame(ChessnutAir):
 
     async def button_pressed(self, button):
         print(f'Button {button} pressed!')
-        await self._run_cmd(constants.BtCommands.query_otb)
-        #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
-        await self._run_cmd(constants.BtCommands.set_otb_upload_mode)
-        await self._run_cmd(constants.BtCommands.is_app_ready)
-        await self._run_cmd(constants.BtCommands.action_newest_data_tranfer)
-        await asyncio.sleep(1)
-        await self._run_cmd(constants.BtCommands.init_code)
-        # await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
+        # await self._run_cmd(constants.BtCommands.query_otb)
+        # #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
+        # await self._run_cmd(constants.BtCommands.set_otb_upload_mode)
+        # await self._run_cmd(constants.BtCommands.is_app_ready)
+        # await self._run_cmd(constants.BtCommands.action_newest_data_tranfer)
+        # await asyncio.sleep(1)
+        # await self._run_cmd(constants.BtCommands.init_code)
+        # #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
         if button == 2:
             await self.exit_read_board_and_select_color()
         if button == 1:
@@ -230,14 +241,11 @@ class BoardGame(ChessnutAir):
         if mixed and horizontal: quit completely
         """
 
-        def filter_fun(s_p):
-            return
-
         relevant_positions = filter(lambda s_p: (3 <= chess.square_rank(s_p.square) <= 4 and
                                                  3 <= chess.square_file(s_p.square) <= 4),
                                     board_state_as_square_and_piece(self.board_state))  # should always be 4
         d5, e5, d4, e4 = map(lambda pos: pos[1].piece_type == chess.KING if pos[1] else False, relevant_positions)
-        if d5 and e4:  # both on white
+        if d5 and e4:  # both on white TODO: maybe add online resign/draw offer
             self.winner = chess.WHITE
             return True
         elif d4 and e5:  # both on black
@@ -327,7 +335,7 @@ class BoardGame(ChessnutAir):
 
     async def ai_move(self):
         would_have_done_task = None
-        if self.show_would_have_done_move:
+        if self.show_would_have_done_move and not self.is_online_game:
             has_player_move = len(self.board.move_stack) > 0
             if has_player_move:
                 player_move = self.board.pop()
@@ -335,8 +343,16 @@ class BoardGame(ChessnutAir):
                 would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(),
                                                                                          min_time=min_time))
                 self.board.push(player_move)
-        ai_play = await self.game.get_cpu_move(self.board)
-        raw_move = ai_play.move
+        if self.is_online_game:
+            play = await self.lichess.opponent_move(sleep_fun=lambda: self.blink_tick(sleep_time=0.5))
+            if play is None:
+                self.running = False
+                self.winner = self.lichess.game.winner
+                return
+            raw_move = chess.Move.from_uci(play)
+        else:
+            play = await self.game.get_cpu_move(self.board)
+            raw_move = play.move
         move = f"{raw_move}"
         print("generated Move:", move)
         if self.board.is_castling(raw_move):
@@ -408,6 +424,12 @@ class BoardGame(ChessnutAir):
             print(self.board)
             print("Move-stack: ", list(map(lambda m: m.uci(), self.board.move_stack)))
             print("Player move: ", move.uci())
+            if self.is_online_game:
+                if self.lichess.game and self.lichess.game.ended:
+                    self.running = False
+                    self.winner = self.lichess.game.winner
+                    return True
+                self.lichess.make_move(move)
             self.to_blink.clear()
             self.to_light.clear()
             self.player_turn = self.board.turn == self.player_color
@@ -431,12 +453,16 @@ class BoardGame(ChessnutAir):
             return True
         return False
 
-    async def exit_read_board_and_select_color(self):
-        print("in exit and select")
+    async def exit_read_board_and_select_color(self, wants_online: typing.Literal['challenge', 'seek'] | None = None,
+                                               seek_info=None):
+        print(f"in exit and select... {wants_online}")
         self.running = False
         self.force_quit = True
-        self.should_read = True
+        self.should_read = wants_online is None
         self.skip_pgn = True
+        self.is_online_game = wants_online is not None
+        self.online_seek_info = seek_info if wants_online == 'seek' else None
+        self.next_game_online = wants_online
 
     async def game_loop(self):
         await self.game.init_engines()
@@ -447,10 +473,29 @@ class BoardGame(ChessnutAir):
         self.winner = None
         self.inited = True
         await self.request_battery_status()
-        while self.force_quit:
+        if self.is_online_game:
+            if self.next_game_online == 'challenge':
+                self.lichess.await_challenge()
+            elif self.next_game_online == 'seek':
+                clock_time, increment, rated, color, rating_range = self.online_seek_info
+                print('Seeking Online game.')
+                self.lichess.seek_game(clock_time=clock_time, increment=increment, rated=rated, color=color,
+                                       rating_range=rating_range)
+            else:
+                print("Finding online game Failed... You should probably restart.")
+                return
+            self.next_game_online = None
+            print(self.lichess.game_info)
+            self.board = chess.Board(self.lichess.game_info['fen'])
+            print(self.board.fen())
+            self.player_color = self.lichess.game_info['color'] == 'white'
             self.force_quit = False
-            await self.maybe_read_board()
-        await self.select_player_color()
+            self.player_color_select = False
+        else:
+            while self.force_quit and not self.is_online_game:
+                self.force_quit = False
+                await self.maybe_read_board()
+            await self.select_player_color()
         self.player_turn = self.board.turn == self.player_color
         await self.fix_board()
         self.to_blink.clear()
@@ -459,7 +504,7 @@ class BoardGame(ChessnutAir):
             await self.play_animation(animations.game_start_amin, sleep_time=0.1)
         self.running = True
         # all initializing is done to loop can finally begin
-        while self.running:
+        while self.running and not self.force_quit:
             self.is_check = self.board.is_check()
             if self.board.is_checkmate():
                 await self.play_animation(animations.check_mate_anim)
@@ -536,6 +581,8 @@ class BoardGame(ChessnutAir):
         return castling if len(castling) > 0 else '-'
 
     async def select_player_color(self):
+        if self.is_online_game:
+            return
         if self.player_color is None:
             self.player_color = chess.WHITE
             self.player_turn = True
@@ -545,7 +592,9 @@ class BoardGame(ChessnutAir):
                 await self.play_animation(animations.pick_anim, sleep_time=0.4)
             self.to_blink = chess.SquareSet(self.find_king_squares())
         while self.player_color_select and not self.force_quit:
-            await self.board_has_changed(sleep_time=0.5)
+            await self.blink_tick(sleep_time=0.5)
+        self.to_blink.clear()
+        self.to_light.clear()
         if self.have_read_board and self.player_color != self.board.turn:
             self.board.turn = self.player_color
 

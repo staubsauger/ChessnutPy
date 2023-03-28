@@ -80,6 +80,10 @@ class BoardAppHandlers:
         await self.game_board.exit_read_board_and_select_color()
         return web.Response(status=303)
 
+    async def start_online_challenge_handler(self, request):
+        await self.game_board.exit_read_board_and_select_color(wants_online='challenge')
+        return await self.online_game_handler(request)
+
     async def set_engine_limit(self, request):
         # this is a POST request
         # ?time: int, ?depth: int, ?nodes: int, ?engine_select: [cpu, suggest]
@@ -101,6 +105,10 @@ class BoardAppHandlers:
         res = web.Response(status=303)
         return res
 
+    async def online_chat_handler(self, request):
+        text = self.game_board.lichess.game.chat if self.game_board.lichess.game else ''
+        return web.Response(text=text)
+
     async def set_engine_cfg(self, request):
         # this is a POST request
         # str that is dict of cfg
@@ -113,6 +121,28 @@ class BoardAppHandlers:
                 sanitized[key] = d[key]
         await self.game_board.game.engine.configure(sanitized)
         return await self.engine_settings_handler(request)
+
+    async def seek_game_handler(self, request):
+        def safe_dict_get(dic, attr):
+            try:
+                val = dic[attr]
+                if all(map(lambda c: c.isdigit(), val)):
+                    val = int(val)
+                return val
+            except KeyError:
+                return None
+        # this is a POST request
+        # str that is dict of cfg
+        data = await request.post()
+        clock_time = safe_dict_get(data, 'time')
+        increment = safe_dict_get(data, 'increment')
+        rated = safe_dict_get(data, 'rated')
+        rated = True if rated == 'on' else False
+        rating_range = safe_dict_get(data, 'rating_range')
+        color = safe_dict_get(data, 'color')
+        seek_info = (clock_time, increment, rated, color, rating_range)
+        await self.game_board.exit_read_board_and_select_color(wants_online='seek', seek_info=seek_info)
+        return await self.online_game_handler(request)
 
     async def get_book_moves(self, request):
         def move_to_opening(entry):
@@ -127,6 +157,10 @@ class BoardAppHandlers:
         await self.game_board.request_battery_status()
         data = f"{'CHARGING' if self.game_board.charging else 'DISCHARGING'}: {self.game_board.charge_percent}%"
         return web.Response(text=data)
+
+    async def time_handler(self, request):
+        data = [self.game_board.lichess.get_white_time_left(), self.game_board.lichess.get_black_time_left()]
+        return web.json_response(data=data)
 
 
 async def start_server(board):
@@ -144,4 +178,9 @@ async def start_server(board):
     app.router.add_route('GET', '/get_book_moves', handlers.get_book_moves)
     app.router.add_route('GET', '/battery_status', handlers.get_battery)
     app.router.add_route('GET', '/engine_settings', handlers.engine_settings_handler)
+    app.router.add_route('GET', '/timers', handlers.time_handler)
+    app.router.add_route('GET', '/online_game', handlers.online_game_handler)
+    app.router.add_route('POST', '/start_online_challenge', handlers.start_online_challenge_handler)
+    app.router.add_route('POST', '/start_online_seek', handlers.seek_game_handler)
+    app.router.add_route('GET', '/online_chat', handlers.online_chat_handler)
     return app

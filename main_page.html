@@ -30,6 +30,7 @@ pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:nor
             const move_stack_response = await fetch('move_stack')
             const last_score_response = await fetch('last_score')
             const counter_opening_response = await fetch('get_book_moves')
+            const timers_response = await fetch('/timers')
             let data = await opening_response.json();
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
@@ -41,8 +42,14 @@ pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:nor
             let data_str = ""
             data.forEach((l) => data_str += l+"<br>");
             document.getElementById('counter_openings').innerHTML = (data_str.length>0 ? data_str : "No counter openings found.");
-            const battery_response = await fetch('battery_status')
-            document.getElementById('battery').innerHTML = 'Battery: '+await battery_response.text()
+            const battery_response = await fetch('battery_status');
+            document.getElementById('battery').innerHTML = 'Battery: '+await battery_response.text();
+            data = await timers_response.json();
+            const wmin = Math.floor(data[0]/60);
+            const wsec = Math.floor(data[0]%60).toString().padStart(2, '0');
+            const bmin = Math.floor(data[1]/60);
+            const bsec = Math.floor(data[1]%60).toString().padStart(2, '0');
+            document.getElementById('timers').innerHTML = 'white: '+wmin+':'+wsec+', black: '+bmin+':'+bsec;
 
         }
         get_current_opening()
@@ -52,6 +59,7 @@ pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:nor
 <h1 class="big">ChessComputer</h1>
 <p class="small">Board:</p>
 <img id="boardImage" alt="Current Gameboard" src="board.svg"/>
+<p id="timers">white: 0:00, black: 0:00</p>
 <p id="opening">Current Opening: CUR_OPENING</p>
 <p class="small">Book Counter Openings:</p>
 <p id="counter_openings" class="small"></p>
