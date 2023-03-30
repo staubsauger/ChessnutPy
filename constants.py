@@ -4,7 +4,6 @@ NONEXISTENT_CHARACTERISTICS = ["1B7E8271-2877-41C3-B46E-CF057C562023", "1B7E8261
                                "1b7e8281-2877-41c3-b46e-cf057c562023"]  # maybe for another board?
 
 
-# todo: refactor old allcaps constants to use this class
 class BtCharacteristics:
     write =             '1B7E8272-2877-41C3-B46E-CF057C562023'# noqa
     read_misc_data =    '1B7E8273-2877-41C3-B46E-CF057C562023'# noqa
@@ -23,6 +22,7 @@ class BtCommands:
     maybe_wipe_otb =                b'\x39\x01\x00'# noqa
     get_device_name =               b'\x2b\x01\x00'# noqa
     get_device_time =               b'\x26\x01\x00'# noqa
+    set_leds_prefix =               b'\x0A\x08'# noqa
 
 
 class BtResponses:

@@ -52,7 +52,8 @@ async def go():
                   sug_depth=int(options.sug_depth) if options.sug_depth != 'None' else None,
                   sug_nodes=int(options.sug_nodes) if options.sug_nodes != 'None' else None,
                   sug_time=float(options.sug_time) if options.sug_time != 'None' else None,
-                  show_would_have_done_move=options.show_would_have_done_move)
+                  show_would_have_done_move=options.show_would_have_done_move,
+                  lichess_token=options.lichess_token)
     await b.connect()
     try:
         run_task = asyncio.create_task(b.run())
@@ -104,6 +105,7 @@ if __name__ == "__main__":
     p.add_argument('--engine_suggest_cmd', default='stockfish')
     p.add_argument('--suggestion_book_dir', default='/usr/share/scid/books/Elo2400.bin')
     p.add_argument('--eco_file', default='./scid.eco')
+    p.add_argument('--lichess_token', default='')
     p.add_argument('--experimental_dragging_detection', default=False, action="store_true")
     p.add_argument('--experimental_dragging_timeout', default=0.3, type=float)
     p.add_argument('--show_valid_moves', default=True, action="store_true")

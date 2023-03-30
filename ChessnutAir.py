@@ -5,6 +5,7 @@ for more information.
 """
 import asyncio
 import math
+import threading
 import time
 from collections import namedtuple
 from typing import Iterable, NamedTuple
@@ -12,6 +13,7 @@ from typing import Iterable, NamedTuple
 import chess
 
 import constants
+from BoardDevice import BoardDevice
 from constants import DEVICE_LIST, convertDict, BtCommands
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic

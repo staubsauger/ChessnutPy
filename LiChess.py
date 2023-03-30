@@ -141,7 +141,10 @@ class LiChessGame(threading.Thread):
         moves = game_state['moves'].split()
         if game_state['status'] != 'started':
             self.ended = True
-            self.winner = chess.WHITE if game_state['winner'] == 'white' else chess.BLACK
+            try:
+                self.winner = chess.WHITE if game_state['winner'] == 'white' else chess.BLACK
+            except KeyError:
+                pass
         self.last_move = moves[-1]
         self.move_num = len(moves)
         self.last_time_update = time.time()
