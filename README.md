@@ -40,5 +40,6 @@ interface via your web browser and 'http://localhost' or from another machine vi
  rmarabini, for https://github.com/rmarabini/chessnutair \
  Graham O'Neil, for the instruction how the board works (pdf) \
  scid-project, for some files we borrowed \
- picochess-project, for inspiration 
+ picochess-project, for inspiration \
+ Willi G, for quality management and helping with the code
  
