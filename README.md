@@ -37,8 +37,8 @@ interface via your web browser and 'http://localhost' or from another machine vi
  8. We also added the ability to start a new game by pushing the on/off button.
  9. The other button on the board reads the state of the board, so you can play any position you want.
 ## Credits
- rmarabini, for https://github.com/rmarabini/chessnutair
- Graham O'Neil, for the instruction how the board works (pdf)
- scid-project, for some files we borrowed 
- picochess-project, for inspiration 
+ rmarabini, for https://github.com/rmarabini/chessnutair \
+ Graham O'Neil, for the instruction how the board works (pdf) \
+ scid-project, for some files we borrowed \
+ picochess-project, for inspiration \
  
