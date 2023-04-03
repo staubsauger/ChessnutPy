@@ -12,7 +12,7 @@ So far, I have only tested this software on Linux.
 
 ## Installation and execution
  1. download code
- 2. install dependencies (pip3 install -r requirements.txt
+ 2. install dependencies (pip3 install -r requirements.txt)
  3. Optional: copy default.config to your $HOME/.config/chessnutair.config and edit it to your liking
  4. Execute python3 ./main.py
  
