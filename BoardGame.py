@@ -7,7 +7,6 @@ import chess.engine
 
 import LiChess
 import animations
-import constants
 from ChessnutAir import ChessnutAir, board_state_as_square_and_piece
 from EngineManager import EngineManager
 from fencompare import fen_diff_leds
