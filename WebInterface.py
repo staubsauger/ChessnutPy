@@ -166,7 +166,9 @@ class BoardAppHandlers:
         return web.Response(text=data)
 
     async def time_handler(self, request):
-        data = [self.game_board.lichess.get_white_time_left(), self.game_board.lichess.get_black_time_left()]
+        data = [-1, -1]
+        if self.game_board.lichess:
+            data = [self.game_board.lichess.get_white_time_left(), self.game_board.lichess.get_black_time_left()]
         return web.json_response(data=data)
 
 
