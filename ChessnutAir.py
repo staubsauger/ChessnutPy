@@ -17,7 +17,7 @@ from constants import DEVICE_LIST, convertDict, BtCommands
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-
+from bleak import BleakError
 
 def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
@@ -48,6 +48,7 @@ class ChessnutAir:
     def __init__(self) -> None:
         self.deviceNameList = DEVICE_LIST  # valid device name list
         self._device = self._advertisement_data = self._connection = None
+        self.is_connected = False
         self.board_state = bytearray(32)
         self._old_data = bytearray(32)
         self._led_command = bytearray([0x0A, 0x08])
@@ -126,6 +127,9 @@ class ChessnutAir:
         Turns on all LEDs in list_of_pos and turns off all others.
             list_of_pos := ["e3", "a4",...]
         """
+        if not self.is_connected:
+            print("Can't change LEDs when disconnected!")
+            return
         is_square_set = isinstance(list_of_pos, chess.SquareSet)
         if is_square_set:
             arr = chess.flip_horizontal(int(list_of_pos)).to_bytes(8, byteorder='big')
@@ -218,6 +222,7 @@ class ChessnutAir:
         async with BleakClient(self._device) as client:
             self._connection = client
             print(f"Connected: {client.is_connected}")
+            self.is_connected = True
             await client.start_notify(constants.BtCharacteristics.read_board_data,
                                       self._board_handler)  # start board handler
             await client.start_notify(constants.BtCharacteristics.read_misc_data,
@@ -228,7 +233,15 @@ class ChessnutAir:
             await client.write_gatt_char(constants.BtCharacteristics.write,
                                          constants.BtCommands.init_code)
             print("Initialized")
-            await self.game_loop()  # call user game loop
+            try:
+                await self.game_loop()  # call user game loop
+            except BleakError:
+                self.is_connected = False
+                self._connection = None
+                self._device = None
+                print("Board disconnected! stange things may occur!")
+                await self.connect() # <- loops until connection
+                await self.run()
             await self.stop_handlers()
 
     async def stop_handlers(self) -> None:

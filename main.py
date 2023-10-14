@@ -13,24 +13,6 @@ from WebInterface import start_server
 import configargparse
 
 # noinspection SpellCheckingInspection
-"""
-Mindmap:
-
-aufstellung der startposition = neues game
-wenn stellung aufgestellt, dann ist der player turn = der letzte könig der gesetzt wurde
-analysefunktion bzw. schiedsrichterfunktion
-
-funktionsweise pi:
--an
-- programm wird gestartet -> sucht nach board
--> vielleicht shutdown nach 5 min
-- findet board -> ließt startpos aus
-- fragt nach spielerfarbe
-- startet game 
-- wenn matt dann restart gameloop
-- wenn beide könige in der mitte (diagonal oder nebeneinander) restart gameloop, 
-    wenn beide weißen damen nebeneinander shutdown
-"""
 
 options = None
 

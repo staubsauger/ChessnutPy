@@ -161,6 +161,8 @@ class BoardAppHandlers:
         return web.json_response(data=moves)
 
     async def get_battery(self, request):
+        if not self.game_board.is_connected:
+            return web.Response(text="DISCONNECTED")
         await self.game_board.request_battery_status()
         data = f"{'CHARGING' if self.game_board.charging else 'DISCHARGING'}: {self.game_board.charge_percent}%"
         return web.Response(text=data)
