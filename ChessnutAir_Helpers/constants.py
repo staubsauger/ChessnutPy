@@ -29,7 +29,7 @@ class BtResponses:
     heartbeat_code =    b'\x23\x01\x00' # noqa
     confirmation_code = b'\x21\x01\x00' # noqa
     head_buffer =       b'\x01\x24'     # noqa
-    board_not_read =    b'\x23\x01\x01' # noqa
+    board_not_ready =   b'\x23\x01\x01' # noqa
     otb_count_prefix =  b'\x32\x01'     # noqa
     file_start =        b'\x37\x01\xbe' # noqa
     file_end =          b'\x37\x01\xed' # noqa

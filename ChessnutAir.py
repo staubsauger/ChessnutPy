@@ -94,7 +94,6 @@ class ChessnutAir:
     async def connect(self) -> None:
         """Run discover() until device is found."""
         while not self._device:
-            await asyncio.sleep(1.0)
             await self.discover()
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
@@ -102,11 +101,11 @@ class ChessnutAir:
         raise NotImplementedError
 
     async def piece_down(self, square: chess.Square, piece: chess.Piece) -> None:
-        """Should be overriden with a function that handles piece up events."""
+        """Should be overriden with a function that handles piece down events."""
         raise NotImplementedError
 
     async def button_pressed(self, button: int) -> None:
-        """Should be overriden with a function that handles button events"""
+        """Should be overriden with a function that handles button events."""
         raise NotImplementedError
 
     async def game_loop(self) -> None:
@@ -114,7 +113,7 @@ class ChessnutAir:
         raise NotImplementedError
 
     async def board_has_changed(self, timeout: float = 0.0, sleep_time: float = 0.4) -> bool:
-        """Sleeps until the board has changed or until timeout (if >0)."""
+        """Sleeps until the board has changed or until timeout (if timeout > 0)."""
         self._board_changed = False
         end_time = time.time() + timeout if timeout > 0 else math.inf
         while not self._board_changed:
@@ -159,7 +158,7 @@ class ChessnutAir:
 
     async def _board_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data[:2] != constants.BtResponses.head_buffer:
-            print('Other data?')
+            print('Other data recieved: ', data)
 
         async def send_message(loc, old, new):
             if old != new:
@@ -188,7 +187,7 @@ class ChessnutAir:
     async def _misc_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data == constants.BtResponses.heartbeat_code:
             return
-        elif data == constants.BtResponses.board_not_read:
+        elif data == constants.BtResponses.board_not_ready:
             print('Board not ready!')
         elif data.startswith(constants.BtResponses.otb_count_prefix):
             print(f'OTB count = {data[2]}')
@@ -254,7 +253,7 @@ class ChessnutAir:
             await self._connection.stop_notify(constants.BtCharacteristics.read_otb_data)
 
     async def request_battery_status(self) -> None:
-        if self._connection:
+        if self.is_connected:
             await self._connection.write_gatt_char(constants.BtCharacteristics.write,
                                                    BtCommands.get_battery_status)
 
