@@ -37,21 +37,21 @@ async def go():
                   show_would_have_done_move=options.show_would_have_done_move,
                   lichess_token=options.lichess_token)
     await b.connect()
-    try:
-        run_task = asyncio.create_task(b.run())
-        if not options.no_server:
-            return await start_server(b)
-        while not run_task.done():
-            await asyncio.sleep(1.0)
-    except BleakError:
-        print("Board Disconnected. Retrying connection.")
-        run_task = asyncio.create_task(b.run())
-        quit()
-    except KeyboardInterrupt:
-        print(b.board.fen())
-        await b.stop_handlers()
-        b.game.quit_chess_engines()
-        quit()
+    # try: # this should no longer be useful
+    run_task = asyncio.create_task(b.run())
+    if not options.no_server:
+        return await start_server(b)
+    while not run_task.done():
+        await asyncio.sleep(1.0)
+    # except BleakError:
+    #     print("Board Disconnected. Retrying connection.")
+    #     run_task = asyncio.create_task(b.run())
+    #     quit()
+    # except KeyboardInterrupt:
+    #     await b.game.quit_chess_engines()
+    #     print(b.board.fen())
+    #     await b.stop_handlers()
+    #     quit()
 
 
 def get_ip():
@@ -97,23 +97,24 @@ if __name__ == "__main__":
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
     print(options)
-    print(options.no_server)
     try:
         if options.no_server:
             asyncio.run(go())
+        elif options.hosts == 'auto-hosts':
+            host = get_ip()
+            print(host)
+            hosts = [host, 'localhost']
+            web.run_app(go(), host=hosts, port=8080)
+        elif len(options.hosts) > 0:
+            hosts = options.hosts
+            host = hosts[0].split(':')[1:]
+            host.append('localhost')
+            web.run_app(go(), host=host, port=options.port)
         else:
-            if options.hosts == 'auto-hosts':
-                host = get_ip()
-                print(host)
-                hosts = [host, 'localhost']
-                web.run_app(go(), host=hosts, port=8080)
-            elif len(options.hosts) > 0:
-                hosts = options.hosts
-                host = hosts[0].split(':')[1:]
-                host.append('localhost')
-                web.run_app(go(), host=host, port=options.port)
-            else:
-                web.run_app(go(), host='localhost', port=8080)
+            web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:
         pass
-    asyncio.get_event_loop().close()
+    try:
+        asyncio.get_event_loop().close()
+    except RuntimeError:
+        pass
