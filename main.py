@@ -39,9 +39,10 @@ async def go():
     await b.connect()
     try:
         run_task = asyncio.create_task(b.run())
-        return await start_server(b)
-        # while not run_task.done():
-        #     await asyncio.sleep(1.0)
+        if not options.no_server:
+            return await start_server(b)
+        while not run_task.done():
+            await asyncio.sleep(1.0)
     except BleakError:
         print("Board Disconnected. Retrying connection.")
         run_task = asyncio.create_task(b.run())
