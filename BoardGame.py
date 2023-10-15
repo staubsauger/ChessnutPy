@@ -6,10 +6,10 @@ import chess
 import chess.engine
 
 import LiChess
-import animations
+import BoardGame_Helpers.animations as animations
 from ChessnutAir import ChessnutAir, board_state_as_square_and_piece
 from EngineManager import EngineManager
-from fencompare import fen_diff_leds
+from BoardGame_Helpers.fencompare import fen_diff_leds
 
 
 class BoardGame(ChessnutAir):

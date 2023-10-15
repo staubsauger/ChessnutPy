@@ -19,14 +19,14 @@ So far, I have only tested this software on Linux.
 
 ## Features
  1. Fix-board function: checks if the state of the board is valid and gives you hints, where pieces are wrong and 
- where you should place them
- 2. If the board is correct, both squares with kings are lit. You can now pick a color by "hovering" a king (picking it 
+ where to put them
+ 2. If the board is correct, both squares with kings are blinking (there is also a short animation, pointing the direction of the kings). You can now pick a color by "hovering" a king (picking it 
  up and putting it back where it stood)
- 3. While in game, you can hover you own king to get a hint for you next move. This is read out of the opening book 
+ 3. While ingame, you can hover your own king to get a hint for you next move. This is read out of the opening book 
  (.bin file) which you can configure in your own configuration. If no move was found in the opening book, you get a 
- suggestion from the engine which you can also configure in your config. Default is stockfish.
- 4. If you hover the opponents king while a game is running, you get the score relative to white, indicated by the leds
- of the board.
+ suggestion from the suggestionengine which you can also configure in your config. Default is stockfish.
+ 4. If you hover the opponents king, while a game is running, you get the score relative to white, indicated by the leds
+ on the board.
  5. If you want to take back a move, you have to do the opponents move first, then you can take back this move and your
  own afterwards. The leds will help you find the last moves in the move stack. There is no limit. You can take back all
  moves until you get to the start position.

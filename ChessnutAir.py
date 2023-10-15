@@ -11,8 +11,8 @@ from typing import Iterable, NamedTuple
 
 import chess
 
-import constants
-from constants import DEVICE_LIST, convertDict, BtCommands
+import ChessnutAir_Helpers.constants as constants
+from ChessnutAir_Helpers.constants import DEVICE_LIST, convertDict, BtCommands
 
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
