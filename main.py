@@ -70,7 +70,7 @@ def get_ip():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
-    p = configargparse.ArgParser(default_config_files=["Docs/default.config", '~/.config/chessnutair.config'],
+    p = configargparse.ArgParser(default_config_files=["./Docs/default.config", '~/.config/chessnutair.config'],
                                  ignore_unknown_config_file_keys=False)
     p.add_argument("--no_server", default=False, action="store_true")
     p.add_argument("--hosts", default='auto-hosts', help='ip1:ip2, or auto-hosts to use local address')
@@ -85,8 +85,8 @@ if __name__ == "__main__":
     p.add_argument('--sug_nodes', default=None, help='How many nodes can the suggestions engine use')
     p.add_argument('--no_suggestions', default=False, action="store_true", help='disable suggestions')
     p.add_argument('--engine_suggest_cmd', default='stockfish')
-    p.add_argument('--suggestion_book_dir', default='/usr/share/scid/books/Elo2400.bin')
-    p.add_argument('--eco_file', default='./scid.eco')
+    p.add_argument('--suggestion_book_dir', default='./Docs/Elo2400.bin')
+    p.add_argument('--eco_file', default='./Docs/scid.eco')
     p.add_argument('--lichess_token', default='')
     p.add_argument('--experimental_dragging_detection', default=False, action="store_true")
     p.add_argument('--experimental_dragging_timeout', default=0.3, type=float)
