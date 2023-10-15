@@ -70,7 +70,7 @@ def get_ip():
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
-    p = configargparse.ArgParser(default_config_files=["./default.config", '~/.config/chessnutair.config'],
+    p = configargparse.ArgParser(default_config_files=["Docs/default.config", '~/.config/chessnutair.config'],
                                  ignore_unknown_config_file_keys=False)
     p.add_argument("--no_server", default=False, action="store_true")
     p.add_argument("--hosts", default='auto-hosts', help='ip1:ip2, or auto-hosts to use local address')
