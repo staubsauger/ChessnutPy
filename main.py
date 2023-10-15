@@ -37,22 +37,11 @@ async def go():
                   show_would_have_done_move=options.show_would_have_done_move,
                   lichess_token=options.lichess_token)
     await b.connect()
-    # try: # this should no longer be useful
     run_task = asyncio.create_task(b.run())
     if not options.no_server:
         return await start_server(b)
     while not run_task.done():
         await asyncio.sleep(1.0)
-    # except BleakError:
-    #     print("Board Disconnected. Retrying connection.")
-    #     run_task = asyncio.create_task(b.run())
-    #     quit()
-    # except KeyboardInterrupt:
-    #     await b.game.quit_chess_engines()
-    #     print(b.board.fen())
-    #     await b.stop_handlers()
-    #     quit()
-
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
