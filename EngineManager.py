@@ -16,7 +16,7 @@ class EngineManager:
 
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
                  suggestion_limit=chess.engine.Limit(time=3.5, depth=None, nodes=None),
-                 suggestion_book_path="/usr/share/scid/books/Elo2400.bin",
+                 suggestion_book_path="./Docs/Elo2400.bin",
                  eco_file=None, engine_cfg={}) -> None:
         self.engine_path = engine_path
         self.transport = None
@@ -36,6 +36,7 @@ class EngineManager:
         self.dict_cache_file = 'eco_dict.cache'
         self.last_suggestion = None
         self.last_ai_move = None
+
         if eco_file:
             if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
                 pass
