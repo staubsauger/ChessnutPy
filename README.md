@@ -8,7 +8,17 @@ old chesscomputer via mame works, only the takeback function does not work at th
  * Supports Linux distributions with BlueZ >= 5.43 (See Linux backend for more details)
  * OS X/macOS support (should work, but not tested)
 
+ * we tested this software on a Chessnut Air. As far as we know, it should work on a Chessnut Pro and a Chessnut Air+ too (Please let us know!). 
+
 So far, I have only tested this software on Linux.
+
+## Main Ideas | How it is different to Picochess
+The main idea behind this project is to bring a modern solution for people, who want to play chess against the computer, 
+but without the distraction of displays, sounds and other things.
+This software fits perfect on a small soc like the raspberry pi zero 2. It is intended to be used without a display. 
+Everything you need, for setting up a game, is done via the pieces and leds on the board. Furthermore, you can use both 
+buttons on the board for setting up a position or restarting a game. At the moment, there is now way to set up the strength
+of the engines via the board. You have to use the config file for this.
 
 ## Installation and execution
  1. download code
