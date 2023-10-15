@@ -94,6 +94,7 @@ class ChessnutAir:
     async def connect(self) -> None:
         """Run discover() until device is found."""
         while not self._device:
+            await asyncio.sleep(1.0)
             await self.discover()
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
