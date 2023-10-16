@@ -16,7 +16,7 @@ class BoardGame(ChessnutAir):
     def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
                  experimental_dragging_detection=False, experimental_dragging_timeout=0.3,
-                 engine_cfg: dict | None = None, engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5,
+                 engine_cfg: "dict | None" = None, engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5,
                  sug_depth=None, sug_nodes=None, show_would_have_done_move=True, lichess_token=''):
         ChessnutAir.__init__(self)
         self.show_would_have_done_move = show_would_have_done_move
@@ -452,7 +452,7 @@ class BoardGame(ChessnutAir):
             return True
         return False
 
-    async def exit_read_board_and_select_color(self, wants_online: typing.Literal['challenge', 'seek'] | None = None,
+    async def exit_read_board_and_select_color(self, wants_online: "typing.Literal['challenge', 'seek'] | None" = None,
                                                seek_info=None):
         print(f"in exit and select... {wants_online}")
         self.running = False

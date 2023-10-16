@@ -147,7 +147,7 @@ class ChessnutAir:
         # print(f'Cmd: {cmd}')
         await self._connection.write_gatt_char(constants.BtCharacteristics.write, cmd)
 
-    async def play_animation(self, list_of_frames: list[list[str] | chess.SquareSet], sleep_time: float = 0.5) -> None:
+    async def play_animation(self, list_of_frames: list["list[str] | chess.SquareSet"], sleep_time: float = 0.5) -> None:
         """
             changes LED to a frame popped from beginning of list_of_frames
             waits for sleep_time and repeats until no more frames
