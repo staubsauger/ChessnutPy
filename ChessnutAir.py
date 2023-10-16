@@ -99,7 +99,7 @@ class ChessnutAir:
                 await self.discover()
             except BleakDBusError:
                 print("DBus Error, waiting 15 seconds before retrying.\nYou probably need to restart the bluetooth stack.")
-                asyncio.sleep(15.0)
+                await asyncio.sleep(15.0)
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
         """Should be overriden with a function that handles piece up events."""
