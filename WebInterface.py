@@ -114,7 +114,7 @@ class BoardAppHandlers:
         return res
 
     async def online_chat_handler(self, request):
-        text = self.game_board.lichess.game.chat if self.game_board.lichess.game else ''
+        text = self.game_board.lichess.game.chat if self.game_board.lichess and self.game_board.lichess.game else ''
         return web.Response(text=text)
 
     async def set_engine_cfg(self, request):
