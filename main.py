@@ -66,7 +66,7 @@ if __name__ == "__main__":
     p.add_argument("--hosts", default='auto-hosts', help='ip1:ip2, or auto-hosts to use local address')
     p.add_argument('-p', '--port', default=8080, type=int)
     p.add_argument('-e', "--engine_cmd", default="stockfish")
-    p.add_argument('--engine_cfg', default={}, help="Engine config dict")
+    p.add_argument('--engine_cfg', default="{}", help="Engine config dict")
     p.add_argument('--engine_time', default=0.5, help='Time the engine has to think')
     p.add_argument('--engine_depth', default=None, help='How deep can the engine calculate ahead')
     p.add_argument('--engine_nodes', default=None, help='How many nodes can the engine use')
