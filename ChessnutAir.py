@@ -17,7 +17,7 @@ from ChessnutAir_Helpers.constants import DEVICE_LIST, convertDict, BtCommands
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from bleak import BleakError
+from bleak import BleakError, BleakDBusError
 
 def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
@@ -97,7 +97,7 @@ class ChessnutAir:
             try:
                 await self.discover()
             except BleakDBusError:
-                print("DBUS Error, waiting 15 seconds before retrying.\nUser probably needs to restart their bluetooth stack.")
+                print("DBus Error, waiting 15 seconds before retrying.\nYou probably need to restart the bluetooth stack.")
                 asyncio.sleep(15.0)
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
