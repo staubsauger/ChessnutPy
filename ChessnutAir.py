@@ -149,7 +149,10 @@ class ChessnutAir:
                 return
             for pos in list_of_pos:
                 arr[conv_number[pos[1]]] |= conv_letter[pos[0]]
-        await self._connection.write_gatt_char(constants.BtCharacteristics.write, self._led_command + arr)
+        try:
+            await self._connection.write_gatt_char(constants.BtCharacteristics.write, self._led_command + arr)
+        except BleakError as e:
+            print(f"Couldn't write LEDs! ({e})")
 
     async def _run_cmd(self, cmd: bytearray):
         # print(f'Cmd: {cmd}')
