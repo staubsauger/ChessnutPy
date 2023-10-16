@@ -464,7 +464,8 @@ class BoardGame(ChessnutAir):
         self.next_game_online = wants_online
 
     async def game_loop(self):
-        await self.game.init_engines()
+        if not self.game.engines_running:
+            await self.game.init_engines()
         if self.play_animations:
             await self.play_animation(animations.start_anim)
         else:
