@@ -122,7 +122,7 @@ class ChessnutAir:
             await self.blink_tick(sleep_time=sleep_time if sleep_time < timeout or timeout == 0.0 else timeout)
         return True
 
-    async def change_leds(self, list_of_pos: list[str] | chess.SquareSet) -> None:
+    async def change_leds(self, list_of_pos: "list[str] | chess.SquareSet") -> None:
         """
         Turns on all LEDs in list_of_pos and turns off all others.
             list_of_pos := ["e3", "a4",...]
