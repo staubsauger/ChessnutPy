@@ -17,7 +17,8 @@ from ChessnutAir_Helpers.constants import DEVICE_LIST, convertDict, BtCommands
 from bleak import BleakScanner, BleakClient, BleakGATTCharacteristic
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from bleak import BleakError, BleakDBusError
+from bleak import BleakError
+from bleak.exc import BleakDBusError
 
 def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
