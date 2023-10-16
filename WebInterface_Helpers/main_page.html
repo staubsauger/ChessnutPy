@@ -1,28 +1,66 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<!-- HTML Codes by Quackit.com -->
-<meta http-equiv="cache-control" content="no-cache" />
-<title>
-</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-    .small {
-        color: white;
-        font-weight: 300;
-        font-size: 20px;
-    }
-    .big {
-        color: white;
-        font-weight: 300;
-        font-size: 30px;
-    }
-body {background-color: #312b2b;background-repeat:no-repeat;background-position:top left;background-attachment:fixed;}
-h1{font-family:Arial, sans-serif;letter-spacing:20px;color: #ffffff;background-color: #312b2b;}
-p {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
-label {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
-pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:normal;color: #ffffff;background-color: #312b2b;}
-</style>
+    <!-- HTML Codes by Quackit.com -->
+    <meta http-equiv="cache-control" content="no-cache" />
+    <title>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .small {
+            color: white;
+            font-weight: 300;
+            font-size: 20px;
+        }
+
+        .big {
+            color: white;
+            font-weight: 300;
+            font-size: 30px;
+        }
+
+        body {
+            background-color: #312b2b;
+            background-repeat: no-repeat;
+            background-position: top left;
+            background-attachment: fixed;
+        }
+
+        h1 {
+            font-family: Arial, sans-serif;
+            letter-spacing: 20px;
+            color: #ffffff;
+            background-color: #312b2b;
+        }
+
+        p {
+            font-family: Georgia, serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: normal;
+            color: #ffffff;
+            background-color: #312b2b;
+        }
+
+        label {
+            font-family: Georgia, serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: normal;
+            color: #ffffff;
+            background-color: #312b2b;
+        }
+
+        pre {
+            font-family: Georgia, serif;
+            font-size: 14px;
+            font-style: normal;
+            font-weight: normal;
+            color: #ffffff;
+            background-color: #312b2b;
+        }
+    </style>
     <script>
         const myVar2 = setInterval(get_current_opening, 500);
         async function get_current_opening() {
@@ -35,39 +73,41 @@ pre {font-family:Georgia, serif;font-size:14px;font-style:normal;font-weight:nor
             document.getElementById('opening').innerHTML = "Current Opening: " + data;
             data = await move_stack_response.text();
             document.getElementById('move_stack').innerHTML = "" + data;
-            document.getElementById('boardImage').src = 'board.svg?time='+new Date().getTime();
+            document.getElementById('boardImage').src = 'board.svg?time=' + new Date().getTime();
             data = await last_score_response.json();
-            document.getElementById('last_score').innerHTML = 'Last calculated score: '+ (data ? data : "never calculated");
+            document.getElementById('last_score').innerHTML = 'Last calculated score: ' + (data ? data : "never calculated");
             data = await counter_opening_response.json();
             let data_str = ""
-            data.forEach((l) => data_str += l+"<br>");
-            document.getElementById('counter_openings').innerHTML = (data_str.length>0 ? data_str : "No counter openings found.");
+            data.forEach((l) => data_str += l + "<br>");
+            document.getElementById('counter_openings').innerHTML = (data_str.length > 0 ? data_str : "No counter openings found.");
             const battery_response = await fetch('battery_status');
-            document.getElementById('battery').innerHTML = 'Battery: '+await battery_response.text();
+            document.getElementById('battery').innerHTML = 'Battery: ' + await battery_response.text();
             data = await timers_response.json();
-            const wmin = Math.floor(data[0]/60);
-            const wsec = Math.floor(data[0]%60).toString().padStart(2, '0');
-            const bmin = Math.floor(data[1]/60);
-            const bsec = Math.floor(data[1]%60).toString().padStart(2, '0');
-            document.getElementById('timers').innerHTML = 'white: '+wmin+':'+wsec+', black: '+bmin+':'+bsec;
+            const wmin = Math.floor(data[0] / 60);
+            const wsec = Math.floor(data[0] % 60).toString().padStart(2, '0');
+            const bmin = Math.floor(data[1] / 60);
+            const bsec = Math.floor(data[1] % 60).toString().padStart(2, '0');
+            document.getElementById('timers').innerHTML = 'Time remaining: white: ' + wmin + ':' + wsec + ', black: ' + bmin + ':' + bsec;
 
         }
         get_current_opening()
     </script>
 </head>
+
 <body>
-<h1 class="big">ChessComputer</h1>
-<p class="small">Board:</p>
-<img id="boardImage" alt="Current Gameboard" src="board.svg"/>
-<p id="timers">white: 0:00, black: 0:00</p>
-<p id="opening">Current Opening: CUR_OPENING</p>
-<p class="small">Book Counter Openings:</p>
-<p id="counter_openings" class="small"></p>
-<p class="small">Current Move Stack:</p>
-<p id="move_stack" class="small">CUR_MOVE_STACK</p>
-<p id="last_score">Last calculated score: never calculated</p>
-<p id="battery">Battery: </p>
-<a class="small" href="/engine_settings">Engine Settings</a>
-<a class="small" href="/online_game">Online Game</a>
+    <h1 class="big">ChessComputer</h1>
+    <p class="small">Board:</p>
+    <img id="boardImage" alt="Current Gameboard" src="board.svg" />
+    <p id="timers">Time remaining: white: 0:00, black: 0:00</p>
+    <p id="opening">Current Opening: CUR_OPENING</p>
+    <p class="small">Book Counter Openings:</p>
+    <p id="counter_openings" class="small"></p>
+    <p class="small">Current Move Stack:</p>
+    <p id="move_stack" class="small">CUR_MOVE_STACK</p>
+    <p id="last_score">Last calculated score: never calculated</p>
+    <p id="battery">Battery: </p>
+    <a class="small" href="/engine_settings">Engine Settings</a>
+    <a class="small" href="/online_game">Online Game</a>
 </body>
+
 </html>
