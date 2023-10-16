@@ -7,6 +7,7 @@ import chess.engine
 from aiohttp import web
 import chess
 import BoardGame
+from bleak import BleakError
 
 
 def svg_board(board, player_color):
@@ -161,9 +162,10 @@ class BoardAppHandlers:
         return web.json_response(data=moves)
 
     async def get_battery(self, request):
-        if not self.game_board.is_connected:
+        try:
+            await self.game_board.request_battery_status()
+        except BleakError:
             return web.Response(text="DISCONNECTED")
-        await self.game_board.request_battery_status()
         data = f"{'CHARGING' if self.game_board.charging else 'DISCHARGING'}: {self.game_board.charge_percent}%"
         return web.Response(text=data)
 
