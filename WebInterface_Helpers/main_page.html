@@ -83,11 +83,15 @@
             const battery_response = await fetch('battery_status');
             document.getElementById('battery').innerHTML = 'Battery: ' + await battery_response.text();
             data = await timers_response.json();
-            const wmin = Math.floor(data[0] / 60);
-            const wsec = Math.floor(data[0] % 60).toString().padStart(2, '0');
-            const bmin = Math.floor(data[1] / 60);
-            const bsec = Math.floor(data[1] % 60).toString().padStart(2, '0');
-            document.getElementById('timers').innerHTML = 'Time remaining: white: ' + wmin + ':' + wsec + ', black: ' + bmin + ':' + bsec;
+            if (data[0] == -1 || data[1] == -1) {
+                document.getElementById('timers').innerHTML = 'Time remaining: only available during online games';
+            } else {
+                const wmin = Math.floor(data[0] / 60);
+                const wsec = Math.floor(data[0] % 60).toString().padStart(2, '0');
+                const bmin = Math.floor(data[1] / 60);
+                const bsec = Math.floor(data[1] % 60).toString().padStart(2, '0');
+                document.getElementById('timers').innerHTML = 'Time remaining: white: ' + wmin + ':' + wsec + ', black: ' + bmin + ':' + bsec;
+            }
 
         }
         get_current_opening()
