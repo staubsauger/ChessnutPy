@@ -85,7 +85,7 @@ if __name__ == "__main__":
     p.add_argument('--show_would_have_done_move', default=False, action='store_true')
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
-    print(options)
+    options.print_values()
     try:
         if options.no_server:
             asyncio.run(go())
