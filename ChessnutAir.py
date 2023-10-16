@@ -94,7 +94,11 @@ class ChessnutAir:
     async def connect(self) -> None:
         """Run discover() until device is found."""
         while not self._device:
-            await self.discover()
+            try:
+                await self.discover()
+            except BleakDBusError:
+                print("DBUS Error, waiting 15 seconds before retrying.\nUser probably needs to restart their bluetooth stack.")
+                asyncio.sleep(15.0)
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
         """Should be overriden with a function that handles piece up events."""
