@@ -11,6 +11,8 @@ import time
 # noinspection PyUnresolvedReferences
 import asyncio
 
+import logging as log 
+
 
 class EngineManager:
 
@@ -55,7 +57,7 @@ class EngineManager:
             self.last_ai_move = await self.engine.play(board, self.limit)
             return self.last_ai_move
         except asyncio.CancelledError:
-            print("AI move stopped.\nThis should never happen.")
+            log.info("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
         score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')
@@ -67,10 +69,10 @@ class EngineManager:
             move = self.get_book_move(board)
             play = None
             if not move:
-                print("Engine move: ", end='')
+                log.info("Engine move: ")
                 play = await self.engine_suggest.play(board, self.limit_sug)
                 move = play.move
-                print(move)
+                log.info(move)
             if min_time == 0.0:
                 self.last_suggestion = play if play else move
             time_spend = time.time() - start_time
@@ -78,13 +80,13 @@ class EngineManager:
                 await asyncio.sleep(min_time-time_spend)
             return move
         except asyncio.exceptions.CancelledError:
-            print("suggestion was canceled")
+            log.info("suggestion was canceled")
 
     def get_book_move(self, board):
         with chess.polyglot.open_reader(self.suggestion_book) as reader:
             try:
                 move = reader.weighted_choice(board)
-                print(move)
+                log.info(move)
                 return move.move
             except IndexError:
                 return None
@@ -153,14 +155,14 @@ class EngineManager:
                 res = '1/2-1/2'
         game.headers["Result"] = res
         if len(board.board.move_stack) == 0:
-            print("No PGN Written")
+            log.info("No PGN Written")
             return
         move = board.board.move_stack.pop(0)
         node = game.add_main_variation(move)
         for move in board.board.move_stack:
             node = node.add_main_variation(move)
-        print(game, file=open(f"{time_str}.pgn", 'w'), end="\n\n")
-        print("PGN written")
+        log.info(game, file=open(f"{time_str}.pgn", 'w'))
+        log.info("PGN written")
 
     def init_eco_file(self, ):
         """
@@ -216,7 +218,7 @@ class EngineManager:
                     duplicates += 1
                 except KeyError:
                     self.eco_dict[fen] = [(name, code)]
-            print(f'duplicates: {duplicates}')
+            log.info(f'duplicates: {duplicates}')
 
     def move_list_to_pgn(self, id_string, uci_moves):
         cur_var = self.eco_pgn
@@ -242,19 +244,19 @@ class EngineManager:
             for key in self.eco_dict:
                 val = self.eco_dict[key]
                 print(f'{key}|{val[0][1]}|{val[0][0]}', file=f)
-        print('wrote eco_dict')
+        log.info('wrote eco_dict')
 
     def read_eco_dict(self):
         with open(self.dict_cache_file, 'r') as f:
             h = str(hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest())
             nh = f.readline().strip()
             if h != nh:
-                print(f'hashes didnt match:\n{h}\n{nh}')
+                log.info(f'hashes didnt match:\n{h}\n{nh}')
                 return False
             for line in f:
                 fen, name, code = line.strip(' \n').split('|')
                 self.eco_dict[fen] = [(name, code)]
-        print('read eco_dict')
+        log.info('read eco_dict')
         return True
 
 
@@ -292,4 +294,4 @@ def read_scid_eco_entries(eco_file):
         yield name, code, uci_moves, b
         count += 1
         eco_line = eco_file.readline()
-    print(count)
+    log.info(count)

@@ -21,12 +21,15 @@ from bleak.backends.scanner import AdvertisementData
 from bleak import BleakError
 from bleak.exc import BleakDBusError
 
+log.basicConfig(level=log.INFO)
+
 def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
     return "hgfedcba"[location % 8] + str((8 - (location // 8)) if not rev else (location // 8))
 
 
 SquareAndPiece = NamedTuple('SquareAndPiece', [('square', chess.Square), ('piece', chess.Piece)])
+
 
 
 def board_state_as_square_and_piece(board_state: bytearray) -> Iterable[SquareAndPiece]:
@@ -224,7 +227,7 @@ class ChessnutAir:
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
-        log.info("device.address: ", self._device.address)
+        log.info("device.address: %s", self._device.address)
 
         async with BleakClient(self._device) as client:
             self._connection = client
