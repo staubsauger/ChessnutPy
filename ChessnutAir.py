@@ -6,6 +6,7 @@ for more information.
 import asyncio
 import math
 import time
+import logging as log
 from collections import namedtuple
 from typing import Iterable, NamedTuple
 
@@ -84,13 +85,13 @@ class ChessnutAir:
 
     async def discover(self) -> None:
         """Scan for chessnut Air devices"""
-        print("scanning, please wait...")
+        log.info("scanning, please wait...")
         await BleakScanner.find_device_by_filter(
                 self._filter_by_name)
         if self._device is None:
-            print("No chessnut Air devices found")
+            log.warning("No chessnut Air devices found")
             return
-        print("done scanning")
+        log.info("done scanning")
 
     async def connect(self) -> None:
         """Run discover() until device is found."""
@@ -98,10 +99,10 @@ class ChessnutAir:
             try:
                 await self.discover()
             except BleakDBusError:
-                print("DBus Error, waiting 15 seconds before retrying.\nYou probably need to restart the bluetooth stack.")
+                log.warning("DBus Error, waiting 15 seconds before retrying.\nYou probably need to restart the bluetooth stack.")
                 await asyncio.sleep(15.0)
             except BleakError as e:
-                print("BleakError during connect: ", e)
+                log.warning("BleakError during connect: ", e)
                 await asyncio.sleep(15.0)
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
@@ -136,7 +137,7 @@ class ChessnutAir:
             list_of_pos := ["e3", "a4",...]
         """
         if not self.is_connected:
-            print("Can't change LEDs when disconnected!")
+            log.warning("Can't change LEDs when disconnected!")
             return
         is_square_set = isinstance(list_of_pos, chess.SquareSet)
         if is_square_set:
@@ -152,7 +153,6 @@ class ChessnutAir:
         await self._connection.write_gatt_char(constants.BtCharacteristics.write, self._led_command + arr)
 
     async def _run_cmd(self, cmd: bytearray):
-        # print(f'Cmd: {cmd}')
         await self._connection.write_gatt_char(constants.BtCharacteristics.write, cmd)
 
     async def play_animation(self, list_of_frames: list["list[str] | chess.SquareSet"], sleep_time: float = 0.5) -> None:
@@ -166,7 +166,7 @@ class ChessnutAir:
 
     async def _board_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data[:2] != constants.BtResponses.head_buffer:
-            print('Other data recieved: ', data)
+            log.warning('Other data recieved: ', data)
 
         async def send_message(loc, old, new):
             if old != new:
@@ -196,40 +196,39 @@ class ChessnutAir:
         if data == constants.BtResponses.heartbeat_code:
             return
         elif data == constants.BtResponses.board_not_ready:
-            print('Board not ready!')
+            log.warning('Board not ready!')
         elif data.startswith(constants.BtResponses.otb_count_prefix):
-            print(f'OTB count = {data[2]}')
+            log.warning(f'OTB count = {data[2]}')
         elif data.startswith(constants.BtResponses.file_size_prefix):
-            print(f'File size = {int.from_bytes(data[2:6], byteorder="little")} ({data[2:]})')
+            log.warning(f'File size = {int.from_bytes(data[2:6], byteorder="little")} ({data[2:]})')
         elif data == constants.BtResponses.file_start:
-            print('OTB File Start')
+            log.warning('OTB File Start')
         elif data == constants.BtResponses.file_end:
-            print('OTB File End')
+            log.warning('OTB File End')
         elif data[0] == 0xf:  # this is a button event
-            # print([hex(p) for p in data])
             button = data[2]
             await self.button_pressed(button)
         elif data[0] == 0x2A:
             self.charging = data[3] == 1  # 1 if charging
             self.charge_percent = min(data[2], 100)
         else:
-            print([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'), data)
+            log.warning([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'), data)
         # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
 
     async def _otb_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         fen = self.board_state_as_fen(board_state=data[2:34])
-        print(fen)
+        log.info(fen)
 
     async def run(self) -> None:
         """
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
-        print("device.address: ", self._device.address)
+        log.info("device.address: ", self._device.address)
 
         async with BleakClient(self._device) as client:
             self._connection = client
-            print(f"Connected: {client.is_connected}")
+            log.info(f"Connected: {client.is_connected}")
             self.is_connected = True
             await client.start_notify(constants.BtCharacteristics.read_board_data,
                                       self._board_handler)  # start board handler
@@ -240,14 +239,14 @@ class ChessnutAir:
             # send initialisation string
             await client.write_gatt_char(constants.BtCharacteristics.write,
                                          constants.BtCommands.init_code)
-            print("Initialized")
+            log.info("Initialized")
             try:
                 await self.game_loop()  # call user game loop
             except BleakError:
                 self.is_connected = False
                 self._connection = None
                 self._device = None
-                print("Board disconnected! stange things may occur!")
+                log.warning("Board disconnected! stange things may occur!")
                 await self.connect() # <- loops until connection
                 await self.run()
             await self.stop_handlers()
