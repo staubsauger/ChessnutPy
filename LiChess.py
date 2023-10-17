@@ -10,13 +10,16 @@ import chess
 
 class LiChess:
     def __init__(self, token):
-        self.session = berserk.TokenSession(token)
-        self.client = berserk.Client(self.session)
-        self.account = self.client.account.get()
-        print(self.account)
-        self.game_id = None
-        self.game = None
-        self.game_info = None
+        try:
+            self.session = berserk.TokenSession(token)
+            self.client = berserk.Client(self.session)
+            self.account = self.client.account.get()
+            print(self.account)
+            self.game_id = None
+            self.game = None
+            self.game_info = None
+        except berserk.exceptions.BerserkError as e:
+            print(f"Couldn't connect to LiChess! ({e})")
 
     def reset(self):
         self.game_id = None
