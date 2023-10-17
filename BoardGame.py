@@ -53,7 +53,11 @@ class BoardGame(ChessnutAir):
         self.skip_pgn = False
         self.force_quit = True
         self.have_read_board = False
-        self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
+        try:
+            self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
+        except:
+            print("Maybe you are not connected to the Internet.")
+            self.lichess = None
         self.is_online_game = False
         self.next_game_online = None
         self.online_seek_info = None

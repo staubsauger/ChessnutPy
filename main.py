@@ -45,6 +45,7 @@ async def go():
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.settimeout(0)
     # noinspection PyBroadException
     try:
@@ -93,12 +94,20 @@ if __name__ == "__main__":
             host = get_ip()
             print(host)
             hosts = [host, 'localhost']
-            web.run_app(go(), host=hosts, port=8080)
+            try:
+                web.run_app(go(), host=hosts, port=8080)
+            except:
+                print("No network found.")
+                asyncio.run(go())
         elif len(options.hosts) > 0:
             hosts = options.hosts
             host = hosts[0].split(':')[1:]
             host.append('localhost')
-            web.run_app(go(), host=host, port=options.port)
+            try:
+                web.run_app(go(), host=host, port=options.port)
+            except:
+                print("No network found.")
+                asyncio.run(go())
         else:
             web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:
