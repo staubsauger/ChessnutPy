@@ -45,7 +45,6 @@ async def go():
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.settimeout(0)
     # noinspection PyBroadException
     try:
@@ -53,7 +52,7 @@ def get_ip():
         s.connect(('10.254.254.254', 1))
         IP = s.getsockname()[0]
     except Exception:
-        IP = '127.0.0.1'
+        IP = None
     finally:
         s.close()
     return IP
@@ -90,31 +89,17 @@ if __name__ == "__main__":
     try:
         if options.no_server:
             asyncio.run(go())
-        elif options.hosts == 'auto-hosts':
-            
-            try:
-                host = get_ip()
-                print(host)
-                hosts = [host, 'localhost'] if host != '127.0.0.1' else host
-                web.run_app(go(), host=hosts, port=8080)
-            except:
-                print("No network found.")
-                options.no_server = True
-                options.lichess_token = ''
-                asyncio.run(go())
-
+        elif options.hosts == 'auto-hosts':            
+            host = get_ip()
+            print(host)
+            hosts = [host, 'localhost'] if host else 'localhost'
+            web.run_app(go(), host=hosts, port=8080)
         elif len(options.hosts) > 0:
-            
-            try:
-                hosts = options.hosts
-                host = hosts[0].split(':')[1:]
+            hosts = options.hosts
+            host = hosts[0].split(':')[1:]
+            if not ('localhost' in host or '127.0.0.1' in host):
                 host.append('localhost')
-                web.run_app(go(), host=host, port=options.port)
-            except:
-                print("No network found.")
-                options.no_server = True
-                options.lichess_token = ''
-                asyncio.run(go())
+            web.run_app(go(), host=host, port=options.port)
         else:
             web.run_app(go(), host='localhost', port=8080)
     except KeyboardInterrupt:
