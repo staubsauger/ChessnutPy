@@ -1,4 +1,5 @@
 __pycache__/
 .idea/
+log.log
 /eco_dict.cache
 /*.pgn
