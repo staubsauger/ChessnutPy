@@ -56,8 +56,9 @@ class BoardGame(ChessnutAir):
         try:
             self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
         except:
-            print("Maybe you are not connected to the Internet.")
+            print("Maybe you are not connected to the Internet or lichess token is wrong.")
             self.lichess = None
+        # self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
         self.is_online_game = False
         self.next_game_online = None
         self.online_seek_info = None
