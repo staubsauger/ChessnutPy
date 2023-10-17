@@ -12,6 +12,10 @@ from bleak import BleakError
 from WebInterface import start_server
 import configargparse
 
+import logging as log 
+
+
+
 # noinspection SpellCheckingInspection
 
 options = None
@@ -83,9 +87,13 @@ if __name__ == "__main__":
     p.add_argument('--show_valid_moves', default=False, action="store_true")
     p.add_argument('--play_animations', default=False, action="store_true")
     p.add_argument('--show_would_have_done_move', default=False, action='store_true')
+    p.add_argument('--logfile', default="log.log")
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
     p.print_values()
+    
+    log = log.basicConfig(filename=options.logfile, filemode='w', level=log.INFO)
+    
     try:
         if options.no_server:
             asyncio.run(go())

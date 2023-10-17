@@ -13,7 +13,6 @@ from BoardGame_Helpers.fencompare import fen_diff_leds
 
 import logging as log
 
-log.basicConfig(level=log.INFO)
 
 class BoardGame(ChessnutAir):
     def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,

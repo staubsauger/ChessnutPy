@@ -21,7 +21,6 @@ from bleak.backends.scanner import AdvertisementData
 from bleak import BleakError
 from bleak.exc import BleakDBusError
 
-log.basicConfig(level=log.INFO)
 
 def loc_to_pos(location: int, rev: bool = False) -> str:
     # noinspection SpellCheckingInspection
