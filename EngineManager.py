@@ -138,10 +138,10 @@ class EngineManager:
         game.headers["Event"] = "VakantOS"
         game.headers["Date"] = day_str
         if board.player_color:
-            game.headers["White"] = "Rudi"
+            game.headers["White"] = os.getlogin()
             game.headers["Black"] = str(self.engine.id["name"])
         else:
-            game.headers["Black"] = "Rudi"
+            game.headers["Black"] = os.getlogin()
             game.headers["White"] = str(self.engine.id["name"])
         res = board.board.result()
         if res == '*':
@@ -293,7 +293,3 @@ def read_scid_eco_entries(eco_file):
         count += 1
         eco_line = eco_file.readline()
     print(count)
-
-# c = GameOfChess("/home/rudi/Games/schach/texel-chess/texel/build/texel", "stockfish")
-# c.init_scid_eco_file()
-# print(c.eco_pgn)
