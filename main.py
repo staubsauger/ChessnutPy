@@ -93,7 +93,7 @@ if __name__ == "__main__":
             host = get_ip()
             print(host)
             hosts = [host, 'localhost'] if host else 'localhost'
-            web.run_app(go(), host=hosts, port=8080)
+            web.run_app(go(), host=hosts, port=options.port)
         elif len(options.hosts) > 0:
             hosts = options.hosts
             host = hosts[0].split(':')[1:]
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                 host.append('localhost')
             web.run_app(go(), host=host, port=options.port)
         else:
-            web.run_app(go(), host='localhost', port=8080)
+            web.run_app(go(), host='localhost', port=options.port)
     except KeyboardInterrupt:
         pass
     try:
