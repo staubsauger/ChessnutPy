@@ -45,7 +45,7 @@ class EngineManager:
                 self.write_eco_dict()
 
     async def init_engines(self):
-        self.transport, self.engine = await chess.engine.popen_uci(self.engine_path, stdin=None, stdout=None, stderr=None)
+        self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
         self.transport_suggest, self.engine_suggest = await chess.engine.popen_uci(self.suggestion_engine_path)
         await self.engine.configure(self.engine_cfg)
         self.engines_running = True
