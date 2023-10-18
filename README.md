@@ -53,4 +53,12 @@ interface via your web browser and 'http://localhost' or from another machine vi
  scid-project, for some files we borrowed \
  picochess-project, for inspiration \
  Willi G, for quality management and helping with the code
+
+## You like our work and want to support us?
+At the moment Lukas(Bierliebhaber) and I are working on the project. But only me got a Chessnut Board, Lukas is still without 
+one. This is not ideal, because working on the code, with only one board makes it hard to debug and develop new features. 
+Lukas is not a chess player himself, so he has little interest in spending 200 Dollar for a chess board. The problem is, that 
+Lukas is the main developer behind this project, as my programming skills are very bare.
+We don't want to earn money with this project, so we only need money for a second board. 
+So if you want to support us with money (or a board), we would be very happy. Please let us know.
  
