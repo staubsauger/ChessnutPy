@@ -6,7 +6,7 @@ import time
 
 import berserk
 import chess
-
+import logging as log
 
 class LiChess:
     def __init__(self, token):
@@ -19,7 +19,7 @@ class LiChess:
             self.game = None
             self.game_info = None
         except berserk.exceptions.BerserkError as e:
-            print(f"Couldn't connect to LiChess! ({e})")
+            log.error(f"Couldn't connect to LiChess! ({e})")
 
     def reset(self):
         self.game_id = None
@@ -140,7 +140,7 @@ class LiChessGame(threading.Thread):
 
     def handle_state_change(self, game_state):
         self.last_event = game_state
-        print(f'LiChess GAMESTATE: {game_state}')
+        log.debug(f'LiChess GAMESTATE: {game_state}')
         moves = game_state['moves'].split()
         if game_state['status'] != 'started':
             self.ended = True
