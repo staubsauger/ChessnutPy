@@ -104,7 +104,7 @@ class ChessnutAir:
                 log.warning("DBus Error, waiting 15 seconds before retrying.\nYou probably need to restart the bluetooth stack.")
                 await asyncio.sleep(15.0)
             except BleakError as e:
-                log.warning("BleakError during connect: ", e)
+                log.warning(f"BleakError during connect: {e}")
                 await asyncio.sleep(15.0)
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece) -> None:
@@ -168,7 +168,7 @@ class ChessnutAir:
 
     async def _board_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data[:2] != constants.BtResponses.head_buffer:
-            log.warning('Other data recieved: ', data)
+            log.warning(f'Other data recieved: {data}')
 
         async def send_message(loc, old, new):
             if old != new:
@@ -214,7 +214,7 @@ class ChessnutAir:
             self.charging = data[3] == 1  # 1 if charging
             self.charge_percent = min(data[2], 100)
         else:
-            log.warning([hex(p) for p in data], int.from_bytes(data[2:], byteorder='little'), data)
+            log.warning(f"unknown data recieved: {[hex(p) for p in data]} {int.from_bytes(data[2:], byteorder='little')} {data}")
         # if data[0] 0x32 -> unknown, 0x37 -> otb_start or end
 
     async def _otb_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
@@ -226,7 +226,7 @@ class ChessnutAir:
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
-        log.info("device.address: %s", self._device.address)
+        log.info(f"device.address: {self._device.address}")
 
         async with BleakClient(self._device) as client:
             self._connection = client
