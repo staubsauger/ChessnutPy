@@ -61,4 +61,5 @@ Lukas is not a chess player himself, so he has little interest in spending 200 D
 Lukas is the main developer behind this project, as my programming skills are very bare.
 We don't want to earn money with this project, so we only need money for a second board. 
 So if you want to support us with money (or a board), we would be very happy. Please let us know.
- 
+
+https://www.paypal.com/donate?campaign_id=8ZAT9JBLDMNDY
