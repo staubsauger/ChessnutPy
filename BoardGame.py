@@ -19,7 +19,7 @@ class BoardGame(ChessnutAir):
                  suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
                  experimental_dragging_detection=False, experimental_dragging_timeout=0.3,
                  engine_cfg: "dict | None" = None, engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5,
-                 sug_depth=None, sug_nodes=None, show_would_have_done_move=True, lichess_token=''):
+                 sug_depth=None, sug_nodes=None, show_would_have_done_move=True, lichess_token='', username='username'):
         ChessnutAir.__init__(self)
         self.show_would_have_done_move = show_would_have_done_move
         self.experimental_dragging_timeout = experimental_dragging_timeout
@@ -36,8 +36,9 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
+        self.username = username
         self.game = EngineManager(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
-                                  eco_file=eco_file, engine_cfg=engine_cfg if engine_cfg else {},
+                                  eco_file=eco_file, engine_cfg=engine_cfg if engine_cfg else {}, username=self.username,
                                   engine_limit=chess.engine.Limit(time=engine_time, nodes=engine_nodes,
                                                                   depth=engine_depth),
                                   suggestion_limit=chess.engine.Limit(time=sug_time, nodes=sug_nodes,

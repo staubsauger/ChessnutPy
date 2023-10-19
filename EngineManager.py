@@ -19,7 +19,8 @@ class EngineManager:
     def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
                  suggestion_limit=chess.engine.Limit(time=3.5, depth=None, nodes=None),
                  suggestion_book_path="./Docs/Elo2400.bin",
-                 eco_file=None, engine_cfg={}) -> None:
+                 eco_file=None, engine_cfg={},
+                 username="username") -> None:
         self.engine_path = engine_path
         self.transport = None
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
@@ -38,6 +39,7 @@ class EngineManager:
         self.dict_cache_file = 'eco_dict.cache'
         self.last_suggestion = None
         self.last_ai_move = None
+        self.username = username
 
         if eco_file:
             if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
@@ -140,10 +142,10 @@ class EngineManager:
         game.headers["Event"] = "VakantOS"
         game.headers["Date"] = day_str
         if board.player_color:
-            game.headers["White"] = os.getlogin()
+            game.headers["White"] = self.username #os.getlogin()
             game.headers["Black"] = str(self.engine.id["name"])
         else:
-            game.headers["Black"] = os.getlogin()
+            game.headers["Black"] = self.username #os.getlogin()
             game.headers["White"] = str(self.engine.id["name"])
         res = board.board.result()
         if res == '*':
@@ -161,7 +163,7 @@ class EngineManager:
         node = game.add_main_variation(move)
         for move in board.board.move_stack:
             node = node.add_main_variation(move)
-        log.info(game, file=open(f"{time_str}.pgn", 'w'))
+        print(game, file=open(f"{time_str}.pgn", 'w'))
         log.info("PGN written")
 
     def init_eco_file(self, ):

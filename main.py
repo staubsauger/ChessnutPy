@@ -39,7 +39,8 @@ async def go():
                   sug_nodes=int(options.sug_nodes) if options.sug_nodes != 'None' else None,
                   sug_time=float(options.sug_time) if options.sug_time != 'None' else None,
                   show_would_have_done_move=options.show_would_have_done_move,
-                  lichess_token=options.lichess_token)
+                  lichess_token=options.lichess_token,
+                  username=options.username)
     await b.connect()
     run_task = asyncio.create_task(b.run())
     if not options.no_server:
@@ -88,6 +89,7 @@ if __name__ == "__main__":
     p.add_argument('--play_animations', default=False, action="store_true")
     p.add_argument('--show_would_have_done_move', default=False, action='store_true')
     p.add_argument('--logfile', default="log.log")
+    p.add_argument('--username', default="user")
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
     p.print_values()
