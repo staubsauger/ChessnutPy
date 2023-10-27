@@ -8,9 +8,11 @@ from aiohttp import web
 import chess
 import BoardGame
 from bleak import BleakError
-
+import logging as log
+import time
 
 def svg_board(board, player_color):
+    start_time = time.perf_counter_ns()
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
@@ -19,6 +21,7 @@ def svg_board(board, player_color):
                         chess.SQUARES)
     for square in attackable:
         fill[square] = 'yellow'
+    log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
     return chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
                            fill=fill, flipped=not player_color)
 
