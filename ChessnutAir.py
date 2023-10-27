@@ -255,10 +255,10 @@ class ChessnutAir:
             except BleakError:
                 self.is_connected = False
                 self._connection = None
-                self._device = None
+#                self._device = None
                 log.warning("Board disconnected! stange things may occur!")
                 await asyncio.sleep(1)
-                await self.connect() # <- loops until connection
+#                await self.connect() # <- loops until connection
         await self.stop_handlers()
 
     async def stop_handlers(self) -> None:
