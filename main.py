@@ -13,7 +13,7 @@ from WebInterface import start_server
 import configargparse
 
 import logging as log
-from os import rename
+from os import replace
 
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     options = p.parse_args()
     p.print_values()
     
-    rename(options.logfile, options.logfile+".old")
+    replace(options.logfile, options.logfile+".old")
     log = log.basicConfig(filename=options.logfile, filemode='w', level=log.WARNING)
     try:
         if options.no_server:
