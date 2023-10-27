@@ -527,6 +527,7 @@ class BoardGame(ChessnutAir):
             self.setup()
             await self.game_loop()
         await self.game.quit_chess_engines()
+        self.bt_running = False
 
     async def maybe_read_board(self):
         if self.should_read:

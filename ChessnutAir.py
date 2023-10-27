@@ -64,6 +64,7 @@ class ChessnutAir:
         self.charging = False
         self.charge_percent = 0
         self.last_change = 0
+        self.bt_running = True
 
     async def blink_tick(self, sleep_time: float = 0.0) -> None:
         self.tick = not self.tick
@@ -232,32 +233,32 @@ class ChessnutAir:
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
-        log.warning(f"device.address: {self._device.address}")
+        while self.bt_running:
+            log.warning(f"device.address: {self._device.address}")
 
-        async with BleakClient(self._device.address) as client:
-            self._connection = client
-            log.warning(f"Connected: {client.is_connected}")
-            self.is_connected = True
-            await client.start_notify(constants.BtCharacteristics.read_board_data,
-                                      self._board_handler)  # start board handler
-            await client.start_notify(constants.BtCharacteristics.read_misc_data,
-                                      self._misc_handler)  # start misc handler
-            await client.start_notify(constants.BtCharacteristics.read_otb_data,
-                                      self._otb_handler)  # start otb handler
-            # send initialisation string
-            await client.write_gatt_char(constants.BtCharacteristics.write,
-                                         constants.BtCommands.init_code)
-            log.warning("Initialized")
-            try:
-                await self.game_loop()  # call user game loop
-            except BleakError:
-                self.is_connected = False
-                self._connection = None
-                self._device = None
-                log.warning("Board disconnected! stange things may occur!")
-                await self.connect() # <- loops until connection
-                await self.run()
-            await self.stop_handlers()
+            async with BleakClient(self._device.address) as client:
+                self._connection = client
+                log.warning(f"Connected: {client.is_connected}")
+                self.is_connected = True
+                await client.start_notify(constants.BtCharacteristics.read_board_data,
+                                        self._board_handler)  # start board handler
+                await client.start_notify(constants.BtCharacteristics.read_misc_data,
+                                        self._misc_handler)  # start misc handler
+                await client.start_notify(constants.BtCharacteristics.read_otb_data,
+                                        self._otb_handler)  # start otb handler
+                # send initialisation string
+                await client.write_gatt_char(constants.BtCharacteristics.write,
+                                            constants.BtCommands.init_code)
+                log.warning("Initialized")
+                try:
+                    await self.game_loop()  # call user game loop
+                except BleakError:
+                    self.is_connected = False
+                    self._connection = None
+                    self._device = None
+                    log.warning("Board disconnected! stange things may occur!")
+                    await self.connect() # <- loops until connection
+        await self.stop_handlers()
 
     async def stop_handlers(self) -> None:
         """Allow stopping of the handler from outside."""
