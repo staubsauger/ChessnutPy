@@ -252,11 +252,11 @@ class ChessnutAir:
                                                 constants.BtCommands.init_code)
                     log.warning("Initialized")
                     await self.game_loop()  # call user game loop
-            except BleakError:
+            except BleakError as e:
                 self.is_connected = False
                 self._connection = None
 #                self._device = None
-                log.warning("Board disconnected! stange things may occur!")
+                log.warning(f"Board disconnected! stange things may occur!\nException: {type(e)} {e}")
                 await asyncio.sleep(1)
 #                await self.connect() # <- loops until connection
         await self.stop_handlers()
