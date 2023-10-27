@@ -87,13 +87,13 @@ class ChessnutAir:
 
     async def discover(self) -> None:
         """Scan for chessnut Air devices"""
-        log.info("scanning, please wait...")
+        log.warning("scanning, please wait...")
         await BleakScanner.find_device_by_filter(
                 self._filter_by_name)
         if self._device is None:
             log.warning("No chessnut Air devices found")
             return
-        log.info("done scanning")
+        log.warning("done scanning")
 
     async def connect(self) -> None:
         """Run discover() until device is found."""
@@ -232,11 +232,11 @@ class ChessnutAir:
         Connect to the device, start the notification handler (which calls self.piece_up() and self.piece_down())
         and wait for self.game_loop() to return.
         """
-        log.info(f"device.address: {self._device.address}")
+        log.warning(f"device.address: {self._device.address}")
 
         async with BleakClient(self._device) as client:
             self._connection = client
-            log.info(f"Connected: {client.is_connected}")
+            log.warning(f"Connected: {client.is_connected}")
             self.is_connected = True
             await client.start_notify(constants.BtCharacteristics.read_board_data,
                                       self._board_handler)  # start board handler
@@ -247,7 +247,7 @@ class ChessnutAir:
             # send initialisation string
             await client.write_gatt_char(constants.BtCharacteristics.write,
                                          constants.BtCommands.init_code)
-            log.info("Initialized")
+            log.warning("Initialized")
             try:
                 await self.game_loop()  # call user game loop
             except BleakError:
