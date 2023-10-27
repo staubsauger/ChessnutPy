@@ -29,6 +29,8 @@ class BoardAppHandlers:
         self.game_board: BoardGame = board
         self.engine_settings = engine_settings
         self.online_game = online_game
+        self.last_svg_board_fen = None
+        self.last_svg_board = None
 
     async def hello(self, request):
         text = pathlib.Path(self.index_template).read_text()
@@ -64,7 +66,13 @@ class BoardAppHandlers:
         return res
 
     async def board_svg_handler(self, request):
-        text = svg_board(self.game_board.board, self.game_board.player_color)
+        text = self.last_svg_board
+        cur_fen = self.game_board.board.board_fen()
+        if not self.last_svg_board_fen == cur_fen:
+            text = svg_board(self.game_board.board, self.game_board.player_color)
+            self.last_svg_board = text
+            self.last_svg_board_fen = cur_fen
+
         res = web.Response(text=text)
         res.content_type = 'image/svg+xml'
         return res
