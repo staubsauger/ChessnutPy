@@ -84,7 +84,7 @@ if __name__ == "__main__":
     options = p.parse_args()
     p.print_values()
     
-    log = log.basicConfig(filename=options.logfile, filemode='w', level=log.INFO)
+    log = log.basicConfig(filename=options.logfile, filemode='w', level=log.WARNING)
     
     try:
         if options.no_server:
