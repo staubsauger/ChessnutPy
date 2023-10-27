@@ -12,7 +12,6 @@ import logging as log
 import time
 
 def svg_board(board, player_color):
-    start_time = time.perf_counter_ns()
     fill = {}
     if board.is_check():
         fill = {board.king(board.turn): 'red'}
@@ -23,7 +22,6 @@ def svg_board(board, player_color):
         fill[square] = 'yellow'
     svg = chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
                                 fill=fill, flipped=not player_color)
-    log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
     return svg
 
 
@@ -70,15 +68,15 @@ class BoardAppHandlers:
         return res
 
     async def board_svg_handler(self, request):
-        text = self.last_svg_board
+        start_time = time.perf_counter_ns()
         cur_fen = self.game_board.board.board_fen()
         if not self.last_svg_board_fen == cur_fen:
-            text = svg_board(self.game_board.board, self.game_board.player_color)
-            self.last_svg_board = text
+            self.last_svg_board = svg_board(self.game_board.board, self.game_board.player_color)
             self.last_svg_board_fen = cur_fen
 
-        res = web.Response(text=text)
+        res = web.Response(text=self.last_svg_board)
         res.content_type = 'image/svg+xml'
+        log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
         return res
 
     async def opening_handler(self, request):
