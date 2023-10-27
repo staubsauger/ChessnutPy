@@ -1,7 +1,7 @@
-async-timeout==4.0.2
+async-timeout==4.0.3
 asyncio==3.4.3
 bleak==0.21.1
-aiohttp==3.8.4
+aiohttp==3.8.6
 ConfigArgParse==1.5.3
 chess==1.10.0
 berserk==0.10.0
