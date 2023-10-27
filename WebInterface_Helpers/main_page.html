@@ -62,7 +62,12 @@
         }
     </style>
     <script>
-        const myVar2 = setInterval(get_current_opening, 500);
+        const myVar1 = setInterval(get_current_opening, 1000);
+        const myVar2 = setInterval(get_battery, 60000);
+        async function get_battery() {
+            const battery_response = await fetch('battery_status');
+            document.getElementById('battery').innerHTML = 'Battery: ' + await battery_response.text();
+        }
         async function get_current_opening() {
             const opening_response = await fetch('opening');
             const move_stack_response = await fetch('move_stack')
@@ -80,8 +85,6 @@
             let data_str = ""
             data.forEach((l) => data_str += l + "<br>");
             document.getElementById('counter_openings').innerHTML = (data_str.length > 0 ? data_str : "No counter openings found.");
-            const battery_response = await fetch('battery_status');
-            document.getElementById('battery').innerHTML = 'Battery: ' + await battery_response.text();
             data = await timers_response.json();
             if (data[0] == -1 || data[1] == -1) {
                 document.getElementById('timers').innerHTML = 'Time remaining: only available during online games';
