@@ -21,9 +21,10 @@ def svg_board(board, player_color):
                         chess.SQUARES)
     for square in attackable:
         fill[square] = 'yellow'
+    svg = chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
+                                fill=fill, flipped=not player_color)
     log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
-    return chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
-                           fill=fill, flipped=not player_color)
+    return svg
 
 
 class BoardAppHandlers:
