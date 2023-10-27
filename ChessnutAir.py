@@ -257,6 +257,7 @@ class ChessnutAir:
                 self._connection = None
                 self._device = None
                 log.warning("Board disconnected! stange things may occur!")
+                await asyncio.sleep(1)
                 await self.connect() # <- loops until connection
         await self.stop_handlers()
 
