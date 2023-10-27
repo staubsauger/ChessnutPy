@@ -157,7 +157,8 @@ class ChessnutAir:
         except Exception as e:
             if isinstance(e, BleakError):
                 raise
-            log.error(f"Couldnt send LED change! Exception: {type(e)} {e}")
+            else:
+                log.error(f"Couldnt send LED change! Exception: {type(e)} {e}")
 
     async def _run_cmd(self, cmd: bytearray):
         await self._connection.write_gatt_char(constants.BtCharacteristics.write, cmd)
@@ -268,8 +269,11 @@ class ChessnutAir:
 
     async def request_battery_status(self) -> None:
         if self.is_connected:
-            await self._connection.write_gatt_char(constants.BtCharacteristics.write,
-                                                   BtCommands.get_battery_status)
+            try:
+                await self._connection.write_gatt_char(constants.BtCharacteristics.write,
+                                                       BtCommands.get_battery_status)
+            except Exception as e:
+                log.error(f"Error while requesting Battery! Exception: {type(e)} {e}")
 
     def board_state_as_fen(self, board_state=None) -> str:
         fen = ''
