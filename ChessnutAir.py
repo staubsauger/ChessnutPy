@@ -233,15 +233,8 @@ class ChessnutAir:
         and wait for self.game_loop() to return.
         """
         log.warning(f"device.address: {self._device.address}")
-        async def dc_callback(c):
-            self.is_connected = False
-            self._device = None
-            self._connection = None
-            log.warning("Disconnection Callback! Reconnecting.")
-            await self.connect()
-            await self.run()
 
-        async with BleakClient(self._device.address, dc_callback) as client:
+        async with BleakClient(self._device.address) as client:
             self._connection = client
             log.warning(f"Connected: {client.is_connected}")
             self.is_connected = True
