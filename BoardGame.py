@@ -15,14 +15,11 @@ import logging as log
 
 
 class BoardGame(ChessnutAir):
-    def __init__(self, player_color=None, no_suggestions=False, show_valid_moves=True, play_animations=True,
-                 suggestion_book_dir="", engine_dir="", engine_suggest_dir="", eco_file=None,
-                 experimental_dragging_detection=False, experimental_dragging_timeout=0.3,
-                 engine_cfg: "dict | None" = None, engine_time=0.5, engine_depth=None, engine_nodes=None, sug_time=0.5,
-                 sug_depth=None, sug_nodes=None, show_would_have_done_move=True, lichess_token='', username='username'):
+    def __init__(self, options, player_color=None, no_suggestions=False):
         ChessnutAir.__init__(self)
-        self.show_would_have_done_move = show_would_have_done_move
-        self.experimental_dragging_timeout = experimental_dragging_timeout
+        self.options = options
+        self.show_would_have_done_move = options.show_would_have_done_move
+        self.experimental_dragging_timeout = options.experimental_dragging_timeout
         self.no_suggestions = no_suggestions
         self.should_read = False
         self.target_move = None
@@ -36,27 +33,29 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
-        self.username = username
-        self.game = EngineManager(engine_dir, engine_suggest_dir, suggestion_book_path=suggestion_book_dir,
-                                  eco_file=eco_file, engine_cfg=engine_cfg if engine_cfg else {}, username=self.username,
-                                  engine_limit=chess.engine.Limit(time=engine_time, nodes=engine_nodes,
-                                                                  depth=engine_depth),
-                                  suggestion_limit=chess.engine.Limit(time=sug_time, nodes=sug_nodes,
-                                                                      depth=sug_depth))
+        self.username = options.username
+        self.game = EngineManager(options.engine_cmd, options.engine_suggest_cmd,
+                                  suggestion_book_path=options.suggestion_book_dir,
+                                  eco_file=options.eco_file,
+                                  engine_cfg=options.engine_cfg if options.engine_cfg else {}, username=self.username,
+                                  engine_limit=chess.engine.Limit(time=options.engine_time, nodes=options.engine_nodes,
+                                                                  depth=options.engine_depth),
+                                  suggestion_limit=chess.engine.Limit(time=options.sug_time, nodes=options.sug_nodes,
+                                                                      depth=options.sug_depth))
         self.more_games = True
         self.winner = None
         self.inited = False
-        self.show_valid = show_valid_moves
+        self.show_valid = options.show_valid_moves
         self.is_check = False
-        self.play_animations = play_animations
+        self.play_animations = options.play_animations
         self.fixing_board = False
         self.last_score = None
         self.maybe_read = False
-        self.experimental_dragging_detection = experimental_dragging_detection
+        self.experimental_dragging_detection = options.experimental_dragging_detection
         self.skip_pgn = False
         self.force_quit = True
         self.have_read_board = False
-        self.lichess = LiChess.LiChess(lichess_token) if lichess_token != '' else None
+        self.lichess = LiChess.LiChess(options.lichess_token) if options.lichess_token != '' else None
         self.is_online_game = False
         self.next_game_online = None
         self.online_seek_info = None

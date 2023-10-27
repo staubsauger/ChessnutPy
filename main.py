@@ -23,24 +23,14 @@ options = None
 
 # noinspection SpellCheckingInspection
 async def go():
-    b = BoardGame(show_valid_moves=options.show_valid_moves,
-                  suggestion_book_dir=options.suggestion_book_dir,
-                  engine_dir=options.engine_cmd,
-                  engine_suggest_dir=options.engine_suggest_cmd,
-                  eco_file=options.eco_file,
-                  engine_cfg=ast.literal_eval(options.engine_cfg),
-                  experimental_dragging_detection=options.experimental_dragging_detection,
-                  experimental_dragging_timeout=options.experimental_dragging_timeout,
-                  play_animations=options.play_animations,
-                  engine_time=float(options.engine_time) if options.engine_time != 'None' else None,
-                  engine_nodes=int(options.engine_nodes) if options.engine_nodes != 'None' else None,
-                  engine_depth=int(options.engine_depth) if options.engine_depth != 'None' else None,
-                  sug_depth=int(options.sug_depth) if options.sug_depth != 'None' else None,
-                  sug_nodes=int(options.sug_nodes) if options.sug_nodes != 'None' else None,
-                  sug_time=float(options.sug_time) if options.sug_time != 'None' else None,
-                  show_would_have_done_move=options.show_would_have_done_move,
-                  lichess_token=options.lichess_token,
-                  username=options.username)
+    options.engine_cfg = ast.literal_eval(options.engine_cfg)
+    options.engine_time = float(options.engine_time) if options.engine_time != 'None' else None
+    options.engine_nodes = int(options.engine_nodes) if options.engine_nodes != 'None' else None
+    options.engine_depth = int(options.engine_depth) if options.engine_depth != 'None' else None
+    options.sug_depth = int(options.sug_depth) if options.sug_depth != 'None' else None
+    options.sug_nodes = int(options.sug_nodes) if options.sug_nodes != 'None' else None
+    options.sug_time = float(options.sug_time) if options.sug_time != 'None' else None
+    b = BoardGame(options)
     await b.connect()
     run_task = asyncio.create_task(b.run())
     if not options.no_server:
