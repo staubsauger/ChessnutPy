@@ -68,7 +68,7 @@ class BoardAppHandlers:
         return res
 
     async def board_svg_handler(self, request):
-        start_time = time.perf_counter_ns()
+        #start_time = time.perf_counter_ns()
         cur_fen = self.game_board.board.board_fen()
         if not self.last_svg_board_fen == cur_fen:
             self.last_svg_board = svg_board(self.game_board.board, self.game_board.player_color)
@@ -76,7 +76,7 @@ class BoardAppHandlers:
 
         res = web.Response(text=self.last_svg_board)
         res.content_type = 'image/svg+xml'
-        log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
+        #log.warning(f"svg_board took {(time.perf_counter_ns()-start_time)//1_000_000} ms")
         return res
 
     async def opening_handler(self, request):
@@ -113,7 +113,7 @@ class BoardAppHandlers:
         nodes = int(data['nodes'])
         nodes = nodes if nodes > 0 else None
         limit = chess.engine.Limit(time=time, depth=depth, nodes=nodes)
-        print(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
+        log.warning(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
         if not (time or depth or nodes):
             return web.Response(status=400, text='All Zeroes not allowed!')
         if data['engine_select'] == 'CPU':
@@ -130,7 +130,7 @@ class BoardAppHandlers:
     async def set_engine_cfg(self, request):
         # this is a POST request
         # str that is dict of cfg
-        print(self.game_board.game.engine.config)
+        log.warning(self.game_board.game.engine.config)
         data = await request.post()
         d = json.loads(data['cfg_dict'])
         sanitized = {}
