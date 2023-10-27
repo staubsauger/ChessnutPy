@@ -155,7 +155,9 @@ class ChessnutAir:
         try:
             await self._connection.write_gatt_char(constants.BtCharacteristics.write, self._led_command + arr)
         except Exception as e:
-            log.error(f"Couldnt send LED change! Exception:\n{e}")
+            if isinstance(e, BleakError):
+                raise
+            log.error(f"Couldnt send LED change! Exception: {type(e)} {e}")
 
     async def _run_cmd(self, cmd: bytearray):
         await self._connection.write_gatt_char(constants.BtCharacteristics.write, cmd)
