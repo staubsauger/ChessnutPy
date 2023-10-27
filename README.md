@@ -1,4 +1,4 @@
-# chessnutair
+# ChessnutPy
 This is a program written in Python. You can connect your Chessnut Air eboard to your pc and play against chess engines.
 At the moment we only support the Chessnut Air eboard and only via bluetooth. We tested the program with stockfish and 
 the texel chess engines. Both work as intended so we can say, that all uci engines should work. Also the emulation of 
