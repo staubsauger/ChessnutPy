@@ -133,7 +133,6 @@ class BoardGame(ChessnutAir):
                 self.maybe_read = False
         else:
             await self.blink_tick()
-            # print("suggesting move: ", end='')
             log.info("suggesting move: ")
             move = await self.game.get_move_suggestion(self.board)
             self.to_blink.clear()
@@ -210,14 +209,6 @@ class BoardGame(ChessnutAir):
 
     async def button_pressed(self, button):
         log.info(f'Button {button} pressed!')
-        # await self._run_cmd(constants.BtCommands.query_otb)
-        # #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
-        # await self._run_cmd(constants.BtCommands.set_otb_upload_mode)
-        # await self._run_cmd(constants.BtCommands.is_app_ready)
-        # await self._run_cmd(constants.BtCommands.action_newest_data_tranfer)
-        # await asyncio.sleep(1)
-        # await self._run_cmd(constants.BtCommands.init_code)
-        # #await self._run_cmd(constants.BtCommands.maybe_wipe_otb)
         if button == 2:
             await self.exit_read_board_and_select_color()
         if button == 1:

@@ -159,8 +159,8 @@ class ChessnutAir:
 
     async def play_animation(self, list_of_frames: list["list[str] | chess.SquareSet"], sleep_time: float = 0.5) -> None:
         """
-            changes LED to a frame popped from beginning of list_of_frames
-            waits for sleep_time and repeats until no more frames
+        changes LED to a frame popped from beginning of list_of_frames
+        waits for sleep_time and repeats until no more frames
         """
         for frame in list_of_frames:
             await self.change_leds(chess.SquareSet(map(lambda s: chess.parse_square(s), frame)))
@@ -291,17 +291,17 @@ class ChessnutAir:
     def compare_board_state_to_fen(self, target_fen):
         # noinspection SpellCheckingInspection
         """
-            takes target_fen and cur_fen and returns which pieces are wrong on fen2
-            fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-            return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
-            """
+        takes target_fen and cur_fen and returns which pieces are wrong on fen2
+        fen like "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        return like [['P','d4'],['1', d2']] -> '1' = empty field,  'letters' = piece
+        """
 
         def convert_fen(fen):
             # noinspection SpellCheckingInspection
             """
-                convert "r1bqkbnr/pppppppp/2n5/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2"
-                to "r1bqkbnr/pppppppp/11n11111/11111111/11P11111/11111111/PP1PPPPP/RNBQKBNR"
-                """
+            convert "r1bqkbnr/pppppppp/2n5/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq c6 0 2"
+            to "r1bqkbnr/pppppppp/11n11111/11111111/11P11111/11111111/PP1PPPPP/RNBQKBNR"
+            """
             fen = fen.split()[0]
             return ''.join(map(lambda p: "1" * int(p) if p.isdigit() and p != '1' else p, fen))
 
