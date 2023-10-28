@@ -18,8 +18,6 @@ class BoardGame(ChessnutAir):
     def __init__(self, options, player_color=None, no_suggestions=False):
         ChessnutAir.__init__(self)
         self.options = options
-        self.show_would_have_done_move = options.show_would_have_done_move
-        self.experimental_dragging_timeout = options.experimental_dragging_timeout
         self.no_suggestions = no_suggestions
         self.should_read = False
         self.target_move = None
@@ -33,11 +31,10 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
-        self.username = options.username
         self.game = EngineManager(options, options.engine_cmd, options.engine_suggest_cmd,
                                   suggestion_book_path=options.suggestion_book_dir,
                                   eco_file=options.eco_file,
-                                  engine_cfg=options.engine_cfg if options.engine_cfg else {}, username=self.username,
+                                  engine_cfg=options.engine_cfg if options.engine_cfg else {}, username=options.username,
                                   engine_limit=chess.engine.Limit(time=options.engine_time, nodes=options.engine_nodes,
                                                                   depth=options.engine_depth),
                                   suggestion_limit=chess.engine.Limit(time=options.sug_time, nodes=options.sug_nodes,
@@ -45,20 +42,20 @@ class BoardGame(ChessnutAir):
         self.more_games = True
         self.winner = None
         self.inited = False
-        self.show_valid = options.show_valid_moves
         self.is_check = False
-        self.play_animations = options.play_animations
         self.fixing_board = False
         self.last_score = None
         self.maybe_read = False
-        self.experimental_dragging_detection = options.experimental_dragging_detection
         self.skip_pgn = False
         self.force_quit = True
         self.have_read_board = False
-        self.lichess = LiChess.LiChess(options.lichess_token) if options.lichess_token != '' else None
+        self.init_lichess()
         self.is_online_game = False
         self.next_game_online = None
         self.online_seek_info = None
+
+    def init_lichess(self):
+        self.lichess = LiChess.LiChess(self.options.lichess_token) if self.options.lichess_token != '' else None
 
     def setup(self):
         log.info("in setup")
@@ -163,7 +160,7 @@ class BoardGame(ChessnutAir):
                 else:
                     await self.cpu_king_hover_action()
         log.info(f"piece: {piece.symbol()} at {chess.square_name(square)} down")
-        if self.experimental_dragging_detection and len(self.move_start) == 0 and not self.fixing_board:
+        if self.options.experimental_dragging_detection and len(self.move_start) == 0 and not self.fixing_board:
             self.move_end = (square, piece)
             return
         if self.player_turn and len(self.move_start) > 0 and not self.fixing_board:
@@ -190,12 +187,12 @@ class BoardGame(ChessnutAir):
     async def piece_up(self, square: chess.Square, piece: chess.Piece):
         log.info(f"piece: {chess.square_name(square)} at {piece.symbol()} up")
         self.to_light.add(square)
-        if not self.experimental_dragging_detection:
+        if not self.options.experimental_dragging_detection:
             self.move_end = None
         self.move_start.append((square, piece))
         if not self.fixing_board:
             self.to_blink.clear()
-            if self.show_valid:
+            if self.options.show_valid_moves:
                 for move in self.board.legal_moves:
                     if move.from_square == square:
                         self.to_blink.add(square)
@@ -328,7 +325,7 @@ class BoardGame(ChessnutAir):
 
     async def ai_move(self):
         would_have_done_task = None
-        if self.show_would_have_done_move and not self.is_online_game:
+        if self.options.show_would_have_done_move and not self.is_online_game:
             has_player_move = len(self.board.move_stack) > 0
             if has_player_move:
                 player_move = self.board.pop()
@@ -386,9 +383,9 @@ class BoardGame(ChessnutAir):
             self.move_end = None
 
     async def maybe_wait_for_board_settle(self):
-        if not self.experimental_dragging_detection:
+        if not self.options.experimental_dragging_detection:
             return False
-        while await self.board_has_changed(timeout=self.experimental_dragging_timeout):
+        while await self.board_has_changed(timeout=self.options.experimental_dragging_timeout):
             pass
         # do legal move check through fen compare
         # generate all legal fens
@@ -460,7 +457,7 @@ class BoardGame(ChessnutAir):
     async def game_loop(self):
         if not self.game.engines_running:
             await self.game.init_engines()
-        if self.play_animations:
+        if self.options.play_animations:
             await self.play_animation(animations.start_anim)
         else:
             await asyncio.sleep(1)  # wait for board to settle
@@ -494,7 +491,7 @@ class BoardGame(ChessnutAir):
         await self.fix_board()
         self.to_blink.clear()
         self.to_light.clear()
-        if self.play_animations:
+        if self.options.play_animations:
             await self.play_animation(animations.game_start_amin, sleep_time=0.1)
         self.running = True
         # all initializing is done to loop can finally begin
@@ -583,7 +580,7 @@ class BoardGame(ChessnutAir):
             self.player_turn = True
             self.player_color_select = True
             log.info('select a color by picking up a king')
-            if self.play_animations:
+            if self.options.play_animations:
                 await self.play_animation(animations.pick_anim, sleep_time=0.4)
             self.to_blink = chess.SquareSet(self.find_king_squares())
         while self.player_color_select and not self.force_quit:
