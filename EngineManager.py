@@ -1,7 +1,7 @@
 import hashlib
 import os.path
 import pathlib
-
+import re
 import chess
 import chess.engine
 import chess.polyglot
@@ -302,3 +302,18 @@ def read_scid_eco_entries(eco_file):
         count += 1
         eco_line = eco_file.readline()
     log.info(count)
+
+def read_uci_file(file_path):
+    contents = ""
+    with open(file_path) as file:
+        contents = file.read()
+    levels = {}
+    pattern = re.compile('\[.*\][^[]*')
+    for match in pattern.finditer(contents):
+        lines = match.group().strip().splitlines()
+        cfg = {}
+        for l in lines[1:]:
+            n, v = l.split('=', 2)
+            cfg[n.strip()] = v.strip()
+        levels[lines[0].strip('[]')] = cfg
+    return levels
