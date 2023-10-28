@@ -58,7 +58,7 @@ class EngineManager:
     async def get_cpu_move(self, board):
         if self.options.engine_use_ext_book:
             log.warning("using external opening book.")
-            bookmove = self.get_book_move(board, self.options.engine_ext_book_dir)
+            bookmove = self.get_book_move(board, self.options.engine_ext_book_dir, weighted=False)
             if bookmove:
                 log.warning("Engine takes move out of book.")
                 return bookmove
@@ -92,10 +92,10 @@ class EngineManager:
         except asyncio.exceptions.CancelledError:
             log.info("suggestion was canceled")
 
-    def get_book_move(self, board, book):
+    def get_book_move(self, board, book, weighted = True):
         with chess.polyglot.open_reader(book) as reader:
             try:
-                move = reader.weighted_choice(board)
+                move = reader.weighted_choice(board) if weighted else reader.choice(board)
                 log.info(move)
                 return move.move
             except IndexError:
