@@ -42,7 +42,7 @@ async def go():
     
     def print_trace_and_quit(fut):
         if fut.exception():
-            log.error(f"Exception: {fut.exception()}", exc_info=True)
+            log.error(fut.exception(), exc_info=True)
         quit()
 
     run_task.add_done_callback(print_trace_and_quit)
