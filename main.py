@@ -96,7 +96,8 @@ if __name__ == "__main__":
     
     if path.isfile(options.logfile):
         replace(options.logfile, options.logfile+".1")
-    log = log.basicConfig(filename=options.logfile, filemode='w', level=log.WARNING)
+    log.basicConfig(filename=options.logfile, filemode='w', level=log.INFO)
+    log.getLogger("aiohttp").setLevel(log.WARNING)
     try:
         if options.no_server:
             asyncio.run(go())
