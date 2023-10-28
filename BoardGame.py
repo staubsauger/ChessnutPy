@@ -344,8 +344,15 @@ class BoardGame(ChessnutAir):
                 return
             raw_move = chess.Move.from_uci(play)
         else:
-            play = await self.game.get_cpu_move(self.board)
-            raw_move = play.move
+            bookmove = self.game.get_book_move(self.board)
+            if not bookmove:
+                log.warning("No opening found, engine plays on its own")
+                play = await self.game.get_cpu_move(self.board)
+                raw_move = play.move
+            else:
+                log.warning("Engine takes move out of book.")
+                raw_move = bookmove
+
         move = f"{raw_move}"
         log.info("generated Move: %s", move)
         if self.board.is_castling(raw_move):
