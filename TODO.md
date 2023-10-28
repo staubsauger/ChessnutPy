@@ -7,7 +7,6 @@
 * Make all configuration options available (and write them to ~/.config/chessnutair.config)
 
 # Engine interface
-* allow forcing the engine to make Book moves
 * allow engine presets (maybe as files, how does picochess do it?)
 
 # Base
