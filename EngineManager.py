@@ -62,13 +62,12 @@ class EngineManager:
             if bookmove:
                 log.warning("Engine takes move out of book.")
                 return bookmove
-        else:
-            log.warning("No opening found, engine plays on its own")
-            try:
-                self.last_ai_move = await self.engine.play(board, self.limit)
-                return self.last_ai_move.move
-            except asyncio.CancelledError:
-                log.info("AI move stopped.\nThis should never happen.")
+        log.warning("No opening found, engine plays on its own")
+        try:
+            self.last_ai_move = await self.engine.play(board, self.limit)
+            return self.last_ai_move.move
+        except asyncio.CancelledError:
+            log.info("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
         score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')
