@@ -304,6 +304,7 @@ def read_scid_eco_entries(eco_file):
     log.info(count)
 
 def read_uci_file(file_path):
+    """Read a .uci file in the style of picochess to get uci setting presets for engines"""
     contents = ""
     with open(file_path) as file:
         contents = file.read()
