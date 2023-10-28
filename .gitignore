@@ -1,6 +1,7 @@
 __pycache__/
 .idea/
 log.log
+log.log.1
 /eco_dict.cache
 /*.pgn
 .venv/
