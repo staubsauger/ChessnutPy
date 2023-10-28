@@ -73,6 +73,8 @@ if __name__ == "__main__":
     p.add_argument('--no_suggestions', default=False, action="store_true", help='disable suggestions')
     p.add_argument('--engine_suggest_cmd', default='stockfish')
     p.add_argument('--suggestion_book_dir', default='./Docs/Elo2400.bin')
+    p.add_argument('--engine_ext_book_dir', default='./Docs/Elo2400.bin')
+    p.add_argument('--engine_use_ext_book', default=False, action="store_true")
     p.add_argument('--eco_file', default='./Docs/scid.eco')
     p.add_argument('--lichess_token', default='')
     p.add_argument('--experimental_dragging_detection', default=False, action="store_true")
@@ -86,7 +88,7 @@ if __name__ == "__main__":
     options = p.parse_args()
     p.print_values()
     
-    replace(options.logfile, options.logfile+".old")
+    # replace(options.logfile, options.logfile+".old")
     log = log.basicConfig(filename=options.logfile, filemode='w', level=log.WARNING)
     try:
         if options.no_server:

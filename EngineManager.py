@@ -68,7 +68,7 @@ class EngineManager:
     async def get_move_suggestion(self, board, min_time=0.0):
         try:
             start_time = time.time()
-            move = self.get_book_move(board)
+            move = self.get_book_move(board, self.suggestion_book)
             play = None
             if not move:
                 log.info("Engine move: ")
@@ -84,8 +84,8 @@ class EngineManager:
         except asyncio.exceptions.CancelledError:
             log.info("suggestion was canceled")
 
-    def get_book_move(self, board):
-        with chess.polyglot.open_reader(self.suggestion_book) as reader:
+    def get_book_move(self, board, book):
+        with chess.polyglot.open_reader(book) as reader:
             try:
                 move = reader.weighted_choice(board)
                 log.info(move)
