@@ -41,8 +41,9 @@ async def go():
     run_task = asyncio.create_task(b.run())
     
     def print_trace_and_quit(fut):
-        log.error(f"Exception: {fut.exception()}")
-        log.error(fut.exception().__traceback__)
+        if fut.exception():
+            log.error(f"Exception: {fut.exception()}")
+            log.error(fut.exception().__traceback__)
         quit()
 
     run_task.add_done_callback(print_trace_and_quit)
