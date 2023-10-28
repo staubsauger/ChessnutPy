@@ -37,8 +37,7 @@ async def go():
     run_task = asyncio.create_task(b.run())
 
     def print_traceback_and_quit(future):
-        if future.exception():
-            log.exception(future.exception())
+        log.exception('print exception if exists')
         quit()
     
     run_task.add_done_callback(print_traceback_and_quit)
