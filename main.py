@@ -1,5 +1,6 @@
 import ast
 import asyncio
+from genericpath import isfile
 import sys
 import socket
 
@@ -13,7 +14,7 @@ from WebInterface import start_server
 import configargparse
 
 import logging as log
-from os import replace
+from os import replace, path
 
 
 
@@ -88,7 +89,8 @@ if __name__ == "__main__":
     options = p.parse_args()
     p.print_values()
     
-    # replace(options.logfile, options.logfile+".old")
+    if path.isfile(options.logfile):
+        replace(options.logfile, options.logfile+".1")
     log = log.basicConfig(filename=options.logfile, filemode='w', level=log.WARNING)
     try:
         if options.no_server:
