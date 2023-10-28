@@ -13,10 +13,10 @@ from bleak import BleakError
 from WebInterface import start_server
 import configargparse
 
-import logging as log
+import logging
 from os import replace, path
 
-
+log = logging.getLogger("ChessnutPy")
 
 # noinspection SpellCheckingInspection
 
@@ -101,8 +101,8 @@ if __name__ == "__main__":
     
     if path.isfile(options.logfile):
         replace(options.logfile, options.logfile+".1")
-    log.basicConfig(filename=options.logfile, filemode='w', level=log.INFO)
-    log.getLogger("aiohttp").setLevel(log.WARNING)
+    logging.basicConfig(filename=options.logfile, filemode='w', level=logging.INFO)
+    logging.getLogger("aiohttp").setLevel(logging.WARNING)
     try:
         if options.no_server:
             asyncio.run(go())

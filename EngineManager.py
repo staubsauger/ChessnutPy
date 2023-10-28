@@ -11,7 +11,9 @@ import time
 # noinspection PyUnresolvedReferences
 import asyncio
 
-import logging as log 
+import logging
+log = logging.getLogger("ChessnutPy")
+ 
 
 
 class EngineManager:

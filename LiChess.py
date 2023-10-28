@@ -6,7 +6,8 @@ import time
 
 import berserk
 import chess
-import logging as log
+import logging
+log = logging.getLogger("ChessnutPy")
 
 class LiChess:
     def __init__(self, token):

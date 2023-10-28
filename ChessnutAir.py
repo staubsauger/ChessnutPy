@@ -6,7 +6,7 @@ for more information.
 import asyncio
 import math
 import time
-import logging as log
+import logging
 from collections import namedtuple
 from typing import Iterable, NamedTuple
 
@@ -20,6 +20,8 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 from bleak import BleakError
 from bleak.exc import BleakDBusError
+
+log = logging.getLogger("ChessnutPy")
 
 
 def loc_to_pos(location: int, rev: bool = False) -> str:

@@ -11,7 +11,9 @@ from ChessnutAir import ChessnutAir, board_state_as_square_and_piece
 from EngineManager import EngineManager
 from BoardGame_Helpers.fencompare import fen_diff_leds
 
-import logging as log
+import logging
+log = logging.getLogger("ChessnutPy")
+
 
 
 class BoardGame(ChessnutAir):

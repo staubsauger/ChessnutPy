@@ -8,8 +8,10 @@ from aiohttp import web
 import chess
 import BoardGame
 from bleak import BleakError
-import logging as log
+import logging
 import time
+
+log = logging.getLogger("ChessnutPy")
 
 def svg_board(board, player_color):
     fill = {}
