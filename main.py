@@ -25,13 +25,17 @@ options = None
 
 # noinspection SpellCheckingInspection
 async def go():
-    options.engine_cfg = ast.literal_eval(options.engine_cfg)
-    options.engine_time = float(options.engine_time) if options.engine_time != 'None' else None
+    try:
+        options.engine_cfg = ast.literal_eval(options.engine_cfg)
+    except:
+        log.warning(f"Couldn't parse engine_cfg: {options.engine_cfg}")
+        options.engine_cfg = {}
+    options.engine_time = float(options.engine_time) if options.engine_time != 'None' else 0.5
     options.engine_nodes = int(options.engine_nodes) if options.engine_nodes != 'None' else None
     options.engine_depth = int(options.engine_depth) if options.engine_depth != 'None' else None
     options.sug_depth = int(options.sug_depth) if options.sug_depth != 'None' else None
     options.sug_nodes = int(options.sug_nodes) if options.sug_nodes != 'None' else None
-    options.sug_time = float(options.sug_time) if options.sug_time != 'None' else None
+    options.sug_time = float(options.sug_time) if options.sug_time != 'None' else 3.5
     b = BoardGame(options)
     await b.connect()
     run_task = asyncio.create_task(b.run())

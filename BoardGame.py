@@ -31,14 +31,7 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
-        self.game = EngineManager(options, options.engine_cmd, options.engine_suggest_cmd,
-                                  suggestion_book_path=options.suggestion_book_dir,
-                                  eco_file=options.eco_file,
-                                  engine_cfg=options.engine_cfg if options.engine_cfg else {}, username=options.username,
-                                  engine_limit=chess.engine.Limit(time=options.engine_time, nodes=options.engine_nodes,
-                                                                  depth=options.engine_depth),
-                                  suggestion_limit=chess.engine.Limit(time=options.sug_time, nodes=options.sug_nodes,
-                                                                      depth=options.sug_depth))
+        self.game = EngineManager(options)
         self.more_games = True
         self.winner = None
         self.inited = False

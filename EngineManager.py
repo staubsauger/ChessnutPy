@@ -16,38 +16,33 @@ import logging as log
 
 class EngineManager:
 
-    def __init__(self, options, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
-                 suggestion_limit=chess.engine.Limit(time=3.5, depth=None, nodes=None),
-                 suggestion_book_path="./Docs/Elo2400.bin",
-                 eco_file=None, engine_cfg={},
-                 username="username") -> None:
+    def __init__(self, options) -> None:
         self.options = options
-        self.engine_path = engine_path
+        self.engine_path = options.engine_cmd
         self.transport = None
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
-        self.suggestion_engine_path = suggestion_engine_path
+        self.suggestion_engine_path = options.engine_suggest_cmd
         self.transport_suggest = None
         self.engine_suggest = None  # chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
-        self.suggestion_book = suggestion_book_path
-        self.limit = engine_limit
-        self.limit_sug = suggestion_limit
+        self.suggestion_book = options.suggestion_book_dir
+        self.limit = chess.engine.Limit(time=options.engine_time, nodes=options.engine_nodes,
+                                        depth=options.engine_depth)
+        self.limit_sug = chess.engine.Limit(time=options.sug_time, nodes=options.sug_nodes,
+                                            depth=options.sug_depth)
         self.engines_running = False
         self.eco_pgn = None  # chess.pgn.BoardGame()
         self.eco_dict = {}
-        self.engine_cfg = engine_cfg
+        self.engine_cfg = options.engine_cfg
         # self.init_scid_eco_file()
-        self.eco_file = eco_file
+        self.eco_file = options.eco_file
         self.dict_cache_file = 'eco_dict.cache'
         self.last_suggestion = None
         self.last_ai_move = None
-        self.username = username
+        self.username = options.username
 
-        if eco_file:
-            if os.path.exists(self.dict_cache_file) and self.read_eco_dict():
-                pass
-            else:
-                self.init_scid_eco_dict()
-                self.write_eco_dict()
+        if options.eco_file and not (os.path.exists(self.dict_cache_file) and self.read_eco_dict()):
+            self.init_scid_eco_dict()
+            self.write_eco_dict()
 
     async def init_engines(self):
         self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
