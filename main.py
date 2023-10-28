@@ -35,12 +35,8 @@ async def go():
     b = BoardGame(options)
     await b.connect()
     run_task = asyncio.create_task(b.run())
-
-    def print_traceback_and_quit(future):
-        log.exception('print exception if exists')
-        quit()
     
-    run_task.add_done_callback(print_traceback_and_quit)
+    #run_task.add_done_callback(quit)
     if not options.no_server:
         return await start_server(b)
     while not run_task.done():
