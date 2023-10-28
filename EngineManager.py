@@ -54,17 +54,17 @@ class EngineManager:
 
     async def get_cpu_move(self, board):
         if self.options.engine_use_ext_book:
-            log.warning("using external opening book.")
+            log.info("using external opening book.")
             bookmove = self.get_book_move(board, self.options.engine_ext_book_dir, weighted=False)
             if bookmove:
-                log.warning("Engine takes move out of book.")
+                log.info("Engine takes move out of book.")
                 return bookmove
-        log.warning("No opening found, engine plays on its own")
+        log.info("No opening found, engine plays on its own")
         try:
             self.last_ai_move = await self.engine.play(board, self.limit)
             return self.last_ai_move.move
         except asyncio.CancelledError:
-            log.info("AI move stopped.\nThis should never happen.")
+            log.error("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
         score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')

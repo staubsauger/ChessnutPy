@@ -92,7 +92,7 @@ class BoardGame(ChessnutAir):
             return
         # check if score exists, else await score
         score = score if score else int((await self.engine_manager.get_score(self.board)).score())
-        log.info(score)
+        log.info(f"Score: {score}")
         self.last_score = score
         # Max score is divided into increments via half of the LED matrix.
         # I.e. if leds has 8 entries, increments = 200/ 4 = 50
@@ -468,7 +468,7 @@ class BoardGame(ChessnutAir):
                 self.lichess.seek_game(clock_time=clock_time, increment=increment, rated=rated, color=color,
                                        rating_range=rating_range)
             else:
-                log.info("Finding online game Failed... You should probably restart.")
+                log.warning("Finding online game Failed... You should probably restart.")
                 return
             self.next_game_online = None
             log.info(self.lichess.game_info)

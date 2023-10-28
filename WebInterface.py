@@ -115,7 +115,7 @@ class BoardAppHandlers:
         nodes = int(data['nodes'])
         nodes = nodes if nodes > 0 else None
         limit = chess.engine.Limit(time=time, depth=depth, nodes=nodes)
-        log.warning(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
+        log.info(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
         if not (time or depth or nodes):
             return web.Response(status=400, text='All Zeroes not allowed!')
         if data['engine_select'] == 'CPU':
@@ -132,7 +132,7 @@ class BoardAppHandlers:
     async def set_engine_cfg(self, request):
         # this is a POST request
         # str that is dict of cfg
-        log.warning(self.game_board.engine_manager.engine.config)
+        log.info(self.game_board.engine_manager.engine.config)
         data = await request.post()
         d = json.loads(data['cfg_dict'])
         sanitized = {}
