@@ -30,12 +30,10 @@ async def go():
     except:
         log.warning(f"Couldn't parse engine_cfg: {options.engine_cfg}")
         options.engine_cfg = {}
-    options.engine_time = float(options.engine_time) if options.engine_time != 'None' else 0.5
     options.engine_nodes = int(options.engine_nodes) if options.engine_nodes != 'None' else None
     options.engine_depth = int(options.engine_depth) if options.engine_depth != 'None' else None
     options.sug_depth = int(options.sug_depth) if options.sug_depth != 'None' else None
     options.sug_nodes = int(options.sug_nodes) if options.sug_nodes != 'None' else None
-    options.sug_time = float(options.sug_time) if options.sug_time != 'None' else 3.5
     b = BoardGame(options)
     await b.connect()
     run_task = asyncio.create_task(b.run())
@@ -75,10 +73,10 @@ if __name__ == "__main__":
     p.add_argument('-p', '--port', default=8080, type=int)
     p.add_argument('-e', "--engine_cmd", default="stockfish")
     p.add_argument('--engine_cfg', default="{}", help="Engine config dict")
-    p.add_argument('--engine_time', default=0.5, help='Time the engine has to think')
+    p.add_argument('--engine_time', default=0.5, help='Time the engine has to think', type=float)
     p.add_argument('--engine_depth', default=None, help='How deep can the engine calculate ahead')
     p.add_argument('--engine_nodes', default=None, help='How many nodes can the engine use')
-    p.add_argument('--sug_time', default=5, help='Time the suggestions engine has to think')
+    p.add_argument('--sug_time', default=5.0, help='Time the suggestions engine has to think', type=float)
     p.add_argument('--sug_depth', default=None, help='How deep can the suggestions engine calculate ahead')
     p.add_argument('--sug_nodes', default=None, help='How many nodes can the suggestions engine use')
     p.add_argument('--no_suggestions', default=False, action="store_true", help='disable suggestions')
@@ -94,7 +92,7 @@ if __name__ == "__main__":
     p.add_argument('--play_animations', default=False, action="store_true")
     p.add_argument('--show_would_have_done_move', default=False, action='store_true')
     p.add_argument('--logfile', default="log.log")
-    p.add_argument('--username', default="user")
+    p.add_argument('--username', default="user", help='Name of the player when creating PGN files')
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
     p.print_values()
