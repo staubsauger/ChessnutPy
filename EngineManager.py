@@ -56,13 +56,12 @@ class EngineManager:
         self.engines_running = True
 
     async def get_cpu_move(self, board):
-        bookmove = None
         if self.options.engine_use_ext_book:
             log.warning("using external opening book.")
             bookmove = self.get_book_move(board, self.options.engine_ext_book_dir)
             if bookmove:
                 log.warning("Engine takes move out of book.")
-                return chess.Move.from_uci(bookmove)
+                return bookmove
         else:
             log.warning("No opening found, engine plays on its own")
             try:
