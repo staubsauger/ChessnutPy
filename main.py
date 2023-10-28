@@ -40,7 +40,12 @@ async def go():
     await b.connect()
     run_task = asyncio.create_task(b.run())
     
-    #run_task.add_done_callback(quit)
+    def print_trace_and_quit(fut):
+        log.error(f"Exception: {fut.exception()}")
+        log.error(fut.exception().__traceback__)
+        quit()
+
+    run_task.add_done_callback(print_trace_and_quit)
     if not options.no_server:
         return await start_server(b)
     while not run_task.done():
