@@ -25,7 +25,7 @@ of the engines via the board. You have to use the config file for this.
  2. install dependencies (pip3 install -r requirements.txt)
  3. Optional: copy Docs/default.config to your $HOME/.config/chessnutair.config and edit it to your liking
  4. Execute python3 ./main.py
- 5. You need stockfish installed on your system. If stockfish is not globaly available on your system, e.g. you compiled it yourself, you have to configure stockfish in you config
+ 5. You need stockfish installed on your system. If stockfish is not globaly available on your system, e.g. you compiled it yourself, you have to configure `engine_cmd` and `engine_suggest_cmd` in the config. You can also use another uci engine in the same way.
  
 
 ## Features
