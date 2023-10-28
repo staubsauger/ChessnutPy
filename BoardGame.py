@@ -34,7 +34,7 @@ class BoardGame(ChessnutAir):
         self.undo_loop = False
         self.player_turn = False
         self.username = options.username
-        self.game = EngineManager(options.engine_cmd, options.engine_suggest_cmd,
+        self.game = EngineManager(options, options.engine_cmd, options.engine_suggest_cmd,
                                   suggestion_book_path=options.suggestion_book_dir,
                                   eco_file=options.eco_file,
                                   engine_cfg=options.engine_cfg if options.engine_cfg else {}, username=self.username,
@@ -344,18 +344,7 @@ class BoardGame(ChessnutAir):
                 return
             raw_move = chess.Move.from_uci(play)
         else:
-            if self.options.engine_use_ext_book:
-                log.warning("using external opening book.")
-                bookmove = self.game.get_book_move(self.board, self.options.engine_ext_book_dir)
-            else:
-                bookmove = None
-            if bookmove and self.options.engine_use_ext_book:
-                log.warning("Engine takes move out of book.")
-                raw_move = bookmove
-            else:
-                log.warning("No opening found, engine plays on its own")
-                play = await self.game.get_cpu_move(self.board)
-                raw_move = play.move
+            raw_move = await self.game.get_cpu_move(self.board)
 
         move = f"{raw_move}"
         log.info("generated Move: %s", move)

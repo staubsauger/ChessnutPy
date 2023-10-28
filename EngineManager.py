@@ -16,11 +16,12 @@ import logging as log
 
 class EngineManager:
 
-    def __init__(self, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
+    def __init__(self, options, engine_path, suggestion_engine_path, engine_limit=chess.engine.Limit(time=0.5),
                  suggestion_limit=chess.engine.Limit(time=3.5, depth=None, nodes=None),
                  suggestion_book_path="./Docs/Elo2400.bin",
                  eco_file=None, engine_cfg={},
                  username="username") -> None:
+        self.options = options
         self.engine_path = engine_path
         self.transport = None
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
@@ -55,11 +56,20 @@ class EngineManager:
         self.engines_running = True
 
     async def get_cpu_move(self, board):
-        try:
-            self.last_ai_move = await self.engine.play(board, self.limit)
-            return self.last_ai_move
-        except asyncio.CancelledError:
-            log.info("AI move stopped.\nThis should never happen.")
+        bookmove = None
+        if self.options.engine_use_ext_book:
+            log.warning("using external opening book.")
+            bookmove = self.get_book_move(board, self.options.engine_ext_book_dir)
+            if bookmove:
+                log.warning("Engine takes move out of book.")
+                return bookmove
+        else:
+            log.warning("No opening found, engine plays on its own")
+            try:
+                self.last_ai_move = await self.engine.play(board, self.limit)
+                return self.last_ai_move.move
+            except asyncio.CancelledError:
+                log.info("AI move stopped.\nThis should never happen.")
 
     async def get_score(self, board):
         score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')
