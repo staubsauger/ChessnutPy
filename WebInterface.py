@@ -36,7 +36,7 @@ class BoardAppHandlers:
 
     async def hello(self, request):
         text = pathlib.Path(self.index_template).read_text()
-        text = text.replace("CUR_OPENING", str(self.game_board.game.print_openings(self.game_board.board)))
+        text = text.replace("CUR_OPENING", str(self.game_board.engine_manager.print_openings(self.game_board.board)))
         b = map(lambda l: f'<p>{l}</p>\n', str(self.game_board.board).split('\n'))
         text = text.replace("BOARD_STATE", ' '.join(b))
         res = web.Response(text=text)
@@ -45,10 +45,10 @@ class BoardAppHandlers:
 
     async def engine_settings_handler(self, request):
         text = pathlib.Path(self.engine_settings).read_text()
-        text = text.replace('LIMIT_TIME', str(self.game_board.game.limit.time))
+        text = text.replace('LIMIT_TIME', str(self.game_board.engine_manager.limit.time))
         settings = {}
-        for k in self.game_board.game.engine.config:
-            settings[k] = self.game_board.game.engine.config[k]
+        for k in self.game_board.engine_manager.engine.config:
+            settings[k] = self.game_board.engine_manager.engine.config[k]
         text = text.replace('ENGINE_SETTINGS', json.dumps(settings))
         res = web.Response(text=text)
         res.content_type = 'text/html'
@@ -80,7 +80,7 @@ class BoardAppHandlers:
         return res
 
     async def opening_handler(self, request):
-        data = self.game_board.game.print_openings(self.game_board.board)
+        data = self.game_board.engine_manager.print_openings(self.game_board.board)
         return web.json_response(data)
 
     async def move_stack_handler(self, request) -> web.Response:
@@ -117,9 +117,9 @@ class BoardAppHandlers:
         if not (time or depth or nodes):
             return web.Response(status=400, text='All Zeroes not allowed!')
         if data['engine_select'] == 'CPU':
-            self.game_board.game.limit = limit
+            self.game_board.engine_manager.limit = limit
         else:
-            self.game_board.game.limit_sug = limit
+            self.game_board.engine_manager.limit_sug = limit
         res = web.Response(status=303)
         return res
 
@@ -130,14 +130,14 @@ class BoardAppHandlers:
     async def set_engine_cfg(self, request):
         # this is a POST request
         # str that is dict of cfg
-        log.warning(self.game_board.game.engine.config)
+        log.warning(self.game_board.engine_manager.engine.config)
         data = await request.post()
         d = json.loads(data['cfg_dict'])
         sanitized = {}
         for key in d:
             if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
                 sanitized[key] = d[key]
-        await self.game_board.game.engine.configure(sanitized)
+        await self.game_board.engine_manager.engine.configure(sanitized)
         return await self.engine_settings_handler(request)
 
     async def seek_game_handler(self, request):
@@ -166,9 +166,9 @@ class BoardAppHandlers:
         def move_to_opening(entry):
             board = self.game_board.board.copy()
             board.push(entry.move)
-            opening = self.game_board.game.print_openings(board)
+            opening = self.game_board.engine_manager.print_openings(board)
             return f'{opening} -> {entry.move.uci()} (weight={entry.weight})'
-        moves = [move_to_opening(e) for e in self.game_board.game.get_book_moves(self.game_board.board)]
+        moves = [move_to_opening(e) for e in self.game_board.engine_manager.get_book_moves(self.game_board.board)]
         return web.json_response(data=moves)
 
     async def get_battery(self, request):

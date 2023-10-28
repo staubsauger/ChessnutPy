@@ -31,7 +31,7 @@ class BoardGame(ChessnutAir):
         self.target_fen = ""
         self.undo_loop = False
         self.player_turn = False
-        self.game = EngineManager(options)
+        self.engine_manager = EngineManager(options)
         self.more_games = True
         self.winner = None
         self.inited = False
@@ -89,7 +89,7 @@ class BoardGame(ChessnutAir):
         if self.is_online_game:
             return
         # check if score exists, else await score
-        score = score if score else int((await self.game.get_score(self.board)).score())
+        score = score if score else int((await self.engine_manager.get_score(self.board)).score())
         log.info(score)
         self.last_score = score
         # Max score is divided into increments via half of the LED matrix.
@@ -123,7 +123,7 @@ class BoardGame(ChessnutAir):
         else:
             await self.blink_tick()
             log.info("suggesting move: ")
-            move = await self.game.get_move_suggestion(self.board)
+            move = await self.engine_manager.get_move_suggestion(self.board)
             self.to_blink.clear()
             self.to_light.clear()
             if move is not None:
@@ -322,8 +322,8 @@ class BoardGame(ChessnutAir):
             has_player_move = len(self.board.move_stack) > 0
             if has_player_move:
                 player_move = self.board.pop()
-                min_time = (self.game.limit.time if self.game.limit.time else 0) + 5.0
-                would_have_done_task = asyncio.create_task(self.game.get_move_suggestion(self.board.copy(),
+                min_time = (self.engine_manager.limit.time if self.engine_manager.limit.time else 0) + 5.0
+                would_have_done_task = asyncio.create_task(self.engine_manager.get_move_suggestion(self.board.copy(),
                                                                                          min_time=min_time))
                 self.board.push(player_move)
         if self.is_online_game:
@@ -334,7 +334,7 @@ class BoardGame(ChessnutAir):
                 return
             raw_move = chess.Move.from_uci(play)
         else:
-            raw_move = await self.game.get_cpu_move(self.board)
+            raw_move = await self.engine_manager.get_cpu_move(self.board)
 
         move = f"{raw_move}"
         log.info("generated Move: %s", move)
@@ -448,8 +448,8 @@ class BoardGame(ChessnutAir):
         self.next_game_online = wants_online
 
     async def game_loop(self):
-        if not self.game.engines_running:
-            await self.game.init_engines()
+        if not self.engine_manager.engines_running:
+            await self.engine_manager.init_engines()
         if self.options.play_animations:
             await self.play_animation(animations.start_anim)
         else:
@@ -505,18 +505,18 @@ class BoardGame(ChessnutAir):
                 # self.check_and_display_check()
                 await self.player_move()
             else:
-                log.info(self.game.print_openings(self.board))
+                log.info(self.engine_manager.print_openings(self.board))
                 await self.ai_move()
-                log.info(self.game.print_openings(self.board))
+                log.info(self.engine_manager.print_openings(self.board))
             await self.blink_tick(sleep_time=0.3)
         log.info(f'winner was {self.winner}!')
         if not self.skip_pgn:
-            self.game.write_to_pgn(self)
+            self.engine_manager.write_to_pgn(self)
         if self.more_games:
             # reset this object and call game_loop again
             self.setup()
             await self.game_loop()
-        await self.game.quit_chess_engines()
+        await self.engine_manager.quit_chess_engines()
         self.bt_running = False
 
     async def maybe_read_board(self):
