@@ -2,119 +2,124 @@
 <html>
 
 <head>
-    <!-- HTML Codes by Quackit.com -->
-    <meta http-equiv="cache-control" content="no-cache" />
-    <title>
-    </title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        .small {
-            color: white;
-            font-weight: 300;
-            font-size: 20px;
-        }
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="mystyle.css">
 
-        .big {
-            color: white;
-            font-weight: 300;
-            font-size: 30px;
-        }
-
-        body {
-            background-color: #312b2b;
-            background-repeat: no-repeat;
-            background-position: top left;
-            background-attachment: fixed;
-        }
-
-        h1 {
-            font-family: Arial, sans-serif;
-            letter-spacing: 20px;
-            color: #ffffff;
-            background-color: #312b2b;
-        }
-
-        p {
-            font-family: Georgia, serif;
-            font-size: 14px;
-            font-style: normal;
-            font-weight: normal;
-            color: #ffffff;
-            background-color: #312b2b;
-        }
-
-        label {
-            font-family: Georgia, serif;
-            font-size: 14px;
-            font-style: normal;
-            font-weight: normal;
-            color: #ffffff;
-            background-color: #312b2b;
-        }
-
-        pre {
-            font-family: Georgia, serif;
-            font-size: 14px;
-            font-style: normal;
-            font-weight: normal;
-            color: #ffffff;
-            background-color: #312b2b;
-        }
-    </style>
-    <script>
-        const myVar1 = setInterval(get_current_opening, 1000);
-        const myVar2 = setInterval(get_battery, 60000);
-        async function get_battery() {
-            const battery_response = await fetch('battery_status');
-            document.getElementById('battery').innerHTML = 'Battery: ' + await battery_response.text();
-        }
-        async function get_current_opening() {
-            const opening_response = await fetch('opening');
-            const move_stack_response = await fetch('move_stack')
-            const last_score_response = await fetch('last_score')
-            const counter_opening_response = await fetch('get_book_moves')
-            const timers_response = await fetch('/timers')
-            let data = await opening_response.json();
-            document.getElementById('opening').innerHTML = "Current Opening: " + data;
-            data = await move_stack_response.text();
-            document.getElementById('move_stack').innerHTML = "" + data;
-            document.getElementById('boardImage').src = 'board.svg?time=' + new Date().getTime();
-            data = await last_score_response.json();
-            document.getElementById('last_score').innerHTML = 'Last calculated score: ' + (data ? data : "never calculated");
-            data = await counter_opening_response.json();
-            let data_str = ""
-            data.forEach((l) => data_str += l + "<br>");
-            document.getElementById('counter_openings').innerHTML = (data_str.length > 0 ? data_str : "No counter openings found.");
-            data = await timers_response.json();
-            if (data[0] == -1 || data[1] == -1) {
-                document.getElementById('timers').innerHTML = 'Time remaining: only available during online games';
-            } else {
-                const wmin = Math.floor(data[0] / 60);
-                const wsec = Math.floor(data[0] % 60).toString().padStart(2, '0');
-                const bmin = Math.floor(data[1] / 60);
-                const bsec = Math.floor(data[1] % 60).toString().padStart(2, '0');
-                document.getElementById('timers').innerHTML = 'Time remaining: white: ' + wmin + ':' + wsec + ', black: ' + bmin + ':' + bsec;
-            }
-
-        }
-        get_current_opening()
-        get_battery()
-    </script>
 </head>
 
 <body>
-    <h1 class="big">ChessComputer</h1>
-    <img id="boardImage" alt="Current Gameboard" src="board.svg" />
-    <p id="timers" class="small">Time remaining: white: 0:00, black: 0:00</p>
-    <p id="opening" class="small">Current Opening: CUR_OPENING</p>
-    <p class="small">Book Counter Openings:</p>
-    <p id="counter_openings"></p>
-    <p class="small">Current Move Stack:</p>
-    <p id="move_stack">CUR_MOVE_STACK</p>
-    <p id="last_score">Last calculated score: never calculated</p>
-    <p id="battery" class="small">Battery: </p>
-    <a class="small" href="/engine_settings">Engine Settings</a>
-    <a class="small" href="/online_game">Online Game</a>
+
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href=/move_stack_frame target="change_me_col">Home</a>
+        <a href=/engine_settings target="change_me_col">Engine</a>
+        <a href=/online_game target="change_me_col">LiChess</a>
+        <a href=/counter_openings_frame target="change_me_col">Hints</a>
+    </div>
+
+    <div id="main" >
+        <span style="font-size:28px;cursor:pointer;color:#818181" onclick="openNav()">&#9776; </span><span style="font-size:28px;cursor:pointer;color:#818181;position:absolute;right:15px;" id="battery">test</span>
+        <div class="row" >
+            <div class="column" id="board_div">
+                <img id="boardImage" alt="chessboard" src="board.svg" width="80%" height="80%">
+                <p id="opening">CUR_OPENING</p>
+            </div>
+            <div class="column">
+                <iframe name="change_me_col" style="border: none;" 
+                    src="/move_stack_frame" onload="resizeIframe(this)" height="100%" width="100%">
+                </iframe>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function get_battery() {
+            const battery_response = await fetch('battery_status');
+            const data = await battery_response.json();
+            let state = '';
+            if (data[0] == -1) {
+                state += '💔';
+            } else {
+                state += data[1] > 50 ? '🔋' : '🪫';
+            }
+            if (data[0] == 1) {
+                state += '🔌'
+            }
+            document.getElementById('battery').innerHTML = state + data[1]+'%';
+        }
+        const battery_timer = setInterval(get_battery, 60000);
+        get_battery()
+
+        let anim_timer = 0;
+        function anim() {
+            resizeIframe(document.getElementsByName("change_me_col")[0]);
+            if (anim_timer > 0) {
+                setTimeout(anim, 33);
+                anim_timer--;
+            }
+        }
+        function openNav() {
+            document.getElementById("mySidenav").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            anim_timer = 31;
+            setTimeout(anim, 33);
+        }
+
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            anim_timer = 31;
+            setTimeout(anim, 33);
+
+//            setTimeout(() => { resizeIframe(document.getElementsByName("change_me_col")[0]); }, 501)
+        }
+
+        function resizeIframe(obj) {
+            obj.style.height = (document.getElementById('boardImage').height+50) + 'px';
+//            obj.style.width = obj.contentWindow.document.documentElement.scrollWidth + 'px';
+        }
+
+        async function get_game_data() {
+            document.getElementById('boardImage').src = 'board.svg?time=' + new Date().getTime();
+
+            const opening_response = await fetch('opening');
+            let data = await opening_response.json();
+            document.getElementById('opening').innerHTML = data;
+
+            // const move_stack_response = await fetch('move_stack');
+            // data = await move_stack_response.text();
+
+        }
+        const b = setInterval(get_game_data, 2000);
+        onresize = (event) => { resizeIframe(document.getElementsByName("change_me_col")[0]); }
+    </script>
+
 </body>
 
 </html>
+
+<!-- <body>
+    <div class="row">
+        <div class="column" style="background-color:#aaa;">
+            <img id="boardImage" alt="chessboard"src="board.svg" width="90%" height="90%">
+        </div>
+        <div class="column" style="background-color:#bbb;">
+            <h2>Column 2</h2>
+            <iframe style="border: none;" id="column_right"></iframe>
+        </div>
+    </div>
+
+    <div class="navbar">
+        <a id="link1" onclick="button_func()" href="#" class="active" >Home</a>
+        <a id="link2" onclick="button_func()" href="#">News</a>
+        <a name="link3" onclick="button_func('link3')">Contact</a>
+        <a name="link4" onclick="button_func('link4')">Test</a>
+        <a name="link5" onclick="button_func('link5')">Test</a>
+        <a onclick="document.getElementById('column_right').src = 'svg_board'" href="#">dfgd</a>
+    </div>
+
+</body>
+
+</html> -->

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- HTML Codes by Quackit.com -->
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="mystyle.css">
+    <script>
+        async function get_counter_openings_data() {
+            const counter_opening_response = await fetch('counter_openings');
+            data = await counter_opening_response.json();
+            let data_str = "";
+            data.forEach((l) => data_str += l);
+            document.getElementById('counter_openings').innerHTML = (data_str.length > 0 ? data_str : "No counter openings found.");
+        }
+        var counter_openings_timer = setInterval(get_counter_openings_data, 1000);
+        get_counter_openings_data();
+    </script>
+
+</head>
+
+<body>
+
+    <p id="counter_openings">COUNTER_OPENINGS</p>
+    
+    
+    
+
+</body>
+
+</html>

@@ -5,3 +5,5 @@ log.log.1
 /eco_dict.cache
 /*.pgn
 .venv/
+WebServer.py
+WebInterface_Helpers/main_page_old.html

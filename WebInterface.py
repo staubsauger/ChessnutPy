@@ -1,6 +1,7 @@
 import ast
 import pathlib
 import json
+import re
 
 import chess.svg
 import chess.engine
@@ -23,26 +24,44 @@ def svg_board(board, player_color):
     for square in attackable:
         fill[square] = 'yellow'
     svg = chess.svg.board(board, size=350, lastmove=board.move_stack[-1] if len(board.move_stack) > 0 else None,
-                                fill=fill, flipped=not player_color)
+                                fill=fill, flipped=not player_color, #colors={'margin': '#01010101', 'square light': '#ff0000', 'square dark': '#7070ff', 'coord': '#00ff00' }
+                                )
     return svg
 
 
 class BoardAppHandlers:
-    def __init__(self, board: BoardGame, index_template='./WebInterface_Helpers/main_page.html', engine_settings='./WebInterface_Helpers/engine_settings.html', online_game='./WebInterface_Helpers/online_game.html'):
+    def __init__(self, board: BoardGame, index_template='./WebInterface_Helpers/main_page.html', 
+                 engine_settings='./WebInterface_Helpers/engine_settings.html', 
+                 online_game='./WebInterface_Helpers/online_game.html',
+                 move_stack='./WebInterface_Helpers/move_stack.html', 
+                 counter_openings='./WebInterface_Helpers/counter_openings.html',
+                 css='./WebInterface_Helpers/mystyle.css'):
         self.index_template = index_template
         self.game_board: BoardGame = board
         self.engine_settings = engine_settings
         self.online_game = online_game
+        self.move_stack = move_stack
         self.last_svg_board_fen = None
         self.last_svg_board = None
-
+        self.last_opening = None
+        self.css = css
+        self.counter_openings = counter_openings
+        
     async def hello(self, request):
         text = pathlib.Path(self.index_template).read_text()
-        text = text.replace("CUR_OPENING", str(self.game_board.engine_manager.print_openings(self.game_board.board)))
+        opening = str(self.game_board.engine_manager.print_openings(self.game_board.board))
+        opening = re.sub(r'\(|\)|\[|\]|\'', '', opening)
+        text = text.replace("CUR_OPENING", opening)
         b = map(lambda l: f'<p>{l}</p>\n', str(self.game_board.board).split('\n'))
         text = text.replace("BOARD_STATE", ' '.join(b))
         res = web.Response(text=text)
         res.content_type = 'text/html'
+        return res
+
+    async def css_handler(self, request):
+        text = pathlib.Path(self.css).read_text()
+        res = web.Response(text=text)
+        res.content_type = 'text/css'
         return res
 
     async def engine_settings_handler(self, request):
@@ -83,15 +102,27 @@ class BoardAppHandlers:
 
     async def opening_handler(self, request):
         data = self.game_board.engine_manager.print_openings(self.game_board.board)
-        return web.json_response(data)
+        if data != "No opening found.":    
+                self.last_opening = data
+        return web.json_response(self.last_opening)
+     
+    async def move_stack_frame_handler(self, request) -> web.Response:
+        text = pathlib.Path(self.move_stack).read_text()
+        res = web.Response(text=text)
+        res.content_type = 'text/html'
+        return res
 
     async def move_stack_handler(self, request) -> web.Response:
         data = self.game_board.board.move_stack
         board = self.game_board.board.copy()
+        if len(board.move_stack) == 0:
+            return web.Response()
         while len(board.move_stack) > 0:
             board.pop()
-        text = board.variation_san(data)
-        return web.Response(text=text)
+        moves = board.variation_san(data)
+        bm = re.sub(r'\d+\.', r'<b>\g<0></b>', moves)
+        res = web.Response(text=bm)
+        return res
 
     async def last_score_handler(self, request):
         return web.json_response(self.game_board.last_score / 100 if self.game_board.last_score else None)
@@ -164,22 +195,29 @@ class BoardAppHandlers:
         await self.game_board.exit_read_board_and_select_color(wants_online='seek', seek_info=seek_info)
         return await self.online_game_handler(request)
 
-    async def get_book_moves(self, request):
+    async def counter_openings_frame_handler(self, request):
+        text = pathlib.Path(self.counter_openings).read_text()
+        res = web.Response(text=text)
+        res.content_type = 'text/html'
+        return res
+
+    async def counter_openings_handler(self, request):
         def move_to_opening(entry):
             board = self.game_board.board.copy()
             board.push(entry.move)
             opening = self.game_board.engine_manager.print_openings(board)
-            return f'{opening} -> {entry.move.uci()} (weight={entry.weight})'
+            return f'<div title="weight: {entry.weight}" style="padding: -8px"> {f"{opening[0][0]}: {opening[0][1]}" if opening else "Unamed"} -> {entry.move.uci()} </div>'
         moves = [move_to_opening(e) for e in self.game_board.engine_manager.get_book_moves(self.game_board.board)]
-        return web.json_response(data=moves)
-
+        res = web.json_response(data=moves)
+        return res
+    
     async def get_battery(self, request):
         try:
             await self.game_board.request_battery_status()
         except BleakError:
-            return web.Response(text="DISCONNECTED")
-        data = f"{'CHARGING' if self.game_board.charging else 'DISCHARGING'}: {self.game_board.charge_percent}%"
-        return web.Response(text=data)
+            return web.json_response(data=[-1, 0])
+        data = [1 if self.game_board.charging else 0, self.game_board.charge_percent]
+        return web.json_response(data=data)
 
     async def time_handler(self, request):
         data = [-1, -1]
@@ -195,12 +233,14 @@ async def start_server(board):
     app.router.add_route('GET', '/debug', handlers.debug_handler)
     app.router.add_route('GET', '/board.svg', handlers.board_svg_handler)
     app.router.add_route('GET', '/opening', handlers.opening_handler)
+    app.router.add_route('GET', '/move_stack_frame', handlers.move_stack_frame_handler)
     app.router.add_route('GET', '/move_stack', handlers.move_stack_handler)
     app.router.add_route('GET', '/last_score', handlers.last_score_handler)
     app.router.add_route('POST', '/read_board', handlers.read_board_handler)
     app.router.add_route('POST', '/set_engine_limit', handlers.set_engine_limit)
     app.router.add_route('POST', '/set_engine_cfg', handlers.set_engine_cfg)
-    app.router.add_route('GET', '/get_book_moves', handlers.get_book_moves)
+    app.router.add_route('GET', '/counter_openings_frame', handlers.counter_openings_frame_handler)
+    app.router.add_route('GET', '/counter_openings', handlers.counter_openings_handler)
     app.router.add_route('GET', '/battery_status', handlers.get_battery)
     app.router.add_route('GET', '/engine_settings', handlers.engine_settings_handler)
     app.router.add_route('GET', '/timers', handlers.time_handler)
@@ -208,4 +248,5 @@ async def start_server(board):
     app.router.add_route('POST', '/start_online_challenge', handlers.start_online_challenge_handler)
     app.router.add_route('POST', '/start_online_seek', handlers.seek_game_handler)
     app.router.add_route('GET', '/online_chat', handlers.online_chat_handler)
+    app.router.add_route('GET', '/mystyle.css', handlers.css_handler)
     return app

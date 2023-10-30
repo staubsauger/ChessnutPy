@@ -118,13 +118,13 @@ class EngineManager:
             if cur_var:
                 return '\n'.join(reversed(cur_var.comment.split('\n')))
             else:
-                return f'not openers found: {" ".join(map(lambda m: m.uci(), board.move_stack))}'
+                return f'no openers found: {" ".join(map(lambda m: m.uci(), board.move_stack))}'
         else:
             fen = board.board_fen()
             try:
                 return self.eco_dict[fen]
             except KeyError:
-                return "No opening found."
+                return None
 
     async def quit_chess_engines(self):
         if self.engines_running:

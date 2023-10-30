@@ -507,9 +507,9 @@ class BoardGame(ChessnutAir):
                 # self.check_and_display_check()
                 await self.player_move()
             else:
-                log.info(self.engine_manager.print_openings(self.board))
+                log.info(f"Openings: {self.engine_manager.print_openings(self.board)}")
                 await self.ai_move()
-                log.info(self.engine_manager.print_openings(self.board))
+                log.info(f"Openings: {self.engine_manager.print_openings(self.board)}")
             await self.blink_tick(sleep_time=0.3)
         log.info(f'winner was {self.winner}!')
         if not self.skip_pgn:
