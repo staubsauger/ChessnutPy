@@ -68,6 +68,8 @@ def get_ip():
 def save_config(config):
     with open(user_config_dir('chessnutair.config'), 'w') as file:
         for k,v in config.__dict__.items():
+            if k == "save_function":
+                continue
             v = v if not isinstance(v, str) else f'"{v}"'
             file.write(f"{k} = {v}\n")
         log.info(f"Wrote config to {user_config_dir('chessnutair.config')}")
@@ -103,6 +105,7 @@ if __name__ == "__main__":
     p.add_argument('--username', default="user", help='Name of the player when creating PGN files')
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
+    options.save_function = lambda: save_config(options)
     
     if path.isfile(options.logfile):
         replace(options.logfile, options.logfile+".1")

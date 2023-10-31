@@ -45,21 +45,26 @@ class EngineManager:
             self.init_scid_eco_dict()
             self.write_eco_dict()
 
-    async def set_engine_limit(self, time, nodes, depth):
+    async def set_engine_limit(self, time, nodes, depth, at_init=False):
         self.limit = chess.engine.Limit(time, nodes, depth)
         self.options.engine_time = time
         self.options.engine_nodes = nodes
         self.options.engine_depth = depth
+        if not at_init:
+            self.options.save_function()
 
     async def set_engine_cfg(self, cfg):
         self.options.engine_cfg = cfg
         await self.engine.configure(cfg)
+        self.options.save_function()
 
-    async def set_sug_limit(self, time, nodes, depth):
+    async def set_sug_limit(self, time, nodes, depth, at_init=False):
         self.limit_sug = chess.engine.Limit(time, nodes, depth)
         self.options.sug_time = time
         self.options.sug_nodes = nodes
         self.options.sug_depth = depth
+        if not at_init:
+            self.options.save_function()
 
     async def init_engines(self):
         self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
