@@ -154,16 +154,18 @@ class BoardGame(ChessnutAir):
                     await self.player_king_hover_action()
                 else:
                     await self.cpu_king_hover_action()
-        log.info(f"piece: {piece.symbol()} at {chess.square_name(square)} down")
-        if self.options.experimental_dragging_detection and len(self.move_start) == 0 and not self.fixing_board:
+        log.info(f"piece: {piece.symbol()} at {chess.square_name(square)} ({square}) down (move_start: {self.move_start})")
+        if self.options.dragging_detection and len(self.move_start) == 0 and not self.fixing_board:
             self.move_end = (square, piece)
             return
         if self.player_turn and len(self.move_start) > 0 and not self.fixing_board:
             self.to_light.clear()
             ms = await self.find_start_move()
+            log.info(f"ms: {ms}")
             self.to_blink.clear()
-            if ms and ms != square:
+            if ms != None and ms != square:
                 self.move_end = (square, piece)
+                log.info(f"move_end: {self.move_end}")
             else:
                 p_moves = list(filter(lambda m: m[1].piece_type == chess.KING, self.move_start))
                 if len(p_moves) > 0:
@@ -171,7 +173,7 @@ class BoardGame(ChessnutAir):
                     if ms == square:
                         await king_hover_action()
                 self.move_end = (square, piece)
-            if not ms and len(self.board.move_stack) > 0:
+            if ms == None and len(self.board.move_stack) > 0:
                 undo_move = self.board.peek()
                 if any(filter(lambda p: p[0] == undo_move.to_square, self.move_start)):
                     self.move_end = (square, piece)
@@ -182,7 +184,7 @@ class BoardGame(ChessnutAir):
     async def piece_up(self, square: chess.Square, piece: chess.Piece):
         log.info(f"piece: {piece.symbol()} at {chess.square_name(square)} up")
         self.to_light.add(square)
-        if not self.options.experimental_dragging_detection:
+        if not self.options.dragging_detection:
             self.move_end = None
         self.move_start.append((square, piece))
         if not self.fixing_board:
@@ -356,9 +358,9 @@ class BoardGame(ChessnutAir):
 
     async def player_move(self):
         start_move = await self.find_start_move()
-        if not start_move and len(self.move_start) > 0:
+        if start_move == None and len(self.move_start) > 0:
             start_move = self.move_start[0][0]
-        if start_move and self.move_end and start_move != self.move_end[0]:
+        if start_move != None and self.move_end and start_move != self.move_end[0]:
             move = chess.Move(start_move, self.move_end[0])
             if self.player_turn:
                 moves = list(filter(lambda m: m.from_square == move.from_square and m.to_square == move.to_square,
@@ -378,9 +380,9 @@ class BoardGame(ChessnutAir):
             self.move_end = None
 
     async def maybe_wait_for_board_settle(self):
-        if not self.options.experimental_dragging_detection:
+        if not self.options.dragging_detection:
             return False
-        while await self.board_has_changed(timeout=self.options.experimental_dragging_timeout):
+        while await self.board_has_changed(timeout=self.options.dragging_timeout):
             pass
         # do legal move check through fen compare
         # generate all legal fens

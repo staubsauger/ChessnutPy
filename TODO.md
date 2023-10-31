@@ -11,5 +11,4 @@
 
 # Base
 * rewrite BoardGame to use a statemachine
-* enhance drag-support (ideally so it can be on by default)
 * add ability to have a timed games against the cpu

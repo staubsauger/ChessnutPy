@@ -179,21 +179,16 @@ class ChessnutAir:
         if data[:2] != constants.BtResponses.head_buffer:
             log.warning(f'Other data recieved: {data}')
 
-        async def send_message(loc, old, new):
-            if old != new:
-                if new == 0:
-                    await self.piece_up(loc, chess.Piece.from_symbol(convertDict[old]))
-                else:
-                    await self.piece_down(loc, chess.Piece.from_symbol(convertDict[new]))
-
         rdata = data[2:34]
         time_stamp = int.from_bytes(data[34:], byteorder="little")
-        if time_stamp <= self.last_change:
-            log.warn(f"Timestamps out of order (old {self.last_change} new {time_stamp}), ignoring!")
-            return
-        else:
-            log.info(f"Timestamp: {time_stamp}")
         if rdata != self._old_data:
+            delay_slot = []
+            async def send_message(loc, old, new):
+                if old != new:
+                    if new == 0:
+                        await self.piece_up(loc, chess.Piece.from_symbol(convertDict[old]))
+                    else:
+                        delay_slot.append((loc, chess.Piece.from_symbol(convertDict[new])))
             self.last_change = time_stamp
             self._board_changed = True
             self.board_state = rdata
@@ -207,6 +202,9 @@ class ChessnutAir:
                     old_right = od[i] >> 4
                     await send_message(63 - i * 2, old_left, cur_left)  # 63-i since we get the data backwards
                     await send_message(63 - (i * 2 + 1), old_right, cur_right)
+            for loc, p in delay_slot:
+                await self.piece_down(loc, p)
+
 
     async def _misc_handler(self, _: BleakGATTCharacteristic, data: bytearray) -> None:
         if data == constants.BtResponses.heartbeat_code:

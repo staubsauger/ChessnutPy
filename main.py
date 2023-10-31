@@ -1,6 +1,5 @@
 import ast
 import asyncio
-from contextlib import redirect_stdout
 import sys
 import atexit
 import signal
@@ -10,14 +9,13 @@ from aiohttp import web
 
 from BoardGame import BoardGame
 import chess.engine
-from bleak import BleakError
 
 from WebInterface import start_server
 import configargparse
 from platformdirs import user_config_dir
 
 import logging
-from os import kill, replace, path
+from os import replace, path
 
 log = logging.getLogger("ChessnutPy")
 
@@ -96,8 +94,8 @@ if __name__ == "__main__":
     p.add_argument('--engine_use_ext_book', default=False, action="store_true")
     p.add_argument('--eco_file', default='./Docs/scid.eco')
     p.add_argument('--lichess_token', default='')
-    p.add_argument('--experimental_dragging_detection', default=False, action="store_true")
-    p.add_argument('--experimental_dragging_timeout', default=0.3, type=float)
+    p.add_argument('--dragging_detection', default=False, action="store_true")
+    p.add_argument('--dragging_timeout', default=0.3, type=float)
     p.add_argument('--show_valid_moves', default=False, action="store_true")
     p.add_argument('--play_animations', default=False, action="store_true")
     p.add_argument('--show_would_have_done_move', default=False, action='store_true')
