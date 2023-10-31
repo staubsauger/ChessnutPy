@@ -188,6 +188,9 @@ class ChessnutAir:
 
         rdata = data[2:34]
         time_stamp = int.from_bytes(data[34:], byteorder="little")
+        if time_stamp <= self.last_change:
+            log.warn(f"Timestamps out of order (old {self.last_change} new {time_stamp}), ignoring!")
+            return
         if rdata != self._old_data:
             self.last_change = time_stamp
             self._board_changed = True
