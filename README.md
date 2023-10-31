@@ -21,7 +21,7 @@ buttons on the board for setting up a position or restarting a game. At the mome
 of the engines via the board. You have to use the config file for this.
 
 
-## Quickstart and recommened way to install 
+## Quickstart and recommended way to install 
 `git clone https://github.com/staubsauger/ChessnutPy`
 
 `cd ChessnutPy`
