@@ -191,6 +191,8 @@ class ChessnutAir:
         if time_stamp <= self.last_change:
             log.warn(f"Timestamps out of order (old {self.last_change} new {time_stamp}), ignoring!")
             return
+        else:
+            log.info(f"Timestamp: {time_stamp}")
         if rdata != self._old_data:
             self.last_change = time_stamp
             self._board_changed = True
