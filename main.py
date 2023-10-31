@@ -1,5 +1,6 @@
 import ast
 import asyncio
+from contextlib import redirect_stdout
 import sys
 import atexit
 import signal
@@ -69,8 +70,9 @@ def get_ip():
 def save_config(config):
     with open(user_config_dir('chessnutair.config'), 'w') as file:
         for k,v in config.__dict__.items():
+            v = v if not isinstance(v, str) else f'"{v}"'
             file.write(f"{k} = {v}\n")
-        print(f"Wrote config to {user_config_dir('chessnutair.config')}")
+        log.info(f"Wrote config to {user_config_dir('chessnutair.config')}")
 
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
@@ -103,11 +105,12 @@ if __name__ == "__main__":
     p.add_argument('--username', default="user", help='Name of the player when creating PGN files')
     # TODO: flags should never default to True otherwise they are not changeable
     options = p.parse_args()
-    p.print_values()
     
     if path.isfile(options.logfile):
         replace(options.logfile, options.logfile+".1")
-    logging.basicConfig(filename=options.logfile, filemode='w', level=logging.INFO)
+    with open(options.logfile, 'w') as lf:
+        p.print_values(file=lf)
+    logging.basicConfig(filename=options.logfile, filemode='a', level=logging.INFO)
     logging.getLogger("aiohttp").setLevel(logging.WARNING)
     def exit_handler():
         save_config(options)
