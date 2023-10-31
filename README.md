@@ -20,12 +20,23 @@ Everything you need, for setting up a game, is done via the pieces and leds on t
 buttons on the board for setting up a position or restarting a game. At the moment, there is now way to set up the strength
 of the engines via the board. You have to use the config file for this.
 
-## Installation and execution
- 1. download code
- 2. install dependencies (pip3 install -r requirements.txt)
- 3. Optional: copy Docs/default.config to your $HOME/.config/chessnutair.config and edit it to your liking
- 4. Execute python3 ./main.py
- 5. You need stockfish installed on your system. If stockfish is not globaly available on your system, e.g. you compiled it yourself, you have to configure `engine_cmd` and `engine_suggest_cmd` in the config. You can also use another uci engine in the same way.
+
+## Quickstart and recommened way to install 
+`git clone https://github.com/staubsauger/ChessnutPy`
+
+`cd ChessnutPy`
+
+`python -m venv .venv`
+
+`source .venv/bin/activate`
+
+`pip install -r requirements.txt`
+
+`python main.py`
+
+Make sure you have stockfish installed on your system systemwide, otherwise you have to configure a engine yourself. Either in Docs/default.config or better, `cp Docs/degault.config ~/.config/chessnutair.config` and configure your engine here (`engine_cmd`).
+
+
  
 
 ## Features
