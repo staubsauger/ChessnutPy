@@ -1,7 +1,8 @@
 import ast
 import asyncio
-from genericpath import isfile
 import sys
+import atexit
+import signal
 import socket
 
 from aiohttp import web
@@ -12,9 +13,10 @@ from bleak import BleakError
 
 from WebInterface import start_server
 import configargparse
+from platformdirs import user_config_dir
 
 import logging
-from os import replace, path
+from os import kill, replace, path
 
 log = logging.getLogger("ChessnutPy")
 
@@ -41,7 +43,7 @@ async def go():
     def print_trace_and_quit(fut):
         if fut.exception():
             log.error(fut.exception(), exc_info=True)
-        quit()
+        sys.exit(0)
 
     run_task.add_done_callback(print_trace_and_quit)
     if not options.no_server:
@@ -64,9 +66,15 @@ def get_ip():
     return IP
 
 
+def save_config(config):
+    with open(user_config_dir('chessnutair.config'), 'w') as file:
+        for k,v in config.__dict__.items():
+            file.write(f"{k} = {v}\n")
+        print(f"Wrote config to {user_config_dir('chessnutair.config')}")
+
 if __name__ == "__main__":
     asyncio.set_event_loop_policy(chess.engine.EventLoopPolicy())
-    p = configargparse.ArgParser(default_config_files=["./Docs/default.config", '~/.config/chessnutair.config'],
+    p = configargparse.ArgParser(default_config_files=["./Docs/default.config", user_config_dir('chessnutair.config')],
                                  ignore_unknown_config_file_keys=False)
     p.add_argument("--no_server", default=False, action="store_true")
     p.add_argument("--hosts", default='auto-hosts', help='ip1:ip2, or auto-hosts to use local address')
@@ -101,6 +109,13 @@ if __name__ == "__main__":
         replace(options.logfile, options.logfile+".1")
     logging.basicConfig(filename=options.logfile, filemode='w', level=logging.INFO)
     logging.getLogger("aiohttp").setLevel(logging.WARNING)
+    def exit_handler():
+        save_config(options)
+    def kill_handler(*args):
+        sys.exit(0)
+    atexit.register(exit_handler)
+    for s in [signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGABRT]:
+        signal.signal(s, kill_handler)
     try:
         if options.no_server:
             asyncio.run(go())

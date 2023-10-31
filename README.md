@@ -1,7 +1,7 @@
 # ChessnutPy
 This is a program written in Python. You can connect your Chessnut Air eboard to your pc and play against chess engines.
 At the moment we only support the Chessnut Air eboard and only via bluetooth. We tested the program with stockfish and 
-the texel chess engines. Both work as intended so we can say, that all uci engines should work. Also the emulation of 
+the texel chess engines. Both work as intended so it is likely, that all uci engines should work. Also the emulation of 
 old chesscomputer via mame works, only the takeback function does not work at the moment. 
 
  * Supports Windows 10 (should work, but not tested)
@@ -15,7 +15,7 @@ So far, I have only tested this software on Linux.
 ## Main Ideas | How it is different to Picochess
 The main idea behind this project is to bring a modern solution for people, who want to play chess against the computer, 
 but without the distraction of displays, sounds and other things.
-This software fits perfect on a small soc like the raspberry pi zero 2. It is intended to be used without a display. 
+This software fits perfectly on a small SoC like the Raspberry Pi Zero 2. It is intended to be used without a display. 
 Everything you need, for setting up a game, is done via the pieces and leds on the board. Furthermore, you can use both 
 buttons on the board for setting up a position or restarting a game. At the moment, there is now way to set up the strength
 of the engines via the board. You have to use the config file for this.
@@ -34,7 +34,7 @@ of the engines via the board. You have to use the config file for this.
 
 `python main.py`
 
-Make sure you have stockfish installed on your system systemwide, otherwise you have to configure a engine yourself. Either in Docs/default.config or better, `cp Docs/degault.config ~/.config/chessnutair.config` and configure your engine here (`engine_cmd`).
+Make sure you have stockfish installed systemwide, otherwise you have to configure a engine yourself by copying the default config to your config directory (ex. `cp Docs/default.config ~/.config/chessnutair.config`) and editing `engine_cmd` there. The programm will automatically copy it for you when it exists for the first time and will keep it updated if you change settings through the webinterface.
 
 
  
@@ -53,7 +53,7 @@ Make sure you have stockfish installed on your system systemwide, otherwise you 
  own afterwards. The leds will help you find the last moves in the move stack. There is no limit. You can take back all
  moves until you get to the start position.
  6. There is also a rudimentary webinterface. It shows you the opening and other useful information. You can access the
-interface via your web browser and 'http://localhost' or from another machine via the ip of the machine.
+interface via your web browser and 'http://localhost:8080' or from another machine via the ip of the machine.
  7. Via the webinterface you can also access the ability to play online on lichess.org (chess.com maybe in the future)
  (you have to acquire a lichess-token and put it in your config)
  8. We also added the ability to start a new game by pushing the on/off button.

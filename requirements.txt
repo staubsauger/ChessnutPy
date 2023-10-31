@@ -5,3 +5,4 @@ aiohttp==3.8.6
 ConfigArgParse==1.5.3
 chess==1.10.0
 berserk==0.10.0
+platformdirs==3.11
