@@ -68,8 +68,8 @@ class BoardAppHandlers:
         text = pathlib.Path(self.engine_settings).read_text()
         text = text.replace('LIMIT_TIME', str(self.game_board.engine_manager.limit.time))
         settings = {}
-        for k in self.game_board.engine_manager.engine.config:
-            settings[k] = self.game_board.engine_manager.engine.config[k]
+        for k in self.game_board.options.engine_cfg:
+            settings[k] = self.game_board.options.engine_cfg[k]
         text = text.replace('ENGINE_SETTINGS', json.dumps(settings))
         res = web.Response(text=text)
         res.content_type = 'text/html'
@@ -145,14 +145,13 @@ class BoardAppHandlers:
         depth = depth if depth > 0 else None
         nodes = int(data['nodes'])
         nodes = nodes if nodes > 0 else None
-        limit = chess.engine.Limit(time=time, depth=depth, nodes=nodes)
         log.info(f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
         if not (time or depth or nodes):
             return web.Response(status=400, text='All Zeroes not allowed!')
         if data['engine_select'] == 'CPU':
-            self.game_board.engine_manager.limit = limit
+            await self.game_board.engine_manager.set_engine_limit(time, depth, nodes)
         else:
-            self.game_board.engine_manager.limit_sug = limit
+            await self.game_board.engine_manager.set_sug_limit(time, depth, nodes)
         res = web.Response(status=303)
         return res
 
@@ -170,7 +169,12 @@ class BoardAppHandlers:
         for key in d:
             if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
                 sanitized[key] = d[key]
-        await self.game_board.engine_manager.engine.configure(sanitized)
+        try:
+            await self.game_board.engine_manager.set_engine_cfg(sanitized)
+        except Exception as e:
+            text = f'Exception {e}: {e.args}'
+            log.error(text)
+            return web.Response(status=400, text=text)
         return await self.engine_settings_handler(request)
 
     async def seek_game_handler(self, request):

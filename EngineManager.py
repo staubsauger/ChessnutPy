@@ -34,7 +34,6 @@ class EngineManager:
         self.engines_running = False
         self.eco_pgn = None  # chess.pgn.BoardGame()
         self.eco_dict = {}
-        self.engine_cfg = options.engine_cfg
         # self.init_scid_eco_file()
         self.eco_file = options.eco_file
         self.dict_cache_file = 'eco_dict.cache'
@@ -46,10 +45,26 @@ class EngineManager:
             self.init_scid_eco_dict()
             self.write_eco_dict()
 
+    async def set_engine_limit(self, time, nodes, depth):
+        self.limit = chess.engine.Limit(time, nodes, depth)
+        self.options.engine_time = time
+        self.options.engine_nodes = nodes
+        self.options.engine_depth = depth
+
+    async def set_engine_cfg(self, cfg):
+        self.options.engine_cfg = cfg
+        await self.engine.configure(cfg)
+
+    async def set_sug_limit(self, time, nodes, depth):
+        self.limit_sug = chess.engine.Limit(time, nodes, depth)
+        self.options.sug_time = time
+        self.options.sug_nodes = nodes
+        self.options.sug_depth = depth
+
     async def init_engines(self):
         self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
         self.transport_suggest, self.engine_suggest = await chess.engine.popen_uci(self.suggestion_engine_path)
-        await self.engine.configure(self.engine_cfg)
+        await self.engine.configure(self.options.engine_cfg)
         self.engines_running = True
 
     async def get_cpu_move(self, board):
