@@ -4,7 +4,7 @@
     * allow offer Draw/Resign
     * allow Selecting roundlength etc
 * Styling
-* Make all configuration options available (and write them to ~/.config/chessnutair.config)
+* Make all configuration options available
 
 # Engine interface
 * allow engine presets (maybe as files, how does picochess do it?)
@@ -12,5 +12,4 @@
 # Base
 * rewrite BoardGame to use a statemachine
 * enhance drag-support (ideally so it can be on by default)
-* propagate settings object instead of individual setting
 * add ability to have a timed games against the cpu
