@@ -180,7 +180,7 @@ class BoardGame(ChessnutAir):
                 self.to_blink = chess.SquareSet(self.find_king_squares())
 
     async def piece_up(self, square: chess.Square, piece: chess.Piece):
-        log.info(f"piece: {chess.square_name(square)} at {piece.symbol()} up")
+        log.info(f"piece: {piece.symbol()} at {chess.square_name(square)} up")
         self.to_light.add(square)
         if not self.options.experimental_dragging_detection:
             self.move_end = None
