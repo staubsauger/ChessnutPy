@@ -45,41 +45,23 @@ class BoardAppHandlers:
         self.css = './WebInterface_Helpers/mystyle.css'
 
     async def index(self, request):
-        text = pathlib.Path(self.index_template).read_text()
-        opening = str(self.game_board.engine_manager.print_openings(
-            self.game_board.board))
-        opening = re.sub(r'\(|\)|\[|\]|\'', '', opening)
-        text = text.replace("CUR_OPENING", opening)
-        b = map(lambda l: f'<p>{l}</p>\n',
-                str(self.game_board.board).split('\n'))
-        text = text.replace("BOARD_STATE", ' '.join(b))
-        res = web.Response(text=text)
-        res.content_type = 'text/html'
-        return res
+        return web.FileResponse(self.index_template)
 
     async def css_handler(self, request):
-        text = pathlib.Path(self.css).read_text()
-        res = web.Response(text=text)
-        res.content_type = 'text/css'
-        return res
+        return web.FileResponse(self.css)
 
     async def engine_settings_handler(self, request):
         text = pathlib.Path(self.engine_settings).read_text()
         text = text.replace('LIMIT_TIME', str(
             self.game_board.engine_manager.limit.time))
-        settings = {}
-        for k in self.game_board.options.engine_cfg:
-            settings[k] = self.game_board.options.engine_cfg[k]
-        text = text.replace('ENGINE_SETTINGS', json.dumps(settings))
+        text = text.replace('ENGINE_SETTINGS', json.dumps(
+            self.game_board.options.engine_cfg))
         res = web.Response(text=text)
         res.content_type = 'text/html'
         return res
 
     async def online_game_handler(self, request):
-        text = pathlib.Path(self.online_game).read_text()
-        res = web.Response(text=text)
-        res.content_type = 'text/html'
-        return res
+        return web.FileResponse(self.online_game)
 
     async def debug_handler(self, request):
         data = {}
@@ -109,19 +91,16 @@ class BoardAppHandlers:
         return web.json_response(self.last_opening)
 
     async def move_stack_frame_handler(self, request) -> web.Response:
-        text = pathlib.Path(self.move_stack).read_text()
-        res = web.Response(text=text)
-        res.content_type = 'text/html'
-        return res
+        return web.FileResponse(self.move_stack)
 
     async def move_stack_handler(self, request) -> web.Response:
-        data = self.game_board.board.move_stack
-        board = self.game_board.board.copy()
-        if len(board.move_stack) == 0:
+        data: list[chess.Move] = self.game_board.board.move_stack
+        starting_board: chess.Board = self.game_board.board.copy()
+        if len(starting_board.move_stack) == 0:
             return web.Response()
-        while len(board.move_stack) > 0:
-            board.pop()
-        moves = board.variation_san(data)
+        while len(starting_board.move_stack) > 0:
+            starting_board.pop()
+        moves = starting_board.variation_san(data)
         bm = re.sub(r'\d+\.', r'<b>\g<0></b>', moves)
         res = web.Response(text=bm)
         return res
@@ -203,10 +182,7 @@ class BoardAppHandlers:
         return await self.online_game_handler(request)
 
     async def counter_openings_frame_handler(self, request):
-        text = pathlib.Path(self.counter_openings).read_text()
-        res = web.Response(text=text)
-        res.content_type = 'text/html'
-        return res
+        return web.FileResponse(self.counter_openings)
 
     async def counter_openings_handler(self, request):
         def move_to_opening(entry):
