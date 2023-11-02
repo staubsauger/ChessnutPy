@@ -38,11 +38,13 @@ class BoardAppHandlers:
         self.online_game = './WebInterface_Helpers/online_game.html'
         self.move_stack = './WebInterface_Helpers/move_stack.html'
         self.counter_openings = './WebInterface_Helpers/counter_openings.html'
+        self.css = './WebInterface_Helpers/mystyle.css'
         self.game_board: BoardGame = board
         self.last_svg_board_fen = None
         self.last_svg_board = None
         self.last_opening = None
-        self.css = './WebInterface_Helpers/mystyle.css'
+        self.last_move_stack = None
+        self.last_move_stack_text = None
 
     async def index(self, request):
         return web.FileResponse(self.index_template)
@@ -95,6 +97,8 @@ class BoardAppHandlers:
 
     async def move_stack_handler(self, request) -> web.Response:
         data: list[chess.Move] = self.game_board.board.move_stack
+        if data == self.last_move_stack:
+            return web.Response(text=self.last_move_stack_text)
         starting_board: chess.Board = self.game_board.board.copy()
         if len(starting_board.move_stack) == 0:
             return web.Response()
@@ -102,8 +106,9 @@ class BoardAppHandlers:
             starting_board.pop()
         moves = starting_board.variation_san(data)
         bm = re.sub(r'\d+\.', r'<b>\g<0></b>', moves)
-        res = web.Response(text=bm)
-        return res
+        self.last_move_stack = data
+        self.last_move_stack_text = bm
+        return web.Response(text=bm)
 
     async def last_score_handler(self, request):
         return web.json_response(self.game_board.last_score / 100 if self.game_board.last_score else None)
