@@ -54,10 +54,16 @@ class BoardAppHandlers:
 
     async def engine_settings_handler(self, request):
         text = pathlib.Path(self.engine_settings).read_text()
-        text = text.replace('LIMIT_TIME', str(
-            self.game_board.engine_manager.limit.time))
-        text = text.replace('ENGINE_SETTINGS', json.dumps(
-            self.game_board.options.engine_cfg))
+        time = str(self.game_board.engine_manager.limit.time)
+        d = self.game_board.engine_manager.limit.depth
+        depth = str(d) if d else '0'
+        n = self.game_board.engine_manager.limit.nodes
+        nodes = str(n) if n else '0'
+        text = text.replace(
+            'LIMIT_TIME', time).replace(
+            'LIMIT_DEPTH', depth).replace(
+            'LIMIT_NODES', nodes).replace(
+            'ENGINE_SETTINGS', json.dumps(self.game_board.options.engine_cfg))
         res = web.Response(text=text)
         res.content_type = 'text/html'
         return res
