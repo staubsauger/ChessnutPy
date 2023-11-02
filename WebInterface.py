@@ -112,7 +112,7 @@ class BoardAppHandlers:
             starting_board.pop()
         moves = starting_board.variation_san(data)
         bm = re.sub(r'\d+\.', r'<b>\g<0></b>', moves)
-        self.last_move_stack = data
+        self.last_move_stack = data.copy()
         self.last_move_stack_text = bm
         return web.Response(text=bm)
 
