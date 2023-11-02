@@ -32,22 +32,17 @@ def svg_board(board, player_color):
 
 
 class BoardAppHandlers:
-    def __init__(self, board: BoardGame, index_template='./WebInterface_Helpers/main_page.html',
-                 engine_settings='./WebInterface_Helpers/engine_settings.html',
-                 online_game='./WebInterface_Helpers/online_game.html',
-                 move_stack='./WebInterface_Helpers/move_stack.html',
-                 counter_openings='./WebInterface_Helpers/counter_openings.html',
-                 css='./WebInterface_Helpers/mystyle.css'):
-        self.index_template = index_template
+    def __init__(self, board: BoardGame):
+        self.index_template = './WebInterface_Helpers/main_page.html'
+        self.engine_settings = './WebInterface_Helpers/engine_settings.html'
+        self.online_game = './WebInterface_Helpers/online_game.html'
+        self.move_stack = './WebInterface_Helpers/move_stack.html'
+        self.counter_openings = './WebInterface_Helpers/counter_openings.html'
         self.game_board: BoardGame = board
-        self.engine_settings = engine_settings
-        self.online_game = online_game
-        self.move_stack = move_stack
         self.last_svg_board_fen = None
         self.last_svg_board = None
         self.last_opening = None
-        self.css = css
-        self.counter_openings = counter_openings
+        self.css = './WebInterface_Helpers/mystyle.css'
 
     async def index(self, request):
         text = pathlib.Path(self.index_template).read_text()
