@@ -185,7 +185,7 @@ class BoardAppHandlers:
         clock_time = safe_dict_get(data, 'time')
         increment = safe_dict_get(data, 'increment')
         rated = safe_dict_get(data, 'rated')
-        rated = True if rated == 'on' else False
+        rated = rated == 'on'
         rating_range = safe_dict_get(data, 'rating_range')
         color = safe_dict_get(data, 'color')
         seek_info = (clock_time, increment, rated, color, rating_range)
