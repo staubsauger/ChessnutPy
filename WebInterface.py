@@ -200,7 +200,7 @@ class BoardAppHandlers:
             board = self.game_board.board.copy()
             board.push(entry.move)
             opening = self.game_board.engine_manager.print_openings(board)
-            return f'<div title="weight: {entry.weight}" style="padding: -8px"> {f"{opening[0][0]}: {opening[0][1]}" if opening else "Unamed"} -> {entry.move.uci()} </div>'
+            return f'<div title="weight: {entry.weight}"> {f"{opening[0][0]}: {opening[0][1]}" if opening else "Unamed"} -> {entry.move.uci()} </div>'
         moves = [move_to_opening(
             e) for e in self.game_board.engine_manager.get_book_moves(self.game_board.board)]
         res = web.json_response(data=moves)
