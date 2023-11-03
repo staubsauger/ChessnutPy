@@ -45,7 +45,6 @@ body {
     @media (max-width: 700px) {
         .column {
             width: 100%;
-            height: auto;
             
         }
     }
@@ -127,6 +126,10 @@ textarea {
     background-color: #3c3836;
     border: transparent;
     resize: none;
+}
+
+#boardImage {
+    width: 90%;
 }
 
 
