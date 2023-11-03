@@ -4,6 +4,9 @@ body {
     color: #f1f1f1;
 }
 
+* {
+    box-sizing: border-box;
+}
 .sidenav {
     height: 100%;
     width: 0;
@@ -41,18 +44,14 @@ body {
 #main {
     transition: margin-left .5s;
     padding: 16px;
-    
+
     @media (max-width: 700px) {
-        .column {
+        .columnL {
             width: 100%;
-            
         }
     }
-}
 
-#engine_settings {
-    transition: margin-left .5s;
-    padding: 16px;
+
 }
 
 @media screen and (max-height: 450px) {
@@ -65,37 +64,31 @@ body {
     }
 }
 
-* {
-    box-sizing: border-box;
-}
 
-
-/* Create two equal columns that floats next to each other */
 .column {
     float: left;
     width: 50%;
     padding: 10px;
-    /* height: 90%; */
-    /* Should be removed. Only for demonstration */
+
 }
 
 .columnR {
     width: 40%;
+    height: 40%;
 
 }
 
 .columnL {
     width: 60%;
+    height: 60%;
 }
 
-/* Clear floats after the columns */
+
 .row:after {
     content: "";
-    display: table;
+    /* display: table; */
     clear: both;
 }
-
-
 
 button {
     background-color: #4CAF50;
@@ -106,6 +99,7 @@ button {
     text-decoration: none;
     display: inline-block;
     font-size: 16px;
+
 }
 
 
@@ -118,7 +112,7 @@ input {
     color: #f1f1f1;
     background-color: #3c3836;
     border: transparent;
-    
+
 }
 
 textarea {
