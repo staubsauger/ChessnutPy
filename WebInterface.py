@@ -4,6 +4,7 @@ import json
 import re
 import select
 import aiohttp
+import multidict
 
 import chess.svg
 import chess.engine
@@ -202,7 +203,7 @@ class EngineAppHandlers:
         return text.replace('ENGINE_SETTINGS', settings)
 
     async def engine_settings_handler(self, request: web.BaseRequest):
-        is_suggestion = "for" in request.query and request.query["for"] == "suggest"
+        is_suggestion = "for" in request.query and request.query["for"] == "SUG"
         text = pathlib.Path(self.engine_settings).read_text()
         limit = self.game_board.engine_manager.limit_sug\
             if is_suggestion else self.game_board.engine_manager.limit
@@ -245,22 +246,25 @@ class EngineAppHandlers:
         res = web.Response(status=303)
         return res
 
-    async def set_engine_cfg(self, request):
+    async def set_engine_cfg(self, request: web.BaseRequest):
         # this is a POST request
         # str that is dict of cfg
-        log.info(self.game_board.engine_manager.engine.config)
         data = await request.post()
-        d = json.loads(data['cfg_dict'])
         sanitized = {}
-        for key in d:
-            if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
-                sanitized[key] = d[key]
+        for key, value in data.items():
+            if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV', 'engine_select']:
+                sanitized[key] = value
         try:
-            await self.game_board.engine_manager.set_engine_cfg(sanitized)
+            if data['engine_select'] == 'CPU':
+                await self.game_board.engine_manager.set_engine_cfg(sanitized)
+            else:
+                await self.game_board.engine_manager.set_sug_engine_cfg(sanitized)
+            log.info(f'Set {data["engine_select"]} engine with values: {sanitized}')
         except Exception as e:
             text = f'Exception {e}: {e.args}'
             log.error(text)
             return web.Response(status=400, text=text)
+
         return await self.engine_settings_handler(request)
 
 

@@ -17,8 +17,8 @@
         <button class="button2" name="readBoard" value="read_board">Read Board</button>
     </form>
     <form action="/engine_settings" method="get">
-        <button class="button3" name="for" value="engine">Engine Settings</button>
-        <button class="button3" name="for" value="suggest">Suggestion Engine Settings</button>
+        <button class="button3" name="for" value="CPU">Engine Settings</button>
+        <button class="button3" name="for" value="SUG">Suggestion Engine Settings</button>
     </form>
     <h2>Settings for ENGINE_TITLE</h2>
     <form action="/set_engine_limit" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
@@ -31,7 +31,7 @@
         <input type="hidden" name="engine_select" value="ENGINE_SELECT">
         <br><input class="button2" type="submit" value="Submit Limit">
     </form>
-    <form action="/set_engine_cfg" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
+    <form action="/set_engine_cfg?for=ENGINE_SELECT" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
         <input type="hidden" name="engine_select" value="ENGINE_SELECT">
         ENGINE_SETTINGS
         <br><input class="button button2" type="submit" value="Submit Config">
