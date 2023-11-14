@@ -189,7 +189,8 @@ class EngineAppHandlers:
                     checked = "checked" if cur_set else ""
                     settings += f'<input id="{v.name}_id" name="{v.name}" type="checkbox" {checked}>'
                 case 'spin':
-                    settings += f'<input id="{v.name}_id" name="{v.name}" type="number" min="{v.min}" max="{v.max}" value="{cur_set}">'
+                    size = max(len(str(v.min)), len(str(v.max)))+1
+                    settings += f'<input id="{v.name}_id" name="{v.name}" type="number" min="{v.min}" max="{v.max}" value="{cur_set}" size="{size}">'
                 case 'string':
                     settings += f'<input id="{v.name}_id" name="{v.name}" type="text" value="{cur_set}">'
                 case 'combo':

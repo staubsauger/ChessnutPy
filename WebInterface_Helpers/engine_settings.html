@@ -22,11 +22,12 @@
     </form>
     <h2>Settings for ENGINE_TITLE</h2>
     <form action="/set_engine_limit" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-        <br><label for="limit_time">Time:</label><input name="time" type="number" min="0" step="0.1" value="LIMIT_TIME">
+        <br><label for="limit_time">Time:</label><input name="time" type="number" min="0" step="0.1" value="LIMIT_TIME"
+            size="5">
         <br><label for="limit_depth">Depth:</label><input id="limit_depth" name="depth" type="number" min="0" step="0"
-            value="LIMIT_DEPTH">
+            size="5" value="LIMIT_DEPTH">
         <br><label for="limit_nodes">Nodes:</label><input id="limit_nodes" name="nodes" type="number" min="0" step="0"
-            value="LIMIT_NODES">
+            size="5" value="LIMIT_NODES">
         <input type="hidden" name="engine_select" value="ENGINE_SELECT">
         <br><input class="button2" type="submit" value="Submit Limit">
     </form>
