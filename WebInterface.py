@@ -178,7 +178,7 @@ class EngineAppHandlers:
         engine = self.game_board.engine_manager.engine_suggest\
             if is_suggestion else self.game_board.engine_manager.engine
         settings = ""
-        for v in engine.options.values()():
+        for v in engine.options.values():
             if v.name in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV'] or v.type == 'button':
                 continue
             cur_set = engine_cfg[v.name] if v.name in engine_cfg else v.default
