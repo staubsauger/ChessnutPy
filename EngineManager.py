@@ -13,7 +13,6 @@ import asyncio
 
 import logging
 log = logging.getLogger("ChessnutPy")
- 
 
 
 class EngineManager:
@@ -25,7 +24,8 @@ class EngineManager:
         self.engine = None  # chess.engine.SimpleEngine.popen_uci(engine_path)
         self.suggestion_engine_path = options.engine_suggest_cmd
         self.transport_suggest = None
-        self.engine_suggest = None  # chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
+        # chess.engine.SimpleEngine.popen_uci(suggestion_engine_path)
+        self.engine_suggest = None
         self.suggestion_book = options.suggestion_book_dir
         self.limit = chess.engine.Limit(time=options.engine_time, nodes=options.engine_nodes,
                                         depth=options.engine_depth)
@@ -66,16 +66,25 @@ class EngineManager:
         if not at_init:
             self.options.save_function()
 
+    async def set_sug_engine_cfg(self, cfg):
+        self.options.sug_engine_cfg = cfg
+        await self.engine_suggest.configure(cfg)
+        self.options.save_function()
+
     async def init_engines(self):
-        self.transport, self.engine = await chess.engine.popen_uci(self.engine_path)
-        self.transport_suggest, self.engine_suggest = await chess.engine.popen_uci(self.suggestion_engine_path)
+        self.transport, self.engine =\
+            await chess.engine.popen_uci(self.engine_path)
+        self.transport_suggest, self.engine_suggest =\
+            await chess.engine.popen_uci(self.suggestion_engine_path)
         await self.engine.configure(self.options.engine_cfg)
+        await self.engine_suggest.configure(self.options.sug_engine_cfg)
         self.engines_running = True
 
     async def get_cpu_move(self, board):
         if self.options.engine_use_ext_book:
             log.info("using external opening book.")
-            bookmove = self.get_book_move(board, self.options.engine_ext_book_dir, weighted=False)
+            bookmove = self.get_book_move(
+                board, self.options.engine_ext_book_dir, weighted=False)
             if bookmove:
                 log.info("Engine takes move out of book.")
                 return bookmove
@@ -88,7 +97,8 @@ class EngineManager:
 
     async def get_score(self, board):
         score = (await self.engine_suggest.analyse(board, self.limit_sug)).get('score')
-        return score.pov(True)  # returns score in cp relative to white -> always
+        # returns score in cp relative to white -> always
+        return score.pov(True)
 
     async def get_move_suggestion(self, board, min_time=0.0):
         try:
@@ -109,10 +119,11 @@ class EngineManager:
         except asyncio.exceptions.CancelledError:
             log.info("suggestion was canceled")
 
-    def get_book_move(self, board, book, weighted = True):
+    def get_book_move(self, board, book, weighted=True):
         with chess.polyglot.open_reader(book) as reader:
             try:
-                move = reader.weighted_choice(board) if weighted else reader.choice(board)
+                move = reader.weighted_choice(
+                    board) if weighted else reader.choice(board)
                 log.info(move)
                 return move.move
             except IndexError:
@@ -167,10 +178,10 @@ class EngineManager:
         game.headers["Event"] = "VakantOS"
         game.headers["Date"] = day_str
         if board.player_color:
-            game.headers["White"] = self.username #os.getlogin()
+            game.headers["White"] = self.username  # os.getlogin()
             game.headers["Black"] = str(self.engine.id["name"])
         else:
-            game.headers["Black"] = self.username #os.getlogin()
+            game.headers["Black"] = self.username  # os.getlogin()
             game.headers["White"] = str(self.engine.id["name"])
         res = board.board.result()
         if res == '*':
@@ -205,7 +216,8 @@ class EngineManager:
                 rest = split[0]
                 split = rest.split(' ')
                 code = split[0]
-                moves = list(filter(lambda m: len(m) > 1 and '.' not in m, split[1:]))
+                moves = list(filter(lambda m: len(
+                    m) > 1 and '.' not in m, split[1:]))
                 b = chess.Board()
                 id_string = f'({name}, {code})\n'
                 uci_moves = list(map(lambda m: b.push_san(m.strip()), moves))
@@ -254,7 +266,8 @@ class EngineManager:
         for i, cur_move in enumerate(uci_moves):
             if cur_var.has_variation(cur_move):
                 if id_string not in cur_var.variation(cur_move).comment:
-                    if len(uci_moves) == i + 1:  # if this is the last move: put id on the front of the string
+                    # if this is the last move: put id on the front of the string
+                    if len(uci_moves) == i + 1:
                         cur_var.variation(cur_move).comment = \
                             f'{id_string}\n{cur_var.variation(cur_move).comment}'
                     else:
@@ -266,7 +279,8 @@ class EngineManager:
 
     def write_eco_dict(self):
         with open("eco_dict.cache", 'w') as f:
-            h = hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest()
+            h = hashlib.md5(pathlib.Path(
+                self.eco_file).read_bytes()).hexdigest()
             print(h, file=f)
             for key in self.eco_dict:
                 val = self.eco_dict[key]
@@ -275,7 +289,8 @@ class EngineManager:
 
     def read_eco_dict(self):
         with open(self.dict_cache_file, 'r') as f:
-            h = str(hashlib.md5(pathlib.Path(self.eco_file).read_bytes()).hexdigest())
+            h = str(hashlib.md5(pathlib.Path(
+                self.eco_file).read_bytes()).hexdigest())
             nh = f.readline().strip()
             if h != nh:
                 log.info(f'hashes didnt match:\n{h}\n{nh}')
@@ -308,7 +323,8 @@ def read_scid_eco_entries(eco_file):
         name = split[1] if len(split) > 1 else ""
         rest = split[2]
         split = rest.split('.')
-        turns = map(lambda m: m[:-2].split(), filter(lambda m: len(m.strip()) > 1, split))
+        turns = map(lambda m: m[:-2].split(),
+                    filter(lambda m: len(m.strip()) > 1, split))
         moves = []
         for t in turns:
             m1 = t[0]
@@ -322,6 +338,7 @@ def read_scid_eco_entries(eco_file):
         count += 1
         eco_line = eco_file.readline()
     log.info(count)
+
 
 def read_uci_file(file_path):
     """Read a .uci file in the style of picochess to get uci setting presets for engines"""

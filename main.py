@@ -31,6 +31,11 @@ async def go():
     except:
         log.warning(f"Couldn't parse engine_cfg: {options.engine_cfg}")
         options.engine_cfg = {}
+    try:
+        options.sug_engine_cfg = ast.literal_eval(options.sug_engine_cfg)
+    except:
+        log.warning(f"Couldn't parse engine_cfg: {options.sug_engine_cfg}")
+        options.sug_engine_cfg = {}
     options.engine_nodes = int(
         options.engine_nodes) if options.engine_nodes != 'None' else None
     options.engine_depth = int(
