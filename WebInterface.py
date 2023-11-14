@@ -2,12 +2,13 @@ import ast
 import pathlib
 import json
 import re
+import aiohttp
 
 import chess.svg
 import chess.engine
 from aiohttp import web
 import chess
-import BoardGame
+from BoardGame import BoardGame
 from bleak import BleakError
 import logging
 import time
@@ -51,22 +52,6 @@ class BoardAppHandlers:
 
     async def css_handler(self, request):
         return web.FileResponse(self.css)
-
-    async def engine_settings_handler(self, request):
-        text = pathlib.Path(self.engine_settings).read_text()
-        time = str(self.game_board.engine_manager.limit.time)
-        d = self.game_board.engine_manager.limit.depth
-        depth = str(d) if d else '0'
-        n = self.game_board.engine_manager.limit.nodes
-        nodes = str(n) if n else '0'
-        text = text.replace(
-            'LIMIT_TIME', time).replace(
-            'LIMIT_DEPTH', depth).replace(
-            'LIMIT_NODES', nodes).replace(
-            'ENGINE_SETTINGS', json.dumps(self.game_board.options.engine_cfg))
-        res = web.Response(text=text)
-        res.content_type = 'text/html'
-        return res
 
     async def online_game_handler(self, request):
         return web.FileResponse(self.online_game)
@@ -127,48 +112,9 @@ class BoardAppHandlers:
         await self.game_board.exit_read_board_and_select_color(wants_online='challenge')
         return await self.online_game_handler(request)
 
-    async def set_engine_limit(self, request):
-        # this is a POST request
-        # ?time: int, ?depth: int, ?nodes: int, ?engine_select: [cpu, suggest]
-        data = await request.post()
-        time = float(data['time'])
-        time = time if time > 0 else None
-        depth = int(data['depth'])
-        depth = depth if depth > 0 else None
-        nodes = int(data['nodes'])
-        nodes = nodes if nodes > 0 else None
-        log.info(
-            f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
-        if not (time or depth or nodes):
-            return web.Response(status=400, text='All Zeroes not allowed!')
-        if data['engine_select'] == 'CPU':
-            await self.game_board.engine_manager.set_engine_limit(time, depth, nodes)
-        else:
-            await self.game_board.engine_manager.set_sug_limit(time, depth, nodes)
-        res = web.Response(status=303)
-        return res
-
     async def online_chat_handler(self, request):
         text = self.game_board.lichess.game.chat if self.game_board.lichess and self.game_board.lichess.game else ''
         return web.Response(text=text)
-
-    async def set_engine_cfg(self, request):
-        # this is a POST request
-        # str that is dict of cfg
-        log.info(self.game_board.engine_manager.engine.config)
-        data = await request.post()
-        d = json.loads(data['cfg_dict'])
-        sanitized = {}
-        for key in d:
-            if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
-                sanitized[key] = d[key]
-        try:
-            await self.game_board.engine_manager.set_engine_cfg(sanitized)
-        except Exception as e:
-            text = f'Exception {e}: {e.args}'
-            log.error(text)
-            return web.Response(status=400, text=text)
-        return await self.engine_settings_handler(request)
 
     async def seek_game_handler(self, request):
         def safe_dict_get(dic, attr):
@@ -223,34 +169,128 @@ class BoardAppHandlers:
         return web.json_response(data=data)
 
 
+class EngineAppHandlers:
+    def __init__(self, board: BoardGame) -> None:
+        self.engine_settings = './WebInterface_Helpers/engine_settings.html'
+        self.game_board: BoardGame = board
+
+    async def add_engine_settings(self, text, is_suggestion, engine_cfg) -> str:
+        engine = self.game_board.engine_manager.engine_suggest\
+            if is_suggestion else self.game_board.engine_manager.engine
+        settings = ""
+        for v in engine.options.values()():
+            if v.name in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV'] or v.type == 'button':
+                continue
+            cur_set = engine_cfg[v.name] if v.name in engine_cfg else v.default
+            settings += f'<br><label for="{v.name}_id">{v.name}:</label>'
+            match v.type:
+                case 'check':
+                    checked = "checked" if cur_set else ""
+                    settings += f'<input id="{v.name}_id" name="{v.name}" type="checkbox" {checked}>'
+                case 'spin':
+                    settings += f'<input id="{v.name}_id" name="{v.name}" type="number" min="{v.min}" max="{v.max}" value="{cur_set}">'
+                case 'string':
+                    settings += f'<input id="{v.name}_id" name="{v.name}" type="text" value="{cur_set}">'
+        return text.replace('ENGINE_SETTINGS', settings)
+
+    async def engine_settings_handler(self, request: web.BaseRequest):
+        is_suggestion = "for" in request.query and request.query["for"] == "suggest"
+        text = pathlib.Path(self.engine_settings).read_text()
+        limit = self.game_board.engine_manager.limit_sug\
+            if is_suggestion else self.game_board.engine_manager.limit
+        time = str(limit.time)
+        d = limit.depth
+        depth = str(d) if d else '0'
+        n = limit.nodes
+        nodes = str(n) if n else '0'
+        engine_cfg = self.game_board.options.sug_engine_cfg\
+            if is_suggestion else self.game_board.options.engine_cfg
+        title = 'Suggestion Engine' if is_suggestion else 'CPU Engine'
+        text = text.replace('ENGINE_TITLE', title).replace(
+            'ENGINE_SELECT', 'SUG' if is_suggestion else 'CPU').replace(
+            'LIMIT_TIME', time).replace(
+            'LIMIT_DEPTH', depth).replace(
+            'LIMIT_NODES', nodes)
+        text = await self.add_engine_settings(text, is_suggestion, engine_cfg)
+        res = web.Response(text=text)
+        res.content_type = 'text/html'
+        return res
+
+    async def set_engine_limit(self, request):
+        # this is a POST request
+        # ?time: int, ?depth: int, ?nodes: int, ?engine_select: [cpu, suggest]
+        data = await request.post()
+        time = float(data['time'])
+        time = time if time > 0 else None
+        depth = int(data['depth'])
+        depth = depth if depth > 0 else None
+        nodes = int(data['nodes'])
+        nodes = nodes if nodes > 0 else None
+        log.info(
+            f'Setting time:{time}, depth:{depth}, nodes:{nodes} for {data["engine_select"]} from web')
+        if not (time or depth or nodes):
+            return web.Response(status=400, text='All Zeroes not allowed!')
+        if data['engine_select'] == 'CPU':
+            await self.game_board.engine_manager.set_engine_limit(time, depth, nodes)
+        else:
+            await self.game_board.engine_manager.set_sug_limit(time, depth, nodes)
+        res = web.Response(status=303)
+        return res
+
+    async def set_engine_cfg(self, request):
+        # this is a POST request
+        # str that is dict of cfg
+        log.info(self.game_board.engine_manager.engine.config)
+        data = await request.post()
+        d = json.loads(data['cfg_dict'])
+        sanitized = {}
+        for key in d:
+            if key not in ['UCI_Chess960', 'UCI_Variant', 'Ponder', 'MultiPV']:
+                sanitized[key] = d[key]
+        try:
+            await self.game_board.engine_manager.set_engine_cfg(sanitized)
+        except Exception as e:
+            text = f'Exception {e}: {e.args}'
+            log.error(text)
+            return web.Response(status=400, text=text)
+        return await self.engine_settings_handler(request)
+
+
 async def start_server(board):
     app = web.Application()
-    handlers = BoardAppHandlers(board)
-    app.router.add_route('GET', '/', handlers.index)
-    app.router.add_route('GET', '/debug', handlers.debug_handler)
-    app.router.add_route('GET', '/board.svg', handlers.board_svg_handler)
-    app.router.add_route('GET', '/opening', handlers.opening_handler)
+    board_handlers = BoardAppHandlers(board)
+    engine_handlers = EngineAppHandlers(board)
+    app.router.add_route('GET', '/', board_handlers.index)
+    app.router.add_route('GET', '/debug', board_handlers.debug_handler)
+    app.router.add_route('GET', '/board.svg', board_handlers.board_svg_handler)
+    app.router.add_route('GET', '/opening', board_handlers.opening_handler)
     app.router.add_route('GET', '/move_stack_frame',
-                         handlers.move_stack_frame_handler)
-    app.router.add_route('GET', '/move_stack', handlers.move_stack_handler)
-    app.router.add_route('GET', '/last_score', handlers.last_score_handler)
-    app.router.add_route('POST', '/read_board', handlers.read_board_handler)
+                         board_handlers.move_stack_frame_handler)
+    app.router.add_route('GET', '/move_stack',
+                         board_handlers.move_stack_handler)
+    app.router.add_route('GET', '/last_score',
+                         board_handlers.last_score_handler)
+    app.router.add_route('POST', '/read_board',
+                         board_handlers.read_board_handler)
     app.router.add_route('POST', '/set_engine_limit',
-                         handlers.set_engine_limit)
-    app.router.add_route('POST', '/set_engine_cfg', handlers.set_engine_cfg)
+                         engine_handlers.set_engine_limit)
+    app.router.add_route('POST', '/set_engine_cfg',
+                         engine_handlers.set_engine_cfg)
     app.router.add_route('GET', '/counter_openings_frame',
-                         handlers.counter_openings_frame_handler)
+                         board_handlers.counter_openings_frame_handler)
     app.router.add_route('GET', '/counter_openings',
-                         handlers.counter_openings_handler)
-    app.router.add_route('GET', '/battery_status', handlers.get_battery)
+                         board_handlers.counter_openings_handler)
+    app.router.add_route('GET', '/battery_status', board_handlers.get_battery)
     app.router.add_route('GET', '/engine_settings',
-                         handlers.engine_settings_handler)
-    app.router.add_route('GET', '/timers', handlers.time_handler)
-    app.router.add_route('GET', '/online_game', handlers.online_game_handler)
+                         engine_handlers.engine_settings_handler)
+    app.router.add_route('GET', '/timers', board_handlers.time_handler)
+    app.router.add_route('GET', '/online_game',
+                         board_handlers.online_game_handler)
     app.router.add_route('POST', '/start_online_challenge',
-                         handlers.start_online_challenge_handler)
+                         board_handlers.start_online_challenge_handler)
     app.router.add_route('POST', '/start_online_seek',
-                         handlers.seek_game_handler)
-    app.router.add_route('GET', '/online_chat', handlers.online_chat_handler)
-    app.router.add_route('GET', '/mystyle.css', handlers.css_handler)
+                         board_handlers.seek_game_handler)
+    app.router.add_route('GET', '/online_chat',
+                         board_handlers.online_chat_handler)
+    app.router.add_route('GET', '/mystyle.css', board_handlers.css_handler)
     return app

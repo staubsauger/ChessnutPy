@@ -7,6 +7,7 @@ body {
 * {
     box-sizing: border-box;
 }
+
 .sidenav {
     height: 100%;
     width: 0;
@@ -104,6 +105,12 @@ button {
 
 
 .button2 {
+    background-color: #7c6f64;
+}
+
+.button3 {
+    display: inline-block;
+    margin-right: 5px;
     background-color: #7c6f64;
 }
 

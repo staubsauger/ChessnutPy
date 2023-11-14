@@ -16,24 +16,24 @@
         <input type="hidden" name="test" value="3">
         <button class="button2" name="readBoard" value="read_board">Read Board</button>
     </form>
+    <form action="/engine_settings" method="get">
+        <button class="button3" name="for" value="engine">Engine Settings</button>
+        <button class="button3" name="for" value="suggest">Suggestion Engine Settings</button>
+    </form>
+    <h2>Settings for ENGINE_TITLE</h2>
     <form action="/set_engine_limit" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-        <br><label for="limit_time">Time:</label><input name="time" type="number" min="0" step="0.1"
-            value="LIMIT_TIME">
+        <br><label for="limit_time">Time:</label><input name="time" type="number" min="0" step="0.1" value="LIMIT_TIME">
         <br><label for="limit_depth">Depth:</label><input id="limit_depth" name="depth" type="number" min="0" step="0"
             value="LIMIT_DEPTH">
         <br><label for="limit_nodes">Nodes:</label><input id="limit_nodes" name="nodes" type="number" min="0" step="0"
             value="LIMIT_NODES">
-        <br><input id="cpu_selected" type="radio" name="engine_select" value="CPU" checked><label for="cpu_selected">Set
-            CPU Limit</label>
-        <br><input id="sug_selected" type="radio" name="engine_select" value="SUG"><label for="sug_selected">Set
-            Suggestion Limit</label>
+        <input type="hidden" name="engine_select" value="ENGINE_SELECT">
+        <input type="checkbox" name="test" checked="on">
         <br><input class="button2" type="submit" value="Submit Limit">
     </form>
     <form action="/set_engine_cfg" method="post" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-        <br><label for="engine_cfg">Engine UCI Config:</label><textarea id="engine_cfg" name="cfg_dict" rows="5"
-            style="width:100%">
-ENGINE_SETTINGS
-    </textarea>
+        <input type="hidden" name="engine_select" value="ENGINE_SELECT">
+        ENGINE_SETTINGS
         <br><input class="button button2" type="submit" value="Submit Config">
     </form>
 </body>
