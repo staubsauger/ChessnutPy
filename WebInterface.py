@@ -2,6 +2,7 @@ import ast
 import pathlib
 import json
 import re
+import select
 import aiohttp
 
 import chess.svg
@@ -191,6 +192,12 @@ class EngineAppHandlers:
                     settings += f'<input id="{v.name}_id" name="{v.name}" type="number" min="{v.min}" max="{v.max}" value="{cur_set}">'
                 case 'string':
                     settings += f'<input id="{v.name}_id" name="{v.name}" type="text" value="{cur_set}">'
+                case 'combo':
+                    settings += f'<select id="{v.name}_id" name="{v.name}">'
+                    for o in v.var:
+                        sel = 'selected' if o == v.default else ''
+                        settings += f'<option value="{o}" {sel}>{o}</option>'
+                    settings += '</select>'
         return text.replace('ENGINE_SETTINGS', settings)
 
     async def engine_settings_handler(self, request: web.BaseRequest):
