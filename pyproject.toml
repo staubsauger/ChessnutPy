@@ -1,0 +1,16 @@
+[project]
+name = "chessnutpy"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.13.9"
+dependencies = [
+    "async-timeout==4.0.3",
+    "asyncio==3.4.3",
+    "bleak==0.22.3",
+    "aiohttp==3.12.15",
+    "ConfigArgParse==1.5.3",
+    "chess==1.10.0",
+    "berserk==0.10.0",
+    "platformdirs==3.11"       
+]

@@ -346,7 +346,7 @@ def read_uci_file(file_path):
     with open(file_path) as file:
         contents = file.read()
     levels = {}
-    pattern = re.compile('\[.*\][^[]*')
+    pattern = re.compile(r'\[.*\][^[]*')
     for m in pattern.finditer(contents):
         lines = m.group().strip().splitlines()
         cfg = {}
