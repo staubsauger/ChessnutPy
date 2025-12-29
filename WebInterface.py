@@ -240,9 +240,9 @@ class EngineAppHandlers:
         if not (time or depth or nodes):
             return web.Response(status=400, text='All Zeroes not allowed!')
         if data['engine_select'] == 'CPU':
-            await self.game_board.engine_manager.set_engine_limit(time, depth, nodes)
+            await self.game_board.engine_manager.set_engine_limit(time, nodes, depth)
         else:
-            await self.game_board.engine_manager.set_sug_limit(time, depth, nodes)
+            await self.game_board.engine_manager.set_sug_limit(time, nodes, depth)
         res = web.Response(status=303)
         return res
 

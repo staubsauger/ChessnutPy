@@ -46,7 +46,7 @@ class EngineManager:
             self.write_eco_dict()
 
     async def set_engine_limit(self, time, nodes, depth, at_init=False):
-        self.limit = chess.engine.Limit(time, nodes, depth)
+        self.limit = chess.engine.Limit(time, depth, nodes)
         self.options.engine_time = time
         self.options.engine_nodes = nodes
         self.options.engine_depth = depth
@@ -59,7 +59,7 @@ class EngineManager:
         self.options.save_function()
 
     async def set_sug_limit(self, time, nodes, depth, at_init=False):
-        self.limit_sug = chess.engine.Limit(time, nodes, depth)
+        self.limit_sug = chess.engine.Limit(time, depth, nodes)
         self.options.sug_time = time
         self.options.sug_nodes = nodes
         self.options.sug_depth = depth
