@@ -8,3 +8,4 @@ log.log.1
 .venv/
 WebServer.py
 WebInterface_Helpers/main_page_old.html
+uv.lock
