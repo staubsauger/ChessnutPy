@@ -20,8 +20,14 @@ Everything you need, for setting up a game, is done via the pieces and leds on t
 buttons on the board for setting up a position or restarting a game. At the moment, there is now way to set up the strength
 of the engines via the board. You have to use the config file for this.
 
+## Quickstart with uv (recommended)
 
-## Quickstart and recommended way to install 
+`git clone https://github.com/staubsauger/ChessnutPy`
+
+`uv run main.py`
+
+
+## Classic way to install (not recommended) 
 `git clone https://github.com/staubsauger/ChessnutPy`
 
 `cd ChessnutPy`
@@ -36,8 +42,6 @@ of the engines via the board. You have to use the config file for this.
 
 Make sure you have stockfish installed systemwide, otherwise you have to configure a engine yourself by copying the default config to your config directory (ex. `cp Docs/default.config ~/.config/chessnutair.config`) and editing `engine_cmd` there. The programm will automatically copy it for you when it exists for the first time and will keep it updated if you change settings through the webinterface.
 
-
- 
 
 ## Features
  1. Fix-board function: checks if the state of the board is valid and gives you hints, where pieces are wrong and 
